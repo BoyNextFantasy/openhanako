@@ -27,7 +27,7 @@ export async function execute(input) {
 }
 ```
 
-2. Open HanaAgent → Settings → Plugins, drag the folder into the install area (or drag a .zip)
+2. Open HanaAgent �?Settings �?Plugins, drag the folder into the install area (or drag a .zip)
 3. After installation, the Agent can immediately call `my-plugin_hello`
 4. Uninstall: click the delete button on the plugins page
 
@@ -54,9 +54,9 @@ Debug order: install the local folder, inspect Settings diagnostics, finish READ
 
 ### Installation Methods
 
-- **Drag-and-drop**: Drag a plugin folder or .zip into Settings → Plugins install area
+- **Drag-and-drop**: Drag a plugin folder or .zip into Settings �?Plugins install area
 - **File picker**: Click the install area and select a plugin folder or .zip via the file picker
-- **Manual**: Place the plugin directory in `${HANA_HOME}/plugins/`. The actual path is shown in Settings → Plugins or via `/api/plugins/settings` as `plugins_dir`
+- **Manual**: Place the plugin directory in `${SATORI_HOME}/plugins/`. The actual path is shown in Settings �?Plugins or via `/api/plugins/settings` as `plugins_dir`
 
 ### Management
 
@@ -68,7 +68,7 @@ All operations take effect immediately, no restart required:
 
 ### Plugin Data
 
-Plugin private data is stored in `${HANA_HOME}/plugin-data/{pluginId}/`. This directory is preserved when the plugin is deleted, so config persists across reinstalls.
+Plugin private data is stored in `${SATORI_HOME}/plugin-data/{pluginId}/`. This directory is preserved when the plugin is deleted, so config persists across reinstalls.
 
 ## Directory Structure
 
@@ -76,20 +76,20 @@ Plugin private data is stored in `${HANA_HOME}/plugin-data/{pluginId}/`. This di
 my-plugin/
 ├── manifest.json          # Optional, only needed for complex declarations
 ├── tools/                 # Tools (called by Agent)
-│   └── *.js
+�?  └── *.js
 ├── skills/                # Knowledge injection (Markdown)
-│   └── my-skill/
-│       └── SKILL.md
+�?  └── my-skill/
+�?      └── SKILL.md
 ├── commands/              # User commands (slash-triggered)
-│   └── *.js
+�?  └── *.js
 ├── agents/                # Agent templates (JSON)
-│   └── *.json
+�?  └── *.json
 ├── routes/                # HTTP routes (requires full-access)
-│   └── *.js
+�?  └── *.js
 ├── providers/             # Provider declarations: chat/media capabilities (requires full-access)
-│   └── *.js
+�?  └── *.js
 ├── extensions/            # Pi SDK extension factories (requires full-access)
-│   └── *.js
+�?  └── *.js
 └── index.js               # Optional, stateful plugin entry point, loaded last (requires full-access)
 ```
 
@@ -134,7 +134,7 @@ Declare `"trust": "full-access"` in manifest:
 
 `minAppVersion` (optional) declares the minimum HanaAgent version required to run the plugin. If the current app version is lower, the plugin will not load and its status is set to `incompatible`. All plugins should declare this field to prevent compatibility issues on older versions.
 
-The user must enable the "Allow full-access plugins" toggle in Settings → Plugins. **When the toggle is off, full-access plugins are not loaded at all** (no partial loading) until the user explicitly enables it.
+The user must enable the "Allow full-access plugins" toggle in Settings �?Plugins. **When the toggle is off, full-access plugins are not loaded at all** (no partial loading) until the user explicitly enables it.
 
 In addition to restricted capabilities:
 
@@ -391,7 +391,7 @@ export async function execute(args, cmdCtx) {
 }
 ```
 
-### Routes (HTTP Routes) ⚡ full-access
+### Routes (HTTP Routes) �?full-access
 
 `routes/*.js` supports three patterns, auto-mounted at `/api/plugins/{pluginId}/...`:
 
@@ -443,7 +443,7 @@ Every HTTP request entering a plugin route gets its own request-level context, r
 ```js
 app.post("/create-session", async (c) => {
   const reqCtx = c.get("pluginRequestContext");
-  // reqCtx.principal        identity behind this request (owner device / this plugin's iframe surface…), null when invoked directly in tests
+  // reqCtx.principal        identity behind this request (owner device / this plugin's iframe surface�?, null when invoked directly in tests
   // reqCtx.agentId          current agent id injected by the proxy layer
   // reqCtx.capabilityGrant  { accessLevel, declaredPermissions, legacyDeclaration }
   const result = await reqCtx.bus.request("session:create", { agentId: reqCtx.agentId });
@@ -451,9 +451,9 @@ app.post("/create-session", async (c) => {
 });
 ```
 
-`reqCtx.bus` differs from `ctx.bus` in one way: calling a system-sensitive capability through it (catalog entries with `owner: "system"` and a `permission`, e.g. `session:create` → `session.write`) is checked against the manifest declaration plus the user grant. A permission missing from manifest `capabilities` / `sensitiveCapabilities` (namespaces work: `session` covers `session.write`) returns 403 `PLUGIN_CAPABILITY_NOT_DECLARED`; a plugin without full access returns 403 `PLUGIN_CAPABILITY_NOT_GRANTED`. Error responses carry `capability` / `permission` / `pluginId` / `declared` / `granted` so the missing piece is immediately visible. Legacy manifests with no capability declarations at all (both fields absent) are treated as declaring everything, so existing plugins keep working; once either list is explicitly written, the declaration is enforced strictly — an explicit empty array (`"capabilities": []`) is not legacy and denies every system-sensitive capability. Prefer `reqCtx.bus` when handling requests that originate from iframe pages.
+`reqCtx.bus` differs from `ctx.bus` in one way: calling a system-sensitive capability through it (catalog entries with `owner: "system"` and a `permission`, e.g. `session:create` �?`session.write`) is checked against the manifest declaration plus the user grant. A permission missing from manifest `capabilities` / `sensitiveCapabilities` (namespaces work: `session` covers `session.write`) returns 403 `PLUGIN_CAPABILITY_NOT_DECLARED`; a plugin without full access returns 403 `PLUGIN_CAPABILITY_NOT_GRANTED`. Error responses carry `capability` / `permission` / `pluginId` / `declared` / `granted` so the missing piece is immediately visible. Legacy manifests with no capability declarations at all (both fields absent) are treated as declaring everything, so existing plugins keep working; once either list is explicitly written, the declaration is enforced strictly �?an explicit empty array (`"capabilities": []`) is not legacy and denies every system-sensitive capability. Prefer `reqCtx.bus` when handling requests that originate from iframe pages.
 
-### Extensions (Pi SDK Event Interception) ⚡ full-access
+### Extensions (Pi SDK Event Interception) �?full-access
 
 Each `.js` file in the `extensions/` directory exports a factory function that receives Pi SDK's `ExtensionAPI` and subscribes to LLM pipeline events:
 
@@ -485,7 +485,7 @@ Factory functions are invoked by Pi SDK at session creation time; handlers fire 
 
 `extensions/` remains a full-access boundary. Restricted plugins that include an `extensions/` directory do not load those factories. If a plugin needs to intercept provider requests, tool calls, or context construction, it must declare `"trust": "full-access"` and the user must enable the full-access plugin toggle.
 
-### Providers (Provider Contribution) ⚡ full-access
+### Providers (Provider Contribution) �?full-access
 
 `providers/*.js` export a ProviderPlugin data object:
 
@@ -559,7 +559,7 @@ Declare in `manifest.json` under `contributes.configuration` using JSON Schema:
 
 Read/write config via `ctx.config.get(key)` / `ctx.config.set(key, value)`, persisted in `plugin-data/{pluginId}/config.json`.
 
-### Page (Plugin Page) ⚡ full-access
+### Page (Plugin Page) �?full-access
 
 A plugin can register a full-page view in the top tab bar, at the same level as "Chat/Channel". When the user switches to that tab, the plugin's iframe occupies the entire window space.
 
@@ -580,7 +580,7 @@ Declare in `manifest.json` under `contributes`:
 - `title`: Display name. Accepts a plain string or an i18n object `{ zh, en, ... }`
 - `icon`: Strongly recommended to provide an inline SVG (stroke style, `currentColor`). Falls back to the first character of the title if omitted
 - `route`: Relative path for the plugin route. The actual URL is `/api/plugins/{pluginId}{route}`
-- A plugin can declare both a `page` and a `widget` simultaneously — they are independent
+- A plugin can declare both a `page` and a `widget` simultaneously �?they are independent
 - Hovering over the tab shows the plugin's full name (tooltip)
 - When there are more than 5 tabs, extras are collapsed into an overflow dropdown menu; users can drag to reorder
 
@@ -691,9 +691,9 @@ export function PluginPanel() {
 
 `HanaThemeProvider` supports three modes: `inherit` reads host CSS variables and then uses SDK fallback tokens; `hana` pins the UI to a named Hana theme token set; `custom` only overrides explicitly provided tokens and lets missing fields continue through the fallback chain. Components depend only on `hana-plugin-*` classes and CSS variables, not renderer internals.
 
-### Widget (Sidebar Component) ⚡ full-access
+### Widget (Sidebar Component) �?full-access
 
-A plugin can register a component in the right-side Jian sidebar. A widget and a page can be declared simultaneously in the same plugin — they are independent and do not conflict.
+A plugin can register a component in the right-side Jian sidebar. A widget and a page can be declared simultaneously in the same plugin �?they are independent and do not conflict.
 
 ```json
 {
@@ -711,7 +711,7 @@ Field rules are the same as Page. The widget appears alongside the desk in the J
 
 Widgets are also rendered via WebView/iframe and must send the `ready` handshake signal.
 
-### SettingsTab (Native Settings Page, Built-ins Only) ⚡ full-access
+### SettingsTab (Native Settings Page, Built-ins Only) �?full-access
 
 Bundled built-in plugins can register a native settings page shown in the settings sidebar, at the same level as "Skills" and "Plugins". This contribution only works for built-in plugins under the packaged `plugins/` directory; community plugins are ignored even if they declare it. The renderer maps `nativeComponent` through a host whitelist, so plugins declare a component id rather than shipping frontend code.
 
@@ -722,7 +722,7 @@ Bundled built-in plugins can register a native settings page shown in the settin
   "contributes": {
     "settingsTab": {
       "id": "mcp",
-      "title": { "zh": "连接器", "en": "Connectors" },
+      "title": { "zh": "连接�?, "en": "Connectors" },
       "nativeComponent": "mcp.settings"
     }
   }
@@ -809,7 +809,7 @@ Older plugins without `activationEvents` remain compatible: if `index.js` exists
 }
 ```
 
-## Stateful Plugins (Lifecycle) ⚡ full-access
+## Stateful Plugins (Lifecycle) �?full-access
 
 If a plugin needs persistent connections, scheduled tasks, or bus handlers, create `index.js`:
 
@@ -835,13 +835,13 @@ import { HANA_BUS_SKIP } from "@hana/plugin-runtime";
 export default class MyPlugin {
   async onload() {
     // ctx is injected by PluginManager:
-    // this.ctx.bus          — EventBus (full: emit/subscribe/request/handle)
-    // this.ctx.config       — Config read/write (get/set)
-    // this.ctx.dataDir      — Private data directory path
-    // this.ctx.log          — Logger with pluginId prefix
-    // this.ctx.pluginId     — Plugin ID
-    // this.ctx.pluginDir    — Plugin installation directory
-    // this.ctx.registerTool — Dynamic tool registration (returns cleanup function)
+    // this.ctx.bus          �?EventBus (full: emit/subscribe/request/handle)
+    // this.ctx.config       �?Config read/write (get/set)
+    // this.ctx.dataDir      �?Private data directory path
+    // this.ctx.log          �?Logger with pluginId prefix
+    // this.ctx.pluginId     �?Plugin ID
+    // this.ctx.pluginDir    �?Plugin installation directory
+    // this.ctx.registerTool �?Dynamic tool registration (returns cleanup function)
 
     // Resources registered via register() are auto-cleaned on unload (reverse order)
     this.register(
@@ -931,9 +931,9 @@ this.register(
 ```
 
 **Error handling**:
-- No handler → throws `BusNoHandlerError`
-- Timeout (default 30s) → throws `BusTimeoutError`
-- Handler business errors → propagated directly
+- No handler �?throws `BusNoHandlerError`
+- Timeout (default 30s) �?throws `BusTimeoutError`
+- Handler business errors �?propagated directly
 
 **Soft dependencies**: `depends.capabilities` in manifest is advisory only; the system won't block installation if capabilities are missing. Plugin code should prefer `bus.getCapability(type)?.available` for graceful degradation at runtime; older plugins may continue to use `bus.hasHandler()`.
 
@@ -1032,7 +1032,7 @@ const transcription = await transcribeAudio(ctx, {
 // transcription = { ok: true, transcription: { status, text, ... } }
 ```
 
-### Dynamic Tool Registration ⚡ full-access
+### Dynamic Tool Registration �?full-access
 
 Plugins can dynamically register tools in `onload()` via `ctx.registerTool()`, useful when tools are discovered at runtime (for example, the bundled Connectors MCP bridge):
 
@@ -1047,7 +1047,7 @@ this.register(this.ctx.registerTool({
 
 Tool names are auto-prefixed with `pluginId_` and auto-removed on unload via `register()`.
 
-### Background Tasks ⚡ full-access
+### Background Tasks �?full-access
 
 Plugins can register background tasks so HanaAgent can track and abort them. Runtime lifecycle is managed by `TaskRegistry`.
 
@@ -1102,7 +1102,7 @@ Developer overrides remain available:
 - `HANA_PLUGIN_MARKETPLACE_FILE=/path/to/marketplace.json`
 - `HANA_PLUGIN_MARKETPLACE_URL=https://.../marketplace.json`
 
-Without either environment variable, Hana first tries `${HANA_HOME}/plugin-marketplace/marketplace.json` for local development. If it does not exist, Hana reads the official `OH-Plugins` URL. The marketplace index shape matches the `OH-Plugins` repository:
+Without either environment variable, Hana first tries `${SATORI_HOME}/plugin-marketplace/marketplace.json` for local development. If it does not exist, Hana reads the official `OH-Plugins` URL. The marketplace index shape matches the `OH-Plugins` repository:
 
 ```json
 {
@@ -1144,7 +1144,7 @@ The marketplace UI shows the plugin list and README in a wider settings subpage.
 
 Marketplace version management uses `versions[]` as the long-term contract: each item declares `version`, that version's `compatibility.minAppVersion`, and its own `distribution`. If `versions[]` is absent, Hana treats the root-level `version` / `compatibility` / `distribution` as a single version entry. The client chooses the highest SemVer version compatible with the current app, while exposing `latestVersion`, `selectedVersion`, `installedVersion`, `updateAvailable`, `downgrade`, `reinstall`, `compatible`, `installAction`, and `canInstall` for UI state.
 
-If the installed version is newer than the highest compatible marketplace version, the action is marked as `downgrade` and install requires explicit `allowDowngrade: true`. Drag-and-drop / local path installs also reject implicit downgrades. Updates back up the previous plugin directory under `${HANA_HOME}/plugin-backups/<pluginId>/`; if the new version fails to load, Hana restores and reloads the old directory. Successful installs are recorded in `${HANA_HOME}/plugin-installs.json` with source, version, release URL, and sha256 so later marketplace state is explicit.
+If the installed version is newer than the highest compatible marketplace version, the action is marked as `downgrade` and install requires explicit `allowDowngrade: true`. Drag-and-drop / local path installs also reject implicit downgrades. Updates back up the previous plugin directory under `${SATORI_HOME}/plugin-backups/<pluginId>/`; if the new version fails to load, Hana restores and reloads the old directory. Successful installs are recorded in `${SATORI_HOME}/plugin-installs.json` with source, version, release URL, and sha256 so later marketplace state is explicit.
 
 ## Forward Compatibility
 

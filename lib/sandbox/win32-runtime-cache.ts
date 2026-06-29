@@ -117,7 +117,7 @@ function copyRuntimeTree({ sourceRoot, targetRoot, markerPath, manifest }) {
 
 function ensureCachedRuntimeRoot({ sourceRoot, primaryPath, hanakoHome, kind }) {
   if (!hanakoHome) {
-    throw new Error("[win32-sandbox] HANA_HOME is required to prepare sandbox runtime cache.");
+    throw new Error("[win32-sandbox] SATORI_HOME is required to prepare sandbox runtime cache.");
   }
   if (!sourceRoot || !fs.existsSync(sourceRoot)) {
     throw new Error(`[win32-sandbox] Runtime source root does not exist: ${sourceRoot || "(missing)"}`);
@@ -140,7 +140,7 @@ function ensureCachedRuntimeRoot({ sourceRoot, primaryPath, hanakoHome, kind }) 
 }
 
 export function sandboxRuntimeCacheRoot(hanakoHome) {
-  if (!hanakoHome) throw new Error("[win32-sandbox] HANA_HOME is required for sandbox runtime cache.");
+  if (!hanakoHome) throw new Error("[win32-sandbox] SATORI_HOME is required for sandbox runtime cache.");
   return joinRuntimePath(hanakoHome, ".ephemeral", CACHE_DIR);
 }
 

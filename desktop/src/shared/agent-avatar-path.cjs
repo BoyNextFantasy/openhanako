@@ -1,5 +1,5 @@
 /**
- * agent-avatar-path.cjs â€” resolve an agent's custom avatar file from disk.
+ * agent-avatar-path.cjs â€?resolve an agent's custom avatar file from disk.
  *
  * Pure, dependency-free helper shared by the Electron main process (notification
  * icons, splash) so the avatar lookup can be unit-tested without Electron.
@@ -9,7 +9,7 @@
  * Mirrors server/routes/agents.js (GET /agents/:id/avatar) and server/routes/avatar.js.
  *
  * Identity is keyed strictly by the supplied agentId. A missing or unsafe agentId
- * returns null so callers fall back to no-icon â€” never to a globally-focused agent
+ * returns null so callers fall back to no-icon â€?never to a globally-focused agent
  * (otherwise concurrent multi-agent notifications would show the wrong face).
  */
 const fs = require("fs");
@@ -30,7 +30,7 @@ function isSafeAgentId(agentId) {
 }
 
 /**
- * @param {string|null|undefined} hanakoHome - resolved HANA_HOME data root
+ * @param {string|null|undefined} hanakoHome - resolved SATORI_HOME data root
  * @param {string|null|undefined} agentId - id of the agent that triggered the notification
  * @returns {string|null} absolute path to the avatar file, or null when none/unsafe
  */

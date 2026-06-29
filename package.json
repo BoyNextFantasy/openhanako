@@ -1,8 +1,8 @@
 {
-  "name": "hanako",
+  "name": "satori-cli",
   "version": "0.348.11",
   "type": "module",
-  "description": "HanaAgent - a personal AI agent with memory and soul",
+  "description": "Satori - an AI coding assistant",
   "license": "Apache-2.0",
   "workspaces": [
     "packages/*"
@@ -12,14 +12,13 @@
   },
   "keywords": [
     "ai-agent",
-    "electron",
-    "memory",
-    "multi-platform",
-    "telegram",
-    "personal-assistant"
+    "coding-assistant",
+    "cli",
+    "electron"
   ],
   "main": "desktop/bootstrap.cjs",
   "bin": {
+    "satori": "cli/entry.ts",
     "hana": "cli/entry.ts"
   },
   "engines": {
@@ -124,8 +123,8 @@
     "vitest": "^4.0.18"
   },
   "build": {
-    "appId": "com.hanako.app",
-    "productName": "HanaAgent",
+    "appId": "com.satori.app",
+    "productName": "Satori",
     "asar": true,
     "npmRebuild": false,
     "afterPack": "./scripts/fix-modules.cjs",
@@ -170,7 +169,7 @@
       ],
       "category": "public.app-category.productivity",
       "icon": "desktop/src/icon.icns",
-      "artifactName": "${productName}-${version}-macOS-${arch}.${ext}",
+      "artifactName": "Satori-${version}-macOS-${arch}.${ext}",
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
       "entitlements": "desktop/entitlements.mac.plist",
@@ -207,8 +206,8 @@
     "win": {
       "target": "nsis",
       "icon": "desktop/src/icon.ico",
-      "executableName": "HanaAgent",
-      "artifactName": "${productName}-${version}-Windows-${arch}.${ext}",
+      "executableName": "Satori",
+      "artifactName": "Satori-${version}-Windows-${arch}.${ext}",
       "requestedExecutionLevel": "asInvoker",
       "extraResources": [
         {
@@ -224,7 +223,7 @@
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": false,
-      "shortcutName": "HanaAgent",
+      "shortcutName": "Satori",
       "include": "build/installer.nsh",
       "installerIcon": "desktop/src/icon.ico",
       "uninstallerIcon": "desktop/src/icon.ico"
@@ -237,7 +236,7 @@
       "maintainer": "liliMozi <liliMozi@users.noreply.github.com>",
       "category": "Utility",
       "icon": "desktop/src/icon.png",
-      "artifactName": "${productName}-${version}-Linux-${arch}.${ext}"
+      "artifactName": "Satori-${version}-Linux-${arch}.${ext}"
     }
   }
 }

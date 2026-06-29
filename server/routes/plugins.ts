@@ -53,15 +53,15 @@ const PLUGIN_IFRAME_HOST_QUERY_PARAMS = new Set([
 ]);
 
 /**
- * 代理分发：将 /plugins/:pluginId/* 的请求转发到对应 plugin 子 app。
+ * 代理分发：将 /plugins/:pluginId/* 的请求转发到对应 plugin �?app�?
  * 入口凭证（iframe ticket / surface session）在转发前剥离；请求级身份与
- * agentId 通过 Hono env 的 `pluginRouteRequest` 显式传入插件 route app，
- * 由 plugin-manager 的中间件铸造为 `pluginRequestContext` 请求变量。
+ * agentId 通过 Hono env �?`pluginRouteRequest` 显式传入插件 route app�?
+ * �?plugin-manager 的中间件铸造为 `pluginRequestContext` 请求变量�?
  * @param {import("hono").Context} c
  * @param {import("hono").Hono} pluginApp
  * @param {string} pluginId
  * @param {string} [agentId] - 当前 agent id，注入到子请求的 X-Hana-Agent-Id header
- * @param {object|null} [requestPrincipal] - 本次请求的来源身份描述
+ * @param {object|null} [requestPrincipal] - 本次请求的来源身份描�?
  */
 async function proxyToPlugin(c: any, pluginApp: any, pluginId: string, agentId?: string, requestPrincipal: any = null) {
   const url = new URL(c.req.url);
@@ -189,8 +189,8 @@ function appendPluginAssetSessionCookie(c: any, engine: any, pluginId: string, r
   if (!responseNeedsPluginAssetSession(c, response, iframeTicket)) return response;
   if (!engine?.hanakoHome) return response;
   const principal = readAuthPrincipal(c);
-  // Surface session 凭证不允许给自己续发资产会话 cookie：派生凭证不能再派生，
-  // 续发只能来自 ticket 或 owner / device 凭证的入口。
+  // Surface session 凭证不允许给自己续发资产会话 cookie：派生凭证不能再派生�?
+  // 续发只能来自 ticket �?owner / device 凭证的入口�?
   if (!iframeTicket && principal?.credentialKind === "plugin_surface_session") return response;
   const principalId = iframeTicket?.principalId || principal?.principalId;
   if (!principalId) return response;
@@ -257,10 +257,10 @@ const PLUGIN_HOST_ROUTE_SURFACE_PATHS = new Set([
 ]);
 
 /**
- * 构造插件 route handler 请求级上下文的来源身份描述。
+ * 构造插�?route handler 请求级上下文的来源身份描述�?
  * 优先采用 HTTP 鉴权铸造的 authPrincipal（owner / device / plugin surface）；
- * ticket 加载的 surface 文档请求没有 authPrincipal，从已验证的 iframe ticket
- * 推导。两者都缺席时为 null（如测试直连 route app）。
+ * ticket 加载�?surface 文档请求没有 authPrincipal，从已验证的 iframe ticket
+ * 推导。两者都缺席时为 null（如测试直连 route app）�?
  */
 function pluginRouteRequestPrincipal(authPrincipal: any, iframeTicket: any, pluginId: string) {
   if (authPrincipal && typeof authPrincipal === "object") {
@@ -667,7 +667,7 @@ async function downloadMarketplaceRelease({ engine, plugin }: { engine: any; plu
     throw err;
   }
   if (!engine.hanakoHome) {
-    const err = new Error("HANA_HOME is unavailable for plugin release installation") as Error & { status: number };
+    const err = new Error("SATORI_HOME is unavailable for plugin release installation") as Error & { status: number };
     err.status = 500;
     throw err;
   }
@@ -794,10 +794,10 @@ export function createPluginsRoute(engine: any) {
   const route = new Hono();
 
   /**
-   * 可见插件过滤 + 序列化（单一出口，所有返回插件列表的端点共用）。
-   * hidden 插件（系统插件）永远不暴露给前端管理页。
+   * 可见插件过滤 + 序列化（单一出口，所有返回插件列表的端点共用）�?
+   * hidden 插件（系统插件）永远不暴露给前端管理页�?
    * @param {object} [opts]
-   * @param {string} [opts.source] - 按 source 过滤（"community" | "builtin"）
+   * @param {string} [opts.source] - �?source 过滤�?community" | "builtin"�?
    */
   function visiblePlugins(pm: any, opts: { source?: string } = {}) {
     reconcileMissingPluginDirectories(engine, pm);
@@ -1300,8 +1300,8 @@ export function createPluginsRoute(engine: any) {
         surfacePath,
         principalId,
       } as any);
-      // Surface session 与 ticket 一并签发：ticket 只负责该 surface 的文档加载，
-      // surface session 是页面脚本调用本插件 route handler 的请求级入口凭证。
+      // Surface session �?ticket 一并签发：ticket 只负责该 surface 的文档加载，
+      // surface session 是页面脚本调用本插件 route handler 的请求级入口凭证�?
       const surfaceSession = issuePluginSurfaceSession({
         hanakoHome: engine.hanakoHome,
         pluginId,
@@ -1341,8 +1341,8 @@ export function createPluginsRoute(engine: any) {
     }
     let css = fs.readFileSync(found, "utf-8");
     // Flatten selectors for iframe consumption:
-    // [data-theme="xxx"], :root:not([data-theme]) → :root
-    // [data-theme="xxx"] → :root
+    // [data-theme="xxx"], :root:not([data-theme]) �?:root
+    // [data-theme="xxx"] �?:root
     css = css.replace(/\[data-theme="[^"]*"\](?:,\s*:root:not\(\[data-theme\]\))?/g, ":root");
     c.header("Content-Type", "text/css");
     c.header("Cache-Control", "public, max-age=300");

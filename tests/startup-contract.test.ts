@@ -30,7 +30,7 @@ describe("local startup contract", () => {
     expect(env.HANA_DEV_NODE_BIN).toBe("/tmp/hana-node");
   });
 
-  it("server configures Pi SDK from HANA_HOME and CLI stays server-first", () => {
+  it("server configures Pi SDK from SATORI_HOME and CLI stays server-first", () => {
     const cliSource = fs.readFileSync(path.join(ROOT, "index.js"), "utf-8");
     const cliEntrySource = fs.readFileSync(path.join(ROOT, "cli", "entry.ts"), "utf-8");
     const launchSource = fs.readFileSync(path.join(ROOT, "scripts", "launch.js"), "utf-8");

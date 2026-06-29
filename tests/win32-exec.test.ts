@@ -1213,8 +1213,8 @@ describe("createWin32Exec", () => {
 
     const diagnostic = chunks.join("");
     expect(diagnostic).toContain("STATUS_DLL_INIT_FAILED");
-    expect(diagnostic).toContain("<HANA_HOME>\\.ephemeral\\win32-sandbox-runtime\\bash-cache\\bin\\bash.exe");
-    expect(diagnostic).toContain("HANA_HOME: <HANA_HOME>");
+    expect(diagnostic).toContain("<SATORI_HOME>\\.ephemeral\\win32-sandbox-runtime\\bash-cache\\bin\\bash.exe");
+    expect(diagnostic).toContain("SATORI_HOME: <SATORI_HOME>");
     expect(diagnostic).not.toContain("C:\\Users\\Hana");
     expect(diagnostic).not.toContain(cachedShell);
     expect(diagnostic).toContain("Default PowerShell/cmd/terminal execution is not changed");
@@ -1284,7 +1284,7 @@ describe("createWin32Exec", () => {
         PATH: "C:\\Windows\\System32",
         COMSPEC: systemCmdExe,
         SystemRoot: "C:\\Windows",
-        HANA_HOME: "C:\\Users\\Hana\\.hanako",
+        SATORI_HOME: "C:\\Users\\Hana\\.hanako",
       },
     });
 
@@ -1292,7 +1292,7 @@ describe("createWin32Exec", () => {
     const diagnostic = chunks.join("");
     expect(diagnostic).toContain("Route: runner=cmd reason=cmd-builtin mode=sandbox-helper sandbox=true");
     expect(diagnostic).toContain(`Helper: ${helper}`);
-    expect(diagnostic).toContain("HANA_HOME: <HANA_HOME>");
+    expect(diagnostic).toContain("SATORI_HOME: <SATORI_HOME>");
     expect(diagnostic).not.toContain("C:\\Users\\Hana");
     expect(spawnAndStream).toHaveBeenCalledTimes(1);
   });
@@ -1330,7 +1330,7 @@ describe("createWin32Exec", () => {
         PATH: "C:\\Windows\\System32",
         COMSPEC: systemCmdExe,
         SystemRoot: "C:\\Windows",
-        HANA_HOME: "C:\\Users\\Hana\\.hanako",
+        SATORI_HOME: "C:\\Users\\Hana\\.hanako",
         USERPROFILE: "C:\\Users\\Hana",
       },
     });

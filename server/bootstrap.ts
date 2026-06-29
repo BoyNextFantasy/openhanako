@@ -18,7 +18,7 @@ const hanaRoot = process.env.HANA_ROOT || import.meta.dirname;
 const serverEntry = process.env.HANA_SERVER_ENTRY || path.join(hanaRoot, "bundle", "index.js");
 
 log(`[server-bootstrap] process started pid=${process.pid} platform=${process.platform} arch=${process.arch}`);
-log(`[server-bootstrap] node=${process.version} hanaHome=${process.env.HANA_HOME || "unset"}`);
+log(`[server-bootstrap] node=${process.version} hanaHome=${process.env.SATORI_HOME || "unset"}`);
 log(`[server-bootstrap] root=${hanaRoot}`);
 log(`[server-bootstrap] entry=${serverEntry}`);
 
@@ -31,18 +31,18 @@ importTimer.unref?.();
 
 // Independent keepalive thread.
 //
-// 主线程被 native module 加载（better-sqlite3 等）或重型 import 阻塞时，上面的
-// setInterval 不会 fire，Electron 因 progress grace 用尽误判启动失败
-// (#719 / #736 根因)。
+// 主线程被 native module 加载（better-sqlite3 等）或重�?import 阻塞时，上面�?
+// setInterval 不会 fire，Electron �?progress grace 用尽误判启动失败
+// (#719 / #736 根因)�?
 //
-// ⚠️ Worker 里 **必须** 用 `fs.writeSync(1, ...)` 直接写 stdout fd——绝不能用
-// `process.stdout.write()`。Worker 的 stdout 默认走 MessagePort 转发到主线程的
+// ⚠️ Worker �?**必须** �?`fs.writeSync(1, ...)` 直接�?stdout fd——绝不能�?
+// `process.stdout.write()`。Worker �?stdout 默认�?MessagePort 转发到主线程�?
 // writable，主线程被阻塞时这些 message 会堆在主线程消息队列里，直到主线程恢复才
-// 被一起 flush，keepalive 形同虚设。
+// 被一�?flush，keepalive 形同虚设�?
 //
-// fs.writeSync(1, ...) 直接对父进程继承下来的 OS pipe fd 做 write() syscall，
-// 不需要主线程参与；Worker 跑在独立 V8 isolate，自己的 event loop 不受主线程
-// 影响，syscall 直达 Electron 端的 stdout pipe。
+// fs.writeSync(1, ...) 直接对父进程继承下来�?OS pipe fd �?write() syscall�?
+// 不需要主线程参与；Worker 跑在独立 V8 isolate，自己的 event loop 不受主线�?
+// 影响，syscall 直达 Electron 端的 stdout pipe�?
 let keepaliveWorker = null;
 try {
   keepaliveWorker = new Worker(

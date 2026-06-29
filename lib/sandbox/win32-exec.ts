@@ -1,22 +1,22 @@
 /**
- * win32-exec.js — Windows 平台的命令执行函数
+ * win32-exec.js �?Windows 平台的命令执行函�?
  *
- * Windows direct fallback 仍走 Pi SDK 兼容的 shell 执行路径；
- * 沙盒开启时由 createWin32Exec({ sandbox }) 通过 Windows restricted-token helper 启动。
- * Pi SDK 默认实现的 detached: true 在 Windows 上会设 DETACHED_PROCESS 标志，
- * 导致 MSYS2/Git Bash 的 stdout/stderr pipe 可能收不到数据。
+ * Windows direct fallback 仍走 Pi SDK 兼容�?shell 执行路径�?
+ * 沙盒开启时�?createWin32Exec({ sandbox }) 通过 Windows restricted-token helper 启动�?
+ * Pi SDK 默认实现�?detached: true �?Windows 上会�?DETACHED_PROCESS 标志�?
+ * 导致 MSYS2/Git Bash �?stdout/stderr pipe 可能收不到数据�?
  *
- * 这个模块提供替代的 exec 函数，使用 spawnAndStream（已去掉 Windows detached）。
- * 返回值契约匹配 Pi SDK BashOperations.exec。
+ * 这个模块提供替代�?exec 函数，使�?spawnAndStream（已去掉 Windows detached）�?
+ * 返回值契约匹�?Pi SDK BashOperations.exec�?
  *
- * Runtime 策略：
- *   1. 默认 Windows shell 语义走 PowerShell
- *   2. cmd 内建 / batch / Windows 原生命令走 cmd.exe
+ * Runtime 策略�?
+ *   1. 默认 Windows shell 语义�?PowerShell
+ *   2. cmd 内建 / batch / Windows 原生命令�?cmd.exe
  *   3. git / python / node 这类 argv 稳定的工具走专用 runner
- *   4. 只有显式 POSIX shell 命令走 bash/ash/sh 兼容层
+ *   4. 只有显式 POSIX shell 命令�?bash/ash/sh 兼容�?
  *
- * POSIX/Git runtime 优先使用打包进 resources/git 的 bundled PortableGit runtime。
- * 沙盒开启时找不到 bundled runtime 就 fail fast；沙盒关闭时才允许系统 Git Bash 兜底。
+ * POSIX/Git runtime 优先使用打包�?resources/git �?bundled PortableGit runtime�?
+ * 沙盒开启时找不�?bundled runtime �?fail fast；沙盒关闭时才允许系�?Git Bash 兜底�?
  */
 
 import { existsSync, mkdirSync } from "fs";
@@ -60,9 +60,9 @@ const STATUS_DLL_INIT_FAILED_SIGNED = -1073741502;
 const WIN32_SANDBOX_HELPER_LAUNCH_FAILURE_RE = /hana-win-sandbox:\s+CreateProcessAsUserW failed/i;
 const WIN32_DIAGNOSTIC_OUTPUT_PREVIEW_LIMIT = 8192;
 
-// 枚举 Windows 盘符 C-Z（A/B 是软盘遗留，不扫）。
-// 用户可能把 Git/MSYS2/Cygwin 装在任意非 C 盘（如 D:\Git、E:\msys64），
-// 硬编码只找 C:/D: 在非这两个盘的机器上会直接失去 fallback。
+// 枚举 Windows 盘符 C-Z（A/B 是软盘遗留，不扫）�?
+// 用户可能�?Git/MSYS2/Cygwin 装在任意�?C 盘（�?D:\Git、E:\msys64），
+// 硬编码只�?C:/D: 在非这两个盘的机器上会直接失�?fallback�?
 const DRIVE_LETTERS = "CDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
 function joinRuntimePath(root, ...segments) {
@@ -126,7 +126,7 @@ function getBundledGitRoots(env = process.env, deps: Record<string, any> = {}) {
 }
 
 /**
- * 对候选 shell 做 probe：用 spawnSync 跑 echo，确认 shell 可正常启动
+ * 对候�?shell �?probe：用 spawnSync �?echo，确�?shell 可正常启�?
  */
 function probeShell(shell, args, env = process.env) {
   try {
@@ -138,8 +138,8 @@ function probeShell(shell, args, env = process.env) {
       env,
     });
     const stdout = (result.stdout || "").trim();
-    // 检查 exit code + stdout 有实际输出 + 包含 probe token
-    // 避免 shell 启动成功但 stdout pipe 失效（Windows detached 进程常见问题）
+    // 检�?exit code + stdout 有实际输�?+ 包含 probe token
+    // 避免 shell 启动成功�?stdout pipe 失效（Windows detached 进程常见问题�?
     return result.status === 0 && stdout.length > 0 && stdout.includes(PROBE_TOKEN);
   } catch {
     return false;
@@ -147,14 +147,14 @@ function probeShell(shell, args, env = process.env) {
 }
 
 /**
- * 收集所有磁盘上存在的 shell 候选（不缓存、不 probe）
+ * 收集所有磁盘上存在�?shell 候选（不缓存、不 probe�?
  *
- * 只收集 bash 兼容 shell（PI SDK 生成 POSIX shell 命令，PowerShell 语法不兼容）。
+ * 只收�?bash 兼容 shell（PI SDK 生成 POSIX shell 命令，PowerShell 语法不兼容）�?
  *
- * 查找顺序：
- * 1. 系统 Git Bash（标准 + 常见安装位置）
- * 2. 注册表查询 Git 安装路径
- * 3. 内嵌 PortableGit 的 POSIX runtime（打包进 resources/git/）
+ * 查找顺序�?
+ * 1. 系统 Git Bash（标�?+ 常见安装位置�?
+ * 2. 注册表查�?Git 安装路径
+ * 3. 内嵌 PortableGit �?POSIX runtime（打包进 resources/git/�?
  * 4. PATH 上的 bash.exe / sh.exe
  * 5. MSYS2 / Cygwin
  */
@@ -285,7 +285,7 @@ function getAllShellCandidates({ preferBundled = false, bundledOnly = false, env
   if (env.USERPROFILE) {
     gitBashPaths.push(`${env.USERPROFILE}\\scoop\\apps\\git\\current\\bin\\bash.exe`);
   }
-  // 绿色版 / 根目录安装：扫 C-Z 盘，覆盖 E:\Git、F:\Git 等非标准盘符
+  // 绿色�?/ 根目录安装：�?C-Z 盘，覆盖 E:\Git、F:\Git 等非标准盘符
   for (const d of DRIVE_LETTERS) {
     gitBashPaths.push(`${d}:\\Git\\bin\\bash.exe`);
   }
@@ -296,7 +296,7 @@ function getAllShellCandidates({ preferBundled = false, bundledOnly = false, env
     }
   }
 
-  // ── 2. 注册表查询 Git 安装路径 ──
+  // ── 2. 注册表查�?Git 安装路径 ──
   for (const regKey of [
     "HKLM\\SOFTWARE\\GitForWindows",
     "HKCU\\SOFTWARE\\GitForWindows",
@@ -320,7 +320,7 @@ function getAllShellCandidates({ preferBundled = false, bundledOnly = false, env
     } catch {}
   }
 
-  // ── 3. 内嵌 PortableGit 的 POSIX runtime ──
+  // ── 3. 内嵌 PortableGit �?POSIX runtime ──
   if (!preferBundled) {
     for (const candidate of bundled) {
       if (!found.some(c => c.shell === candidate.shell)) found.push(candidate);
@@ -336,7 +336,7 @@ function getAllShellCandidates({ preferBundled = false, bundledOnly = false, env
           const candidate = line.trim();
           if (!candidate || !existsSync(candidate)) continue;
           if (found.some(c => c.shell === candidate)) continue;
-          // System32/SysWOW64 下的 bash.exe 是 WSL launcher，不是真正的 bash shell
+          // System32/SysWOW64 下的 bash.exe �?WSL launcher，不是真正的 bash shell
           // WSL 进入不同的文件系统命名空间，cwd/PATH/编码全对不上
           const lower = candidate.toLowerCase();
           if (lower.includes("\\windows\\system32\\") || lower.includes("\\windows\\syswow64\\")) continue;
@@ -348,7 +348,7 @@ function getAllShellCandidates({ preferBundled = false, bundledOnly = false, env
   }
 
   // ── 5. MSYS2 / Cygwin ──
-  // 默认装在盘符根下的 msys64 / cygwin64 / cygwin，扫 C-Z 盘覆盖非 C 盘安装
+  // 默认装在盘符根下�?msys64 / cygwin64 / cygwin，扫 C-Z 盘覆盖非 C 盘安�?
   for (const d of DRIVE_LETTERS) {
     for (const p of [
       `${d}:\\msys64\\usr\\bin\\bash.exe`,
@@ -361,16 +361,16 @@ function getAllShellCandidates({ preferBundled = false, bundledOnly = false, env
     }
   }
 
-  // PowerShell 不在候选列表中：PI SDK 生成 bash 语法（&&、管道、command substitution 等），
-  // PowerShell 语法完全不兼容，静默降级只会让每条命令以莫名方式失败。
-  // 如果所有 bash 兼容 shell 都不可用，应该 fail fast 并给出明确的安装指引。
+  // PowerShell 不在候选列表中：PI SDK 生成 bash 语法�?&、管道、command substitution 等）�?
+  // PowerShell 语法完全不兼容，静默降级只会让每条命令以莫名方式失败�?
+  // 如果所�?bash 兼容 shell 都不可用，应�?fail fast 并给出明确的安装指引�?
 
   return found;
 }
 
 /**
- * 从候选列表中找到第一个 probe 成功的 shell 并缓存
- * @param {string} [startAfter] - 跳过此路径及之前的所有候选（用于降级重试）
+ * 从候选列表中找到第一�?probe 成功�?shell 并缓�?
+ * @param {string} [startAfter] - 跳过此路径及之前的所有候选（用于降级重试�?
  */
 function shellCacheMatchesOptions(shellInfo: any, options: Record<string, any> = {}) {
   if (!shellInfo) return false;
@@ -380,12 +380,12 @@ function shellCacheMatchesOptions(shellInfo: any, options: Record<string, any> =
 }
 
 function findAndCacheShell(startAfter: any, options: Record<string, any> = {}) {
-  // 有缓存且不是降级重试 → 直接返回
+  // 有缓存且不是降级重试 �?直接返回
   if (_cachedShell && !startAfter && shellCacheMatchesOptions(_cachedShell, options)) return _cachedShell;
 
   const candidates = getAllShellCandidates(options);
 
-  // 降级重试：跳过 startAfter 及之前的候选
+  // 降级重试：跳�?startAfter 及之前的候�?
   let startIdx = 0;
   if (startAfter) {
     const idx = candidates.findIndex(c => c.shell === startAfter);
@@ -406,7 +406,7 @@ function findAndCacheShell(startAfter: any, options: Record<string, any> = {}) {
 
   // 全部失败
   const allLabels = startAfter
-    ? [`(前序已跳过)`, ...failures]
+    ? [`(前序已跳�?`, ...failures]
     : candidates.map(c => c.label);
   if (options.bundledOnly) {
     throw new Error(
@@ -430,10 +430,10 @@ function findAndCacheShell(startAfter: any, options: Record<string, any> = {}) {
 const SPAWN_ERROR_CODES = new Set(["ENOENT", "EACCES", "EPERM", "UNKNOWN"]);
 
 /**
- * 判断是否为 shell 启动失败的 spawn 级错误。
+ * 判断是否�?shell 启动失败�?spawn 级错误�?
  *
- * Node 在 cwd 不存在时同样报 ENOENT，且 err.path 可能仍指向可执行文件。
- * ENOENT 时先排除 cwd 失效，避免把一个目录问题误判成 shell/helper 问题。
+ * Node �?cwd 不存在时同样�?ENOENT，且 err.path 可能仍指向可执行文件�?
+ * ENOENT 时先排除 cwd 失效，避免把一个目录问题误判成 shell/helper 问题�?
  */
 function isShellSpawnError(err, shellPath, cwd) {
   if (!err || typeof err.code !== "string") return false;
@@ -450,7 +450,7 @@ function isShellSpawnError(err, shellPath, cwd) {
 }
 
 /**
- * 包装错误信息，附带完整诊断
+ * 包装错误信息，附带完整诊�?
  */
 function enrichError(retryErr, primaryShell, originalErr) {
   const msg = [
@@ -475,7 +475,7 @@ function enrichError(retryErr, primaryShell, originalErr) {
 // ── Shell 环境 ──
 
 /**
- * 构建干净的 shell 执行环境
+ * 构建干净�?shell 执行环境
  * 移除 ELECTRON_RUN_AS_NODE（不应泄漏到用户命令子进程）
  */
 function cleanShellEnv(baseEnv) {
@@ -856,8 +856,8 @@ function envValue(env, key) {
 function redactWin32DiagnosticText(value: any, { sandbox, env }: { sandbox?: any; env?: any } = {}) {
   let text = String(value || "");
   const replacements = [
-    [sandbox?.hanakoHome, "<HANA_HOME>"],
-    [envValue(env, "HANA_HOME"), "<HANA_HOME>"],
+    [sandbox?.hanakoHome, "<SATORI_HOME>"],
+    [envValue(env, "SATORI_HOME"), "<SATORI_HOME>"],
     [envValue(env, "USERPROFILE"), "<USERPROFILE>"],
     [envValue(env, "HOME"), "<HOME>"],
     [process.env.USERPROFILE, "<USERPROFILE>"],
@@ -952,14 +952,14 @@ function emitWin32RuntimeFailureDiagnostic(onData, {
     helperPath ? `Helper: ${redactWin32DiagnosticPath(helperPath, sandbox, env)}` : "Helper: (none)",
     runtimeInfo?.label ? `Runtime label: ${redactWin32DiagnosticText(runtimeInfo.label, context)}` : null,
     runtimeInfo?.bundledRoot ? `Runtime root: ${redactWin32DiagnosticPath(runtimeInfo.bundledRoot, sandbox, env)}` : null,
-    sandbox?.hanakoHome ? "HANA_HOME: <HANA_HOME>" : null,
+    sandbox?.hanakoHome ? "SATORI_HOME: <SATORI_HOME>" : null,
     `Output bytes before failure: ${outputBytes ?? 0}`,
     `Duration ms: ${durationMs ?? "unknown"}`,
     ...collectWin32EnvironmentDiagnostics(env, context),
     "Default PowerShell/cmd/terminal execution is not changed by this diagnostic path.",
     "No fallback was attempted for this STATUS_DLL_INIT_FAILED result.",
     "Likely causes: Windows child process DLL initialization failed, the restricted-token helper environment is incomplete, or a runtime cache/AV block is preventing startup.",
-    "Next step: attach this diagnostic with the command log; for cached POSIX runtimes also clear HANA_HOME/.ephemeral/win32-sandbox-runtime and retry.",
+    "Next step: attach this diagnostic with the command log; for cached POSIX runtimes also clear SATORI_HOME/.ephemeral/win32-sandbox-runtime and retry.",
     "",
   ].filter(Boolean);
   onData(Buffer.from(`${lines.join("\n")}\n`, "utf-8"));
@@ -996,7 +996,7 @@ function emitWin32SandboxHelperLaunchFailureDiagnostic(onData, {
     helperPath ? `Helper: ${redactWin32DiagnosticPath(helperPath, sandbox, env)}` : "Helper: (none)",
     runtimeInfo?.label ? `Runtime label: ${redactWin32DiagnosticText(runtimeInfo.label, context)}` : null,
     runtimeInfo?.bundledRoot ? `Runtime root: ${redactWin32DiagnosticPath(runtimeInfo.bundledRoot, sandbox, env)}` : null,
-    sandbox?.hanakoHome ? "HANA_HOME: <HANA_HOME>" : null,
+    sandbox?.hanakoHome ? "SATORI_HOME: <SATORI_HOME>" : null,
     `Output bytes before failure: ${outputBytes ?? 0}`,
     `Duration ms: ${durationMs ?? "unknown"}`,
     ...collectWin32EnvironmentDiagnostics(env, context),
@@ -1152,10 +1152,10 @@ async function spawnViaSandboxHelper({ sandbox, executable, args, cwd, env, onDa
 // ── 导出 ──
 
 /**
- * 创建 Windows 平台的 bash exec 函数
+ * 创建 Windows 平台�?bash exec 函数
  *
- * spawn 失败时自动降级到下一个可用 shell（清缓存 + 重试）。
- * 只对 spawn 级错误（ENOENT/EACCES/EPERM）降级，abort/timeout/命令错误原样抛出。
+ * spawn 失败时自动降级到下一个可�?shell（清缓存 + 重试）�?
+ * 只对 spawn 级错误（ENOENT/EACCES/EPERM）降级，abort/timeout/命令错误原样抛出�?
  *
  * @returns {(command: string, cwd: string, opts: object) => Promise<{exitCode: number|null}>}
  */
@@ -1524,8 +1524,8 @@ export function createWin32Exec({ sandbox = null } = {}) {
         }),
       });
     } catch (err) {
-      // 只对 shell 启动失败降级（ENOENT 指向 shell 二进制、EACCES、EPERM）
-      // abort / timeout / 命令本身报错 / cwd 不存在 → 原样抛出
+      // 只对 shell 启动失败降级（ENOENT 指向 shell 二进制、EACCES、EPERM�?
+      // abort / timeout / 命令本身报错 / cwd 不存�?�?原样抛出
       if (!isShellSpawnError(err, shellInfo.shell, cwd)) throw err;
 
       log.warn(`Shell exec failed (${shellInfo.label}): ${err.code} ${err.message}, trying fallback…`);
@@ -1535,7 +1535,7 @@ export function createWin32Exec({ sandbox = null } = {}) {
       try {
         fallback = findAndCacheShell(shellInfo.shell);
         const fallbackEnv = getShellEnvForCandidate(shellEnv, fallback);
-        log.warn(`降级到: ${fallback.label}`);
+        log.warn(`降级�? ${fallback.label}`);
         const fallbackArgs = [...fallback.args, command];
         return await runWithWin32Diagnostics({
           route,
@@ -1552,7 +1552,7 @@ export function createWin32Exec({ sandbox = null } = {}) {
           }),
         });
       } catch (retryErr) {
-        // 降级也失败：抛出富化的错误信息
+        // 降级也失败：抛出富化的错误信�?
         if (fallback && isShellSpawnError(retryErr, fallback.shell, cwd)) {
           throw enrichError(retryErr, shellInfo, err);
         }

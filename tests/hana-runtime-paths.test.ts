@@ -13,14 +13,14 @@ import {
 } from "../shared/hana-runtime-paths.ts";
 
 describe("Hana runtime path contracts", () => {
-  it("derives the Pi SDK agent directory from HANA_HOME", () => {
+  it("derives the Pi SDK agent directory from SATORI_HOME", () => {
     const hanakoHome = path.join(os.tmpdir(), "hana-runtime-paths", ".hanako-dev");
 
     expect(resolveHanaPiAgentDir(hanakoHome)).toBe(path.join(hanakoHome, ".pi", "agent"));
     expect(resolveHanaPiProjectDir(hanakoHome)).toBe(path.join(hanakoHome, ".pi", "project"));
   });
 
-  it("normalizes HANA_HOME before deriving Pi SDK paths", () => {
+  it("normalizes SATORI_HOME before deriving Pi SDK paths", () => {
     const homeDir = path.join(os.tmpdir(), "hana-runtime-home");
 
     expect(resolveHanakoHome("~/.hanako-dev", homeDir)).toBe(path.join(homeDir, ".hanako-dev"));

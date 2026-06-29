@@ -1,11 +1,11 @@
 /**
- * HanaAgent Server — HTTP + WebSocket API
+ * HanaAgent Server �?HTTP + WebSocket API
  *
- * 启动方式：
+ * 启动方式�?
  *   node server/index.js              （独立运行）
  *   Electron main.js fork 启动        （桌面应用内嵌）
  *
- * 当通过 fork() 启动时，会通过 IPC 通知父进程端口号。
+ * 当通过 fork() 启动时，会通过 IPC 通知父进程端口号�?
  */
 import crypto from "crypto";
 import fs from "fs";
@@ -35,7 +35,7 @@ import { isCorsOriginAllowed } from "./http/cors-policy.ts";
 import { inferHttpConnectionKind } from "./http/transport-context.ts";
 import { authorizeHttpRoute, isPublicHttpRoute } from "./http/route-security.ts";
 
-// Pi SDK 的 fetch 请求会累积 AbortSignal listener，提高上限避免无害警告
+// Pi SDK �?fetch 请求会累�?AbortSignal listener，提高上限避免无害警�?
 setMaxListeners(50);
 
 import { loadLocale } from "../lib/i18n.ts";
@@ -197,14 +197,14 @@ function createListenPermissionStartupError(cause: any, { host, port, listenHost
   return err;
 }
 
-// 用户数据存放在 ~/.hanako/（打包后与产品代码分离）
-// 开发时可通过 HANA_HOME 环境变量隔离数据目录，如：HANA_HOME=~/.hanako-dev node server/index.js
-const hanakoHome = resolveHanakoHome(process.env.HANA_HOME);
-process.env.HANA_HOME = hanakoHome;
+// 用户数据存放�?~/.hanako/（打包后与产品代码分离）
+// 开发时可通过 SATORI_HOME 环境变量隔离数据目录，如：SATORI_HOME=~/.hanako-dev node server/index.js
+const hanakoHome = resolveHanakoHome(process.env.SATORI_HOME);
+process.env.SATORI_HOME = hanakoHome;
 ensureHanaPiSdkDirs(hanakoHome);
 configureProcessPiSdkEnv(hanakoHome);
 
-// 读取版本号
+// 读取版本�?
 let appVersion = "?";
 try {
   const pkg = JSON.parse(fs.readFileSync(fromRoot("package.json"), "utf-8"));
@@ -270,29 +270,29 @@ await bindServerTransportOwnership(server, {
 });
 
 // ── 首次运行播种 ──
-log.log("① ensureFirstRun...");
+log.log("�?ensureFirstRun...");
 const firstRunReport = ensureFirstRun(hanakoHome, productDir);
 for (const invalid of firstRunReport.invalidAgentDirs) {
-  log.warn(`① 发现无效 agent 目录（已跳过启动校验）: "${invalid.id}" (${invalid.reason})`);
+  log.warn(`�?发现无效 agent 目录（已跳过启动校验�? "${invalid.id}" (${invalid.reason})`);
 }
 if (firstRunReport.defaultConfigBackupPath) {
-  log.warn(`① 默认助手 config.yaml 已损坏，原文件备份于: ${firstRunReport.defaultConfigBackupPath}`);
+  log.warn(`�?默认助手 config.yaml 已损坏，原文件备份于: ${firstRunReport.defaultConfigBackupPath}`);
 }
-log.log("① ensureFirstRun 完成");
+log.log("�?ensureFirstRun 完成");
 
-log.log("① ensureLocalIdentityRegistries...");
+log.log("�?ensureLocalIdentityRegistries...");
 ensureLocalIdentityRegistries(hanakoHome);
-log.log("① ensureLocalIdentityRegistries 完成");
+log.log("�?ensureLocalIdentityRegistries 完成");
 
-// ── 初始化 Debug 日志 ──
+// ── 初始�?Debug 日志 ──
 const dlog = initDebugLog(path.join(hanakoHome, "logs"));
 
-// ── 初始化引擎 ──
-log.log("② 创建 HanaEngine...");
+// ── 初始化引�?──
+log.log("�?创建 HanaEngine...");
 const engine: any = new HanaEngine({ hanakoHome, productDir, appVersion } as any);
-log.log("② HanaEngine 构造完成，开始 init...");
+log.log("�?HanaEngine 构造完成，开�?init...");
 await engine.init((msg: any) => log.log(msg));
-log.log("② engine.init 完成");
+log.log("�?engine.init 完成");
 dlog.log("server", "engine initialized");
 
 const outboundProxyRuntime = createOutboundProxyRuntime({
@@ -302,18 +302,18 @@ const outboundProxyRuntime = createOutboundProxyRuntime({
 engine.setOutboundProxyRuntime(outboundProxyRuntime);
 outboundProxyRuntime.apply(engine.getNetworkProxy());
 
-// 注入依赖给 BrowserManager（避免循环依赖）
+// 注入依赖�?BrowserManager（避免循环依赖）
 import { BrowserManager } from "../lib/browser/browser-manager.ts";
 BrowserManager.setHanakoHome(engine.hanakoHome);
 BrowserManager.setSessionIdResolver((sessionPath: string) => engine.getSessionIdForPath?.(sessionPath) || null);
 
-// 注：任何 createSession 都必须在相关 Pi SDK extension factory 注册完之后。
-// framework extension 在插件 onStartup 之前注册，避免启动插件通过 session:send
-// 抢先创建缺少核心 handler 的 session；plugin extension 由 initPlugins() 同步。
-// 运行期插件热操作后，engine.syncPluginExtensions() 会 reload 已加载且空闲的
-// session，让 ExtensionRunner 重新绑定最新 factories。
+// 注：任何 createSession 都必须在相关 Pi SDK extension factory 注册完之后�?
+// framework extension 在插�?onStartup 之前注册，避免启动插件通过 session:send
+// 抢先创建缺少核心 handler �?session；plugin extension �?initPlugins() 同步�?
+// 运行期插件热操作后，engine.syncPluginExtensions() �?reload 已加载且空闲�?
+// session，让 ExtensionRunner 重新绑定最�?factories�?
 
-// 写日志头部
+// 写日志头�?
 dlog.header(appVersion, {
   model: engine.currentModel?.name || "(none)",
   agent: engine.agentName,
@@ -324,7 +324,7 @@ dlog.header(appVersion, {
 
 if (process.platform === "win32") engine.startWin32LegacySandboxMaintenance();
 
-// ── 初始化 Hub（调度中枢，包装 engine） ──
+// ── 初始�?Hub（调度中枢，包装 engine�?──
 const hub = new Hub({ engine });
 
 // Framework Pi SDK extensions must be registered before plugin onStartup
@@ -378,10 +378,10 @@ await engine.registerExtensionFactory(createCompactionGuardExtension({
   },
 }));
 
-// ── 初始化插件系统 ──
+// ── 初始化插件系�?──
 await engine.initPlugins(hub.eventBus);
 
-// 启动 Hub 调度器（Scheduler + ChannelRouter）
+// 启动 Hub 调度器（Scheduler + ChannelRouter�?
 hub.initSchedulers();
 
 engine.cleanupCheckpoints().catch(err => {
@@ -398,7 +398,7 @@ const sessionFileCleanupTimer = setInterval(() => {
 }, 24 * 60 * 60 * 1000);
 sessionFileCleanupTimer.unref?.();
 
-// 加载 i18n（engine.init 已经按全局偏好加载过，这里保持启动入口显式同步）
+// 加载 i18n（engine.init 已经按全局偏好加载过，这里保持启动入口显式同步�?
 loadLocale(engine.getLocale?.() || engine.config?.locale);
 
 const serverAuthService = createServerAuthService({
@@ -412,7 +412,7 @@ const wsTicketService = createWebSocketTicketService();
 const app = new Hono();
 const { injectWebSocket, upgradeWebSocket } = createNodeWebSocket({ app });
 
-// CORS（默认允许 localhost 开发前端和 production Electron file:// 前端；HANA_CORS_ORIGIN 可收紧到单一来源）+ 鉴权
+// CORS（默认允�?localhost 开发前端和 production Electron file:// 前端；HANA_CORS_ORIGIN 可收紧到单一来源�? 鉴权
 const corsAllowedOrigin = process.env.HANA_CORS_ORIGIN;
 app.use("*", async (c: any, next: any) => {
   const origin = c.req.header("origin") || "";
@@ -481,8 +481,8 @@ app.use("*", async (c: any, next: any) => {
     return;
   }
 
-  // 主鉴权 → plugin surface session 后备（仅 missing_credential 时）→ 路由授权。
-  // 链路实现与契约见 server/http/request-principal.ts（与测试共用）。
+  // 主鉴�?�?plugin surface session 后备（仅 missing_credential 时）�?路由授权�?
+  // 链路实现与契约见 server/http/request-principal.ts（与测试共用）�?
   const resolved = resolveHttpRequestPrincipal(c, engine, {
     serverAuthService,
     wsTicketService,
@@ -528,7 +528,7 @@ app.onError((err: any, c: any) => {
   );
 });
 
-// ── 阻塞式确认存储 ──
+// ── 阻塞式确认存�?──
 const confirmStore = new ConfirmStore({
   getSessionIdForPath: (sessionPath: string) => engine.getSessionIdForPath?.(sessionPath) || null,
 });
@@ -546,10 +546,10 @@ const subagentThreadStore = new SubagentThreadStore(
 );
 engine.setSubagentThreadStore(subagentThreadStore);
 
-// 统一 Agent Activity 实时真相源（内存广播层）：subagent / workflow / 巡检 都往这推，
-// 前端按当前对话 sessionPath 订阅。广播走 engine.emitEvent → WS（与 block_update 同一路）。
-// workflow / workflow_agent 另有持久化背书（重启不丢右侧卡）：启动先按 72h 修剪冷活动，
-// 再交给 ActivityHub 回灌（构造时把遗留 running 判孤儿、标 failed）。
+// 统一 Agent Activity 实时真相源（内存广播层）：subagent / workflow / 巡检 都往这推�?
+// 前端按当前对�?sessionPath 订阅。广播走 engine.emitEvent �?WS（与 block_update 同一路）�?
+// workflow / workflow_agent 另有持久化背书（重启不丢右侧卡）：启动先�?72h 修剪冷活动，
+// 再交�?ActivityHub 回灌（构造时把遗�?running 判孤儿、标 failed）�?
 const WORKFLOW_ACTIVITY_TTL_MS = 72 * 60 * 60 * 1000;
 const workflowActivityStore = new WorkflowActivityStore(
   path.join(hanakoHome, "workflow-activity.json"),
@@ -672,21 +672,21 @@ hub.eventBus.handle("usage:list", (filter = {}) => {
 
 // ── 启动默认 session ──
 // Desktop 会显式跳过：renderer 首屏就是 pending-new-session，首次发送消息时
-// 才需要创建 chat session；独立 server/CLI 保持旧行为。
-// 时序要求：所有 framework extension + plugin extension 都注册完之后再 create，
-// 否则 pi SDK ExtensionRunner 构造时拿不到这些 factory，extension 不会挂到
-// startup session 上（Codex 评审发现的 issue#437 部分失效场景）。
+// 才需要创�?chat session；独�?server/CLI 保持旧行为�?
+// 时序要求：所�?framework extension + plugin extension 都注册完之后�?create�?
+// 否则 pi SDK ExtensionRunner 构造时拿不到这�?factory，extension 不会挂到
+// startup session 上（Codex 评审发现�?issue#437 部分失效场景）�?
 const shouldCreateStartupSession = process.env.HANA_CREATE_STARTUP_SESSION !== "0";
 if (shouldCreateStartupSession && engine.currentModel) {
-  log.log("③ 创建 session...");
+  log.log("�?创建 session...");
   await engine.createSession();
-  log.log("③ Session created");
+  log.log("�?Session created");
   dlog.log("server", `session created, model=${engine.currentModel.name}`);
 } else if (!shouldCreateStartupSession) {
-  log.log("③ 跳过启动期 session 创建");
+  log.log("�?跳过启动�?session 创建");
   dlog.log("server", "startup session creation skipped");
 } else {
-  // 诊断信息：区分三种 currentModel=null 的情况，方便用户排查 (#414)
+  // 诊断信息：区分三�?currentModel=null 的情况，方便用户排查 (#414)
   const availableCount = engine.availableModels?.length ?? 0;
   const chatRef = engine.agent?.config?.models?.chat;
   const chatRefStr = typeof chatRef === "object" ? JSON.stringify(chatRef) : (chatRef || "(empty)");
@@ -698,11 +698,11 @@ if (shouldCreateStartupSession && engine.currentModel) {
   } else {
     reason = `models.chat=${chatRefStr} not found in ${availableCount} available models`;
   }
-  log.warn(`⚠ 无可用模型，跳过 session 创建：${reason}`);
+  log.warn(`�?无可用模型，跳过 session 创建�?{reason}`);
   dlog.warn("server", `session creation skipped: ${reason}`);
 }
 
-// ── 外部平台接入管理器 ──
+// ── 外部平台接入管理�?──
 let bridgeManager = null;
 let bridgeManagerInitPromise = null;
 let bridgeManagerInitError = null;
@@ -726,18 +726,18 @@ async function startBridgeManager({ autoStart = false } = {}) {
 
   bridgeManagerInitError = null;
   bridgeManagerInitPromise = (async () => {
-    log.log("Bridge manager 初始化...");
+    log.log("Bridge manager 初始�?..");
     const { BridgeManager } = await import("../lib/bridge/bridge-manager.ts");
     const manager = new BridgeManager({ engine, hub });
     bridgeManager = manager;
     hub.bridgeManager = manager;
     if (bridgeAutoStartRequested) runBridgeAutoStart(manager);
-    log.log("Bridge manager 初始化完成");
+    log.log("Bridge manager 初始化完�?);
     return manager;
   })().catch((err) => {
     bridgeManagerInitError = err;
     hub.bridgeManager = null;
-    log.error(`Bridge manager 初始化失败: ${err.message}`);
+    log.error(`Bridge manager 初始化失�? ${err.message}`);
     dlog.error("server", `bridge init failed: ${err.stack || err.message}`);
     return null;
   }).finally(() => {
@@ -814,11 +814,11 @@ app.route("/api", createServerIdentityRoute({
   appVersion,
   getRuntimeContext: () => engine.getRuntimeContext(),
 } as any));
-// internal-browser WS — see unified upgrade handler in server startup below
+// internal-browser WS �?see unified upgrade handler in server startup below
 
-// 健康检查 + 身份信息
+// 健康检�?+ 身份信息
 app.get("/api/health", async (c) => {
-  // 检查自定义头像是否存在（避免前端 HEAD 请求 404）
+  // 检查自定义头像是否存在（避免前�?HEAD 请求 404�?
   const avatars = {};
   for (const role of ['agent', 'user']) {
     const dir = path.join(role === 'user' ? engine.userDir : engine.agentDir, 'avatars');
@@ -843,7 +843,7 @@ app.get("/api/health", async (c) => {
 
 activeFetch = app.fetch.bind(app);
 
-// 前端日志上报（desktop 端把错误 POST 到 server 写进持久化日志）
+// 前端日志上报（desktop 端把错误 POST �?server 写进持久化日志）
 app.post("/api/log", async (c) => {
   const { level, module, message } = await safeJson(c);
   if (!message) return c.json({ ok: false });
@@ -939,9 +939,9 @@ app.post("/api/session-permission-mode", async (c) => {
   });
 });
 
-// 远程关闭（供 desktop 端复用 server 退出时调用，跨平台可靠的 graceful shutdown）
+// 远程关闭（供 desktop 端复�?server 退出时调用，跨平台可靠�?graceful shutdown�?
 app.post("/api/shutdown", async (c) => {
-  log.log("收到 HTTP shutdown 请求，正在清理...");
+  log.log("收到 HTTP shutdown 请求，正在清�?..");
   // 异步执行，先返回响应
   setTimeout(() => gracefulShutdown(), 100);
   return c.json({ ok: true });
@@ -1017,11 +1017,11 @@ try {
     _bwsLog("browser WS connected");
     const origSend = ws.send.bind(ws);
     ws.send = function(data: any, ...args: any[]) {
-      try { const m = JSON.parse(data); _bwsLog(`→ cmd=${m.cmd || m.type} id=${m.id || "?"}`); } catch {}
+      try { const m = JSON.parse(data); _bwsLog(`�?cmd=${m.cmd || m.type} id=${m.id || "?"}`); } catch {}
       return origSend(data, ...args);
     };
     ws.on("message", (data) => {
-      try { const m = JSON.parse(data); _bwsLog(`← type=${m.type} id=${m.id || "?"} error=${m.error || "none"}`); } catch {}
+      try { const m = JSON.parse(data); _bwsLog(`�?type=${m.type} id=${m.id || "?"} error=${m.error || "none"}`); } catch {}
     });
 
     ws.on("close", () => {
@@ -1055,13 +1055,13 @@ try {
   const actualPort = address.port;
   serverRuntimeState.actualPort = actualPort;
 
-  log.log(`HanaAgent Server 运行在 http://${host}:${actualPort}`);
+  log.log(`HanaAgent Server 运行�?http://${host}:${actualPort}`);
   dlog.log("server", `listening on :${actualPort}`);
 
-  // 写 server-info 文件，供 Electron 检测复用或外部工具查询。
-  // 文件含 128-bit loopback SERVER_TOKEN (本机最高权限凭据)，
+  // �?server-info 文件，供 Electron 检测复用或外部工具查询�?
+  // 文件�?128-bit loopback SERVER_TOKEN (本机最高权限凭�?�?
   // 必须 owner-only 可读 (0o600)，否则共享主机上的另一 UID / 沙箱外的
-  // 非授权进程能读到 token 后冒充 owner 调任意 LOCAL_ONLY 路由。
+  // 非授权进程能读到 token 后冒�?owner 调任�?LOCAL_ONLY 路由�?
   const serverInfoPath = path.join(hanakoHome, "server-info.json");
   try {
     const runtimeContext = engine.getRuntimeContext?.() || {};
@@ -1084,18 +1084,18 @@ try {
       studioId: runtimeContext.studioId || null,
       userId: runtimeContext.userId || null,
     }), { mode: 0o600 });
-    // mode-on-create 在某些 fs 上不可靠（已有文件不会重置 mode），显式 chmod 兜底
+    // mode-on-create 在某�?fs 上不可靠（已有文件不会重�?mode），显式 chmod 兜底
     try { fs.chmodSync(serverInfoPath, 0o600); } catch {}
   } catch (e) {
     log.error(`写入 server-info.json 失败: ${e.message}`);
   }
 
-  // 通知就绪（server-info.json 已在上方写入，无需额外动作）
+  // 通知就绪（server-info.json 已在上方写入，无需额外动作�?
   log.log(`ready: port=${actualPort}`);
 
-  // Bridge 平台依赖不属于 HTTP readiness 的前置条件。先让桌面端拿到
-  // server-info，再在后台加载外部平台 adapter，避免 Windows 上依赖加载
-  // 或杀毒扫描拖垮主启动握手。
+  // Bridge 平台依赖不属�?HTTP readiness 的前置条件。先让桌面端拿到
+  // server-info，再在后台加载外部平�?adapter，避�?Windows 上依赖加�?
+  // 或杀毒扫描拖垮主启动握手�?
   startBridgeManager({ autoStart: true });
 
   // Legacy explicit attach mode. Normal headless server runs stay quiet.
@@ -1113,7 +1113,7 @@ try {
   process.exit(1);
 }
 
-// 优雅退出（防止并发关闭，带超时保护）
+// 优雅退出（防止并发关闭，带超时保护�?
 let _shutting = false;
 async function gracefulShutdown() {
   if (_shutting) return;
@@ -1121,9 +1121,9 @@ async function gracefulShutdown() {
   log.log("\n正在关闭...");
   dlog.log("server", "shutting down...");
 
-  // 超时保护：15 秒内必须完成（含 memory final pass LLM 调用），否则强制退出
+  // 超时保护�?5 秒内必须完成（含 memory final pass LLM 调用），否则强制退�?
   const forceTimer = setTimeout(() => {
-    log.error("关闭超时，强制退出");
+    log.error("关闭超时，强制退�?);
     process.exit(1);
   }, 15000);
   forceTimer.unref();
@@ -1131,10 +1131,10 @@ async function gracefulShutdown() {
   try {
     // 1. 先停止接受新请求
     server.close();
-    log.log("HTTP server 已关闭");
+    log.log("HTTP server 已关�?);
     dlog.log("server", "HTTP server closed");
 
-    // 2. 挂起浏览器（保留冷保存，重启后可恢复卡片）
+    // 2. 挂起浏览器（保留冷保存，重启后可恢复卡片�?
     try {
       const { BrowserManager } = await import("../lib/browser/browser-manager.ts");
       const bm = BrowserManager.instance();
@@ -1143,19 +1143,19 @@ async function gracefulShutdown() {
         log.log(`浏览器已挂起: ${sp}`);
       }
     } catch (e) {
-      log.error(`浏览器挂起失败: ${e.message}`);
+      log.error(`浏览器挂起失�? ${e.message}`);
     }
 
     // 3. 停止外部平台
     bridgeManager?.stopAll();
     dlog.log("server", "bridge stopped");
 
-    // 4. flush deferred result store（debounce 可能有未写盘的脏数据）
+    // 4. flush deferred result store（debounce 可能有未写盘的脏数据�?
     engine.deferredResults?.dispose?.();
 
-    // 5. 清理 Hub + 引擎（停 ticker → 等 tick 完成 → 关 DB → 清理 session）
+    // 5. 清理 Hub + 引擎（停 ticker �?�?tick 完成 �?�?DB �?清理 session�?
     await hub.dispose();
-    log.log("Hub + Engine 已清理");
+    log.log("Hub + Engine 已清�?);
     dlog.log("server", "hub + engine disposed");
   } catch (err) {
     log.error(`关闭出错: ${err.message}`);
@@ -1171,7 +1171,7 @@ process.on("SIGINT", gracefulShutdown);
 process.on("SIGTERM", gracefulShutdown);
 if (process.platform === "win32") process.on("SIGBREAK", gracefulShutdown);
 
-// 全局未捕获错误（写入持久化日志，防止崩溃无痕）
+// 全局未捕获错误（写入持久化日志，防止崩溃无痕�?
 let _stdoutBroken = false;
 function _safeConsoleError(...args) {
   if (_stdoutBroken) return;

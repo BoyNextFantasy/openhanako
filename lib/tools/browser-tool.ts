@@ -1,19 +1,19 @@
 /**
- * browser-tool.js — 浏览器控制工具
+ * browser-tool.js �?浏览器控制工�?
  *
- * 单一 tool，通过 action 字段选择子命令。
- * 感知主要基于 AXTree snapshot（文本，便宜），截图为辅助。
+ * 单一 tool，通过 action 字段选择子命令�?
+ * 感知主要基于 AXTree snapshot（文本，便宜），截图为辅助�?
  *
- * 每个动作的 details 都包含 { running, url, thumbnail? } 状态字段，
- * 供 chat.js 拦截后推送 browser_status WS 事件给前端。
+ * 每个动作�?details 都包�?{ running, url, thumbnail? } 状态字段，
+ * �?chat.js 拦截后推�?browser_status WS 事件给前端�?
  *
- * 操作：
- * - start    启动浏览器
- * - stop     关闭浏览器
- * - navigate 导航到 URL
- * - snapshot  获取当前页面的无障碍树
+ * 操作�?
+ * - start    启动浏览�?
+ * - stop     关闭浏览�?
+ * - navigate 导航�?URL
+ * - snapshot  获取当前页面的无障碍�?
  * - screenshot 截取当前页面截图
- * - click    点击元素（by ref）
+ * - click    点击元素（by ref�?
  * - type     输入文本
  * - scroll   滚动页面
  * - select   选择下拉选项
@@ -50,13 +50,13 @@ function browserError(rawMsg: any, details: Record<string, any> = {}) {
 }
 
 /**
- * 创建浏览器工具
- * @param {(() => string|null)|undefined} getSessionPath - 返回当前 sessionPath 的回调
+ * 创建浏览器工�?
+ * @param {(() => string|null)|undefined} getSessionPath - 返回当前 sessionPath 的回�?
  * @param {object} [options]
- * @param {(sessionPath:string|null) => object|null} [options.getSessionModel] - 返回执行 session 的模型对象
- * @param {() => { prepare?: Function }|null} [options.getVisionBridge] - 视觉辅助桥
- * @param {() => boolean} [options.isVisionAuxiliaryEnabled] - 视觉辅助总开关
- * @param {() => string|null} [options.getHanakoHome] - 返回 HANA_HOME
+ * @param {(sessionPath:string|null) => object|null} [options.getSessionModel] - 返回执行 session 的模型对�?
+ * @param {() => { prepare?: Function }|null} [options.getVisionBridge] - 视觉辅助�?
+ * @param {() => boolean} [options.isVisionAuxiliaryEnabled] - 视觉辅助总开�?
+ * @param {() => string|null} [options.getHanakoHome] - 返回 SATORI_HOME
  * @param {(sessionPath:string|null) => string|null} [options.getSessionIdForPath] - 返回 sessionId
  * @param {(entry: object) => object} [options.registerSessionFile] - 注册 session 文件
  * @param {boolean} [options.screenshotEnabled] - false 时从 schema 屏蔽 screenshot
@@ -77,10 +77,10 @@ export function createBrowserTool(getSessionPath: any, options: {
     ? BROWSER_ACTIONS
     : BROWSER_ACTIONS.filter((action) => action !== "screenshot");
 
-  /** 操作日志 per-session（每次 start 时清空，记录所有操作供回看纠错） */
-  const _actionLogs = new Map(); // sessionId || legacy sessionPath → action[]
-  const ACTION_LOG_MAX_SESSIONS = 20;  // 最多保留 20 个 session 的日志
-  const ACTION_LOG_MAX_PER_SESSION = 200; // 每个 session 最多 200 条
+  /** 操作日志 per-session（每�?start 时清空，记录所有操作供回看纠错�?*/
+  const _actionLogs = new Map(); // sessionId || legacy sessionPath �?action[]
+  const ACTION_LOG_MAX_SESSIONS = 20;  // 最多保�?20 �?session 的日�?
+  const ACTION_LOG_MAX_PER_SESSION = 200; // 每个 session 最�?200 �?
 
   function actionLogKey(sessionPath: any) {
     return options.getSessionIdForPath?.(sessionPath) || sessionPath;
@@ -113,7 +113,7 @@ export function createBrowserTool(getSessionPath: any, options: {
     }
   }
 
-  /** 当前状态快照（附加到每个 action 的 details），运行时自动带缩略图 */
+  /** 当前状态快照（附加到每�?action �?details），运行时自动带缩略�?*/
   async function statusFields(sessionPath: any) {
     const running = browser.isRunning(sessionPath);
     const url = browser.currentUrl(sessionPath);
@@ -161,7 +161,7 @@ export function createBrowserTool(getSessionPath: any, options: {
     label: "Browser",
     description: "Control a headless browser (navigate, click, type, scroll, screenshot, evaluate JS). Element [ref] ids from snapshot become stale after page changes; always use refs from the latest snapshot.",
     parameters: Type.Object({
-      action: StringEnum(actionValues, { description: "Which operation to run. Required params per action: navigate→url; click→ref; type→text (optional ref, pressEnter); scroll→direction (optional amount); select→ref+value; key→key; wait→(optional timeout, state); evaluate→expression. start, stop, snapshot, screenshot, show take no extra params." }),
+      action: StringEnum(actionValues, { description: "Which operation to run. Required params per action: navigate→url; click→ref; type→text (optional ref, pressEnter); scroll→direction (optional amount); select→ref+value; key→key; wait�?optional timeout, state); evaluate→expression. start, stop, snapshot, screenshot, show take no extra params." }),
       url: Type.Optional(Type.String({ description: "URL (required for navigate)" })),
       tabId: Type.Optional(Type.String({ description: "Optional browser tab id. Defaults to the active tab." })),
       ref: Type.Optional(Type.Number({ description: "Element ref number (used for click/type/select)" })),

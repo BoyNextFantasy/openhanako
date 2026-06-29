@@ -80,7 +80,7 @@ describe("server transport ownership", () => {
       cwd: root,
       env: {
         ...process.env,
-        HANA_HOME: hanaHome,
+        SATORI_HOME: hanaHome,
         HANA_PORT: String(port),
         HANA_ROOT: root,
         HANA_SERVER_ENTRY: path.join(root, "server", "index.ts"),
