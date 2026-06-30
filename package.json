@@ -1,6 +1,6 @@
 {
   "name": "satori-cli",
-  "version": "0.349.0",
+  "version": "0.349.1",
   "type": "module",
   "description": "Satori - an AI coding assistant",
   "license": "Apache-2.0",
