@@ -1,7 +1,11 @@
+import path from "node:path";
 import { describe, expect, it, vi } from "vitest";
+import { renderCommandWithWorkdir, resolveExecShell } from "../lib/exec-command/shell.ts";
 import { createExecCommandTools } from "../lib/exec-command/tool.ts";
 
-function makeCtx(sessionPath = "/tmp/session.jsonl", cwd = "/tmp/work") {
+const DEFAULT_TEST_CWD = "/tmp/work";
+
+function makeCtx(sessionPath = "/tmp/session.jsonl", cwd = DEFAULT_TEST_CWD) {
   return {
     sessionManager: {
       getSessionFile: () => sessionPath,
@@ -10,8 +14,21 @@ function makeCtx(sessionPath = "/tmp/session.jsonl", cwd = "/tmp/work") {
   };
 }
 
+function resolvedTestCwd(cwd = DEFAULT_TEST_CWD) {
+  return path.resolve(cwd);
+}
+
+function expectedRenderedCommand(command: string, platform: NodeJS.Platform, cwd = DEFAULT_TEST_CWD) {
+  return renderCommandWithWorkdir(command, resolveExecShell({ platform }), {
+    workdir: resolvedTestCwd(cwd),
+    defaultCwd: cwd,
+    platform,
+  });
+}
+
 describe("exec_command tools", () => {
   it("routes one-shot commands through the wrapped bash tool and returns nonzero exits as structured output", async () => {
+    const platform = "win32";
     const bashTool = {
       execute: vi.fn(async () => {
         throw new Error("Command exited with code 127\npython: not found");
@@ -19,8 +36,8 @@ describe("exec_command tools", () => {
     };
     const [execCommand] = createExecCommandTools({
       bashTool,
-      getCwd: () => "/tmp/work",
-      platform: "win32",
+      getCwd: () => DEFAULT_TEST_CWD,
+      platform,
     });
 
     const result: any = await execCommand.execute("call-1", {
@@ -30,7 +47,7 @@ describe("exec_command tools", () => {
 
     expect(bashTool.execute).toHaveBeenCalledWith(
       "call-1",
-      { command: "python --version" },
+      { command: expectedRenderedCommand("python --version", platform) },
       null,
       null,
       expect.any(Object),
@@ -46,6 +63,7 @@ describe("exec_command tools", () => {
   });
 
   it("routes Windows one-shot commands through commandExec and decodes GBK output without PI bash", async () => {
+    const platform = "win32";
     const gbkCopyText = Buffer.from([0xb8, 0xb4, 0xd6, 0xc6]);
     const bashTool = { execute: vi.fn() };
     const commandExec = vi.fn(async (_command, _cwd, opts = {}) => {
@@ -55,8 +73,8 @@ describe("exec_command tools", () => {
     const [execCommand] = createExecCommandTools({
       bashTool,
       commandExec,
-      getCwd: () => "/tmp/work",
-      platform: "win32",
+      getCwd: () => DEFAULT_TEST_CWD,
+      platform,
     });
 
     const result: any = await execCommand.execute("call-gbk", {
@@ -66,8 +84,8 @@ describe("exec_command tools", () => {
 
     expect(bashTool.execute).not.toHaveBeenCalled();
     expect(commandExec).toHaveBeenCalledWith(
-      "copy C:\\missing.txt C:\\target\\",
-      expect.any(String),
+      expectedRenderedCommand("copy C:\\missing.txt C:\\target\\", platform),
+      resolvedTestCwd(),
       expect.objectContaining({
         timeout: undefined,
         signal: null,
@@ -89,6 +107,7 @@ describe("exec_command tools", () => {
   });
 
   it("starts tty processes through the terminal manager and write_stdin writes to the same process id", async () => {
+    const platform = "linux";
     const manager = {
       start: vi.fn(async (input) => ({ ...input, terminalId: "term_1", status: "running", seq: 0, output: "" })),
       write: vi.fn((input) => ({ ...input, status: "running", seq: 1 })),
@@ -97,10 +116,10 @@ describe("exec_command tools", () => {
       bashTool: { execute: vi.fn() },
       getTerminalSessionManager: () => manager,
       getAgentId: () => "hana",
-      getCwd: () => "/tmp/work",
-      platform: "linux",
+      getCwd: () => DEFAULT_TEST_CWD,
+      platform,
     });
-    const ctx = makeCtx("/tmp/session.jsonl", "/tmp/work");
+    const ctx = makeCtx("/tmp/session.jsonl", DEFAULT_TEST_CWD);
 
     const started: any = await execCommand.execute("call-tty", {
       cmd: "npm run dev",
@@ -112,8 +131,8 @@ describe("exec_command tools", () => {
     expect(manager.start).toHaveBeenCalledWith(expect.objectContaining({
       sessionPath: "/tmp/session.jsonl",
       agentId: "hana",
-      cwd: "/tmp/work",
-      command: "npm run dev",
+      cwd: resolvedTestCwd(),
+      command: expectedRenderedCommand("npm run dev", platform),
     }));
 
     const written: any = await writeStdin.execute("call-stdin", {
