@@ -37,6 +37,52 @@ describe('ToolGroupBlock', () => {
     expect(detail.textContent).toBe('rm -rf /Users/jason/.claude/plugins/mar…');
   });
 
+  it('renders exec_command with the legacy bash user-facing copy', () => {
+    window.t = ((key: string, vars?: Record<string, unknown>) => {
+      if (key === 'tool.bash.done') return `💻 ${vars?.name} 用完电脑了`;
+      return key;
+    }) as typeof window.t;
+
+    render(
+      <ToolGroupBlock
+        collapsed={false}
+        agentName="Hanako"
+        tools={[{
+          name: 'exec_command',
+          args: { cmd: 'npm test' },
+          done: true,
+          success: true,
+        }]}
+      />,
+    );
+
+    expect(screen.getByText('💻 Hanako 用完电脑了')).toBeInTheDocument();
+    expect(screen.getByText('npm test')).toBeInTheDocument();
+  });
+
+  it('renders write_stdin with the legacy terminal user-facing copy', () => {
+    window.t = ((key: string, vars?: Record<string, unknown>) => {
+      if (key === 'tool.terminal.done') return `💻 ${vars?.name} 敲完了`;
+      return key;
+    }) as typeof window.t;
+
+    render(
+      <ToolGroupBlock
+        collapsed={false}
+        agentName="Hanako"
+        tools={[{
+          name: 'write_stdin',
+          args: { process_id: 'term_1', chars: 'q\n' },
+          done: true,
+          success: true,
+        }]}
+      />,
+    );
+
+    expect(screen.getByText('💻 Hanako 敲完了')).toBeInTheDocument();
+    expect(document.querySelector('[data-tool="write_stdin"] [title]')).toHaveAttribute('title', 'q\n');
+  });
+
   it('syncs a multi-tool group to collapsed when the completed block updates', async () => {
     const { rerender } = render(
       <ToolGroupBlock
