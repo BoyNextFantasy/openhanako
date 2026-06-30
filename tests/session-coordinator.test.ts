@@ -2913,8 +2913,8 @@ describe("SessionCoordinator", () => {
       maxTokens: 32000,
     };
     const readTool = { name: "read", description: "Read files", parameters: { type: "object" } };
-    const bashTool = { name: "bash", description: "Run shell", parameters: { type: "object" } };
-    const activeTools = new Map([["read", readTool], ["bash", bashTool]]);
+    const execCommandTool = { name: "exec_command", description: "Run command", parameters: { type: "object" } };
+    const activeTools = new Map([["read", readTool], ["exec_command", execCommandTool]]);
     const originalStreamFn = vi.fn(async () => "ok");
     const session = {
       sessionManager: { getSessionFile: () => sessionFile },
@@ -2929,7 +2929,7 @@ describe("SessionCoordinator", () => {
         state: {
           model,
           systemPrompt: "FINAL CACHE PREFIX",
-          tools: [readTool, bashTool],
+          tools: [readTool, execCommandTool],
           messages: [],
         },
       },
@@ -2963,7 +2963,7 @@ describe("SessionCoordinator", () => {
         getExtensions: () => ({ extensions: [], errors: [] }),
       }),
       getSkills: () => null,
-      buildTools: () => ({ tools: [readTool, bashTool], customTools: [] }),
+      buildTools: () => ({ tools: [readTool, execCommandTool], customTools: [] }),
       emitEvent: () => {},
       getHomeCwd: () => "/tmp/home",
       agentIdFromSessionPath: () => "hana",
@@ -2980,13 +2980,13 @@ describe("SessionCoordinator", () => {
 
     await expect((session.agent.streamFn as any)(model, {
       systemPrompt: "FINAL CACHE PREFIX",
-      tools: [readTool, bashTool],
+      tools: [readTool, execCommandTool],
       messages: [{ role: "user", content: "hello" }],
     }, {})).resolves.toBe("ok");
 
     await expect((session.agent.streamFn as any)(model, {
       systemPrompt: "MUTATED CACHE PREFIX",
-      tools: [readTool, bashTool],
+      tools: [readTool, execCommandTool],
       messages: [
         { role: "user", content: "hello" },
         { role: "toolResult", content: [{ type: "text", text: "dynamic" }] },
@@ -3087,7 +3087,7 @@ describe("SessionCoordinator", () => {
   it("builds a keyed session cache snapshot from session-owned active tool definitions", () => {
     const sessionPath = path.join(tempDir, "hana", "sessions", "snapshot.jsonl");
     const readTool = { name: "read", description: "Read files", parameters: { type: "object" } };
-    const bashTool = { name: "bash", description: "Run shell", parameters: { type: "object" } };
+    const execCommandTool = { name: "exec_command", description: "Run command", parameters: { type: "object" } };
     const coordinator = Object.create(SessionCoordinator.prototype);
     coordinator._sessions = new Map([
       [sessionPath, {
@@ -3103,7 +3103,7 @@ describe("SessionCoordinator", () => {
           },
         },
         thinkingLevel: "medium",
-        activeToolDefinitions: [readTool, bashTool],
+        activeToolDefinitions: [readTool, execCommandTool],
       }],
     ]);
 
@@ -3112,12 +3112,12 @@ describe("SessionCoordinator", () => {
     expect(snapshot).toMatchObject({
       strategy: "session_snapshot",
       sessionPath,
-      toolNames: ["read", "bash"],
+      toolNames: ["read", "exec_command"],
       cacheKeyParams: { thinkingLevel: "medium" },
     });
     expect(snapshot.tools).toEqual([
       { name: "read", description: "Read files", parameters: { type: "object" } },
-      { name: "bash", description: "Run shell", parameters: { type: "object" } },
+      { name: "exec_command", description: "Run command", parameters: { type: "object" } },
     ]);
     expect(snapshot.messages[0].content[1]).toEqual({ type: "input_audio", audio_url: "file://voice.wav" });
   });

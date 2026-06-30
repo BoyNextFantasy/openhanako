@@ -45,6 +45,12 @@ describe("tool-categories constants", () => {
     expect(all.has("cron")).toBe(false);
   });
 
+  it("uses Codex-style command tools as the core Agent command surface", () => {
+    expect(CORE_TOOL_NAMES).toEqual(expect.arrayContaining(["exec_command", "write_stdin"]));
+    expect(CORE_TOOL_NAMES).not.toContain("bash");
+    expect(STANDARD_TOOL_NAMES).not.toContain("terminal");
+  });
+
   it("GLOBAL_TOOL_NAMES is exactly the global setting governed whitelist", () => {
     expect(new Set(GLOBAL_TOOL_NAMES)).toEqual(new Set(["computer"]));
   });
@@ -100,7 +106,7 @@ describe("computeSettingsAvailableToolNames", () => {
 });
 
 describe("computeToolSnapshot", () => {
-  const allNames = ["read", "bash", "browser", "automation", "todo_write", "web_fetch"];
+  const allNames = ["read", "exec_command", "write_stdin", "browser", "automation", "todo_write", "web_fetch"];
 
   it("returns all names when disabled is empty", () => {
     expect(computeToolSnapshot(allNames, [])).toEqual(allNames);
@@ -108,7 +114,7 @@ describe("computeToolSnapshot", () => {
 
   it("removes optional tools that are in disabled list", () => {
     expect(computeToolSnapshot(allNames, ["browser"])).toEqual(
-      ["read", "bash", "automation", "todo_write", "web_fetch"]
+      ["read", "exec_command", "write_stdin", "automation", "todo_write", "web_fetch"]
     );
   });
 
@@ -130,11 +136,11 @@ describe("computeToolSnapshot", () => {
 
   it("deduplicates tool names while preserving the first occurrence", () => {
     const result = computeToolSnapshot(
-      ["read", "bash", "read", "browser", "browser", "todo_write"],
+      ["read", "exec_command", "read", "browser", "browser", "todo_write"],
       [],
     );
 
-    expect(result).toEqual(["read", "bash", "browser", "todo_write"]);
+    expect(result).toEqual(["read", "exec_command", "browser", "todo_write"]);
   });
 
   it("treats null disabled as empty (no tools removed)", () => {

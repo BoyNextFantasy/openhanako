@@ -2267,6 +2267,8 @@ export class HanaEngine {
       recordFileOperation: (entry) => this.recordSessionFileOperation(entry),
       getVisionBridge: () => this.getVisionBridge(),
       isVisionAuxiliaryEnabled: () => this.isVisionAuxiliaryEnabled(),
+      getTerminalSessionManager: () => this._terminalSessions,
+      getAgentId: () => agentId,
       resourceIO,
       emitEvent: (event, sessionPath) => this._emitEvent(event, sessionPath),
       legacyCleanupQueue: this._win32LegacySandboxCleanupQueue,

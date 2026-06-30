@@ -102,14 +102,14 @@ describe("SessionCoordinator.writeSessionMeta serialization", () => {
 
   it("two concurrent writeSessionMeta calls with different fields preserve both", async () => {
     const p1 = sessionCoord.writeSessionMeta(fakeSessionPath, { memoryEnabled: false });
-    const p2 = sessionCoord.writeSessionMeta(fakeSessionPath, { toolNames: ["read", "bash"] });
+    const p2 = sessionCoord.writeSessionMeta(fakeSessionPath, { toolNames: ["read", "exec_command"] });
     await Promise.all([p1, p2]);
 
     const metaPath = path.join(sessionDir, "session-meta.json");
     const meta = JSON.parse(await fsp.readFile(metaPath, "utf-8"));
     const entry = meta[path.basename(fakeSessionPath)];
     expect(entry.memoryEnabled).toBe(false);
-    expect(entry.toolNames).toEqual(["read", "bash"]);
+    expect(entry.toolNames).toEqual(["read", "exec_command"]);
   });
 
   it("three sequential writes accumulate fields correctly", async () => {

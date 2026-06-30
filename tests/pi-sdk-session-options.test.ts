@@ -22,7 +22,7 @@ function makeAgentTool(name) {
 
 describe("Pi SDK session option normalization", () => {
   it("exposes stable Hana built-in tool names without SDK prebuilt objects", () => {
-    expect(PI_BUILTIN_TOOL_NAMES).toEqual(["read", "write", "edit", "bash", "grep", "find", "ls"]);
+    expect(PI_BUILTIN_TOOL_NAMES).toEqual(["read", "write", "edit", "exec_command", "write_stdin", "grep", "find", "ls"]);
     expect(Object.isFrozen(PI_BUILTIN_TOOL_NAMES)).toBe(true);
   });
 
@@ -79,7 +79,7 @@ describe("Pi SDK session option normalization", () => {
 
   it("normalizes Hana Tool[] plus customTools into Pi 0.68+ name allowlist and SDK custom tools", () => {
     const read = makeAgentTool("read");
-    const bash = makeAgentTool("bash");
+    const execCommand = makeAgentTool("exec_command");
     const custom = {
       name: "web_search",
       description: "search",
@@ -89,13 +89,13 @@ describe("Pi SDK session option normalization", () => {
 
     const normalized = normalizeCreateAgentSessionOptions({
       cwd: "/tmp/project",
-      tools: [read, bash],
+      tools: [read, execCommand],
       customTools: [custom],
       model: { id: "m" },
     }, "0.70.2");
 
-    expect(normalized.tools).toEqual(["read", "bash", "web_search"]);
-    expect(normalized.customTools.map(t => t.name)).toEqual(["read", "bash", "web_search"]);
+    expect(normalized.tools).toEqual(["read", "exec_command", "web_search"]);
+    expect(normalized.customTools.map(t => t.name)).toEqual(["read", "exec_command", "web_search"]);
     expect(normalized.customTools[0]).not.toBe(read);
     expect(normalized.customTools[2]).not.toBe(custom);
     expect(normalized.model).toEqual({ id: "m" });
@@ -133,9 +133,9 @@ describe("Pi SDK session option normalization", () => {
   });
 
   it("deduplicates active names while preserving first occurrence order", () => {
-    expect(uniqueToolNames(["read", "bash", "read", "", null, "web_search"])).toEqual([
+    expect(uniqueToolNames(["read", "exec_command", "read", "", null, "web_search"])).toEqual([
       "read",
-      "bash",
+      "exec_command",
       "web_search",
     ]);
   });

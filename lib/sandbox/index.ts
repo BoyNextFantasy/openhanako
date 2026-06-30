@@ -33,6 +33,7 @@ import { serializeSessionFile } from "../session-files/session-file-response.ts"
 import { wrapResourceIoFileTools } from "../resource-io/agent-tools.ts";
 import { createResourceIoToolOperations } from "../resource-io/pi-tool-operations.ts";
 import { createSandboxResourceIO } from "../resource-io/sandbox-resource-io.ts";
+import { createExecCommandTools } from "../exec-command/tool.ts";
 
 /**
  * 为一个 session 创建沙盒包装后的工具集
@@ -59,6 +60,8 @@ import { createSandboxResourceIO } from "../resource-io/sandbox-resource-io.ts";
  * @param {(entry: object) => void} [opts.recordFileOperation]  记录 write/edit 触达的 session file
  * @param {() => object|null} [opts.getVisionBridge]  辅助视觉桥
  * @param {() => boolean} [opts.isVisionAuxiliaryEnabled]  辅助视觉开关
+ * @param {() => object|null} [opts.getTerminalSessionManager]  当前 engine 的 terminal session manager
+ * @param {() => string} [opts.getAgentId]  当前 agent id
  * @param {object} [opts.resourceIO]  session 级 ResourceIO 内核；未传入时按 cwd 创建 local_fs 内核
  * @param {(event: object, sessionPath?: string|null) => void} [opts.emitEvent]  ResourceIO 事件出口
  * @param {object|null} [opts.legacyCleanupQueue] Windows 旧 ACL 清理队列
@@ -80,6 +83,8 @@ export function createSandboxedTools(cwd, customTools, {
   recordFileOperation,
   getVisionBridge,
   isVisionAuxiliaryEnabled,
+  getTerminalSessionManager,
+  getAgentId,
   resourceIO: providedResourceIO,
   emitEvent,
   legacyCleanupQueue = null,
@@ -195,6 +200,13 @@ export function createSandboxedTools(cwd, customTools, {
     emitEvent,
     withResourceTarget: resourceOps.withResourceTarget,
   });
+  const createExecToolsForBash = (bashTool) => createExecCommandTools({
+    bashTool,
+    getTerminalSessionManager,
+    getAgentId,
+    getCwd: () => cwd,
+    platform: process.platform,
+  });
 
   // ── Windows: PathGuard 包装 + restricted-token exec，关闭沙盒时走 direct fallback ──
   if (platform === "win32-restricted-token") {
@@ -211,12 +223,13 @@ export function createSandboxedTools(cwd, customTools, {
         })(command, execCwd, execOpts)) as any,
       },
     });
+    const wrappedBashTool = wrapBashTool(sandboxedBashTool, guard, cwd, bashWrapOpts);
     return {
       tools: buildResourceIoFileTools([
         readTool,
         writeToolWithResourceIO,
         editTool,
-        wrapBashTool(sandboxedBashTool, guard, cwd, bashWrapOpts),
+        ...createExecToolsForBash(wrappedBashTool),
         createGrepTool(cwd, { operations: resourceOps.grep }),
         createFindTool(cwd, { operations: resourceOps.find }),
         createLsTool(cwd, { operations: resourceOps.ls }),
@@ -247,12 +260,13 @@ export function createSandboxedTools(cwd, customTools, {
     };
   }
 
+  const wrappedBashTool = wrapBashTool(sandboxedBashTool, guard, cwd, bashWrapOpts);
   return {
     tools: buildResourceIoFileTools([
       readTool,
       writeToolWithResourceIO,
       editTool,
-      wrapBashTool(sandboxedBashTool, guard, cwd, bashWrapOpts),
+      ...createExecToolsForBash(wrappedBashTool),
       createGrepTool(cwd, { operations: resourceOps.grep }),
       createFindTool(cwd, { operations: resourceOps.find }),
       createLsTool(cwd, { operations: resourceOps.ls }),

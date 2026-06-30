@@ -1625,8 +1625,9 @@ export class SessionCoordinator {
     //   B. restore=true + meta missing        → legacy session, keep all tools
     //   C. restore=false                       → fresh compute from agent config
     //
-    // allToolNames must cover the COMPLETE active set: Pi SDK built-ins
-    // (read/bash/edit/write/grep/find/ls) from sessionTools + HanaAgent
+    // allToolNames must cover the COMPLETE active set: Hana built-ins
+    // (read/write/edit/exec_command/write_stdin/grep/find/ls) from
+    // sessionTools + HanaAgent
     // customs + plugin tools from sessionCustomTools. Using only agent.tools
     // would silently drop SDK built-ins and plugin tools when
     // setActiveToolsByName is applied.

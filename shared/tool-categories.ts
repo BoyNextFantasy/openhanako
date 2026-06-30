@@ -20,7 +20,7 @@
 // per-agent switch; concrete plugin tools then implement runtime availability.
 
 export const CORE_TOOL_NAMES = [
-  "read", "bash", "edit", "write", "grep", "find", "ls",
+  "read", "write", "edit", "exec_command", "write_stdin", "grep", "find", "ls",
   "search_memory", "pin_memory", "unpin_memory",
   "web_search",
 ];
@@ -42,7 +42,6 @@ export const STANDARD_TOOL_NAMES = [
   "current_status",
   "session_folders",
   "stop_task",
-  "terminal",
   "hana_card_guide",
   "show_card",
 ];
