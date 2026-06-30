@@ -15,7 +15,7 @@ export const parameters = {
     },
     provider: {
       type: "string",
-      description: "Optional provider id, for example jimeng-cli.",
+      description: "Optional provider id.",
     },
     model: {
       type: "string",

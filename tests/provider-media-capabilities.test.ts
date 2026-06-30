@@ -401,17 +401,17 @@ describe("ProviderRegistry media capabilities", () => {
   it("normalizes plugin-contributed CLI media providers into the same registry", () => {
     const registry = new ProviderRegistry(tmpHome);
     registry.registerProviderContribution({
-      id: "jimeng-cli",
-      displayName: "即梦 CLI",
+      id: "test-cli-provider",
+      displayName: "测试 CLI",
       authType: "none",
-      _pluginId: "jimeng",
+      _pluginId: "test-plugin",
       runtime: {
         kind: "browser-cli",
         protocolId: "browser-cli-media",
         command: {
-          executable: "opencli",
+          executable: "artgen",
           args: [
-            { literal: "jimeng" },
+            { literal: "render" },
             { literal: "generate" },
             { option: "--prompt", from: "prompt" },
             { option: "--model", from: "modelId" },
@@ -424,14 +424,14 @@ describe("ProviderRegistry media capabilities", () => {
       capabilities: {
         chat: {
           projection: "none",
-          runtimeProviderId: "jimeng-cli",
-          displayProviderId: "jimeng-cli",
+          runtimeProviderId: "test-cli-provider",
+          displayProviderId: "test-cli-provider",
         },
         media: {
           imageGeneration: {
             models: [{
-              id: "high_aes_general_v50",
-              displayName: "即梦 5.0 Lite",
+              id: "test_model_v1",
+              displayName: "测试模型",
               protocolId: "browser-cli-media",
               inputs: ["text", "image"],
               outputs: ["image"],
@@ -442,20 +442,20 @@ describe("ProviderRegistry media capabilities", () => {
     });
     registry.reload();
 
-    expect(registry.get("jimeng-cli")).toMatchObject({
-      id: "jimeng-cli",
-      source: { kind: "plugin", pluginId: "jimeng" },
+    expect(registry.get("test-cli-provider")).toMatchObject({
+      id: "test-cli-provider",
+      source: { kind: "plugin", pluginId: "test-plugin" },
       runtime: expect.objectContaining({ kind: "browser-cli" }),
     });
-    expect(registry.getMediaModels("jimeng-cli", "image_generation")).toEqual([
+    expect(registry.getMediaModels("test-cli-provider", "image_generation")).toEqual([
       expect.objectContaining({
-        id: "high_aes_general_v50",
-        displayName: "即梦 5.0 Lite",
+        id: "test_model_v1",
+        displayName: "测试模型",
         protocolId: "browser-cli-media",
       }),
     ]);
-    expect(registry.resolveChatProvider("jimeng-cli")).toMatchObject({
-      providerId: "jimeng-cli",
+    expect(registry.resolveChatProvider("test-cli-provider")).toMatchObject({
+      providerId: "test-cli-provider",
       projection: "none",
     });
   });

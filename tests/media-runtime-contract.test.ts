@@ -6,7 +6,7 @@ import {
 
 describe("media runtime CLI contract", () => {
   it("rejects raw shell command strings", () => {
-    expect(() => validateCliCommandSpec("opencli jimeng generate --prompt hi"))
+    expect(() => validateCliCommandSpec("opencli art generate --prompt hi"))
       .toThrow(/structured CLI command spec/i);
   });
 
@@ -14,7 +14,7 @@ describe("media runtime CLI contract", () => {
     const spec = {
       executable: "opencli",
       args: [
-        { literal: "jimeng" },
+        { literal: "art" },
         { literal: "generate" },
         { option: "--prompt", from: "prompt" },
         { option: "--model", from: "modelId" },
@@ -30,7 +30,7 @@ describe("media runtime CLI contract", () => {
       modelId: "high_aes_general_v50",
       outputDir: "/tmp/out",
     })).toEqual([
-      "jimeng",
+      "art",
       "generate",
       "--prompt",
       "一只猫",

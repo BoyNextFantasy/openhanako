@@ -134,9 +134,9 @@ describe("media generation tools", () => {
     const mod = await import("../plugins/media/tools/describe-options.ts");
     const request = vi.fn(async () => ({
       providers: {
-        "jimeng-cli": {
-          providerId: "jimeng-cli",
-          displayName: "即梦 CLI",
+        "test-image-provider": {
+          providerId: "test-image-provider",
+          displayName: "测试图像",
           models: [{
             id: "seedance2.0_vip",
             displayName: "Seedance 2.0 VIP",
@@ -157,7 +157,7 @@ describe("media generation tools", () => {
 
     const result = await mod.execute({
       kind: "video",
-      provider: "jimeng-cli",
+      provider: "test-image-provider",
       model: "seedance2.0_vip",
       mode: "text2video",
     }, makeCtx(request));

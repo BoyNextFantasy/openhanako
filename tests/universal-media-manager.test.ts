@@ -487,15 +487,15 @@ describe("UniversalMediaManager adapter registration bus contract", () => {
 
     const result = bus.handlers.get("media-gen:register-adapter")({
       adapter: {
-        id: "jimeng-cli-images",
-        protocolId: "jimeng-cli-images",
+        id: "test-cli-images",
+        protocolId: "test-cli-images",
         types: ["image"],
         submit: vi.fn(),
       },
     });
     expect(result).toEqual({ ok: true });
-    expect(manager.registry.getProtocol("jimeng-cli-images")).toMatchObject({
-      id: "jimeng-cli-images",
+    expect(manager.registry.getProtocol("test-cli-images")).toMatchObject({
+      id: "test-cli-images",
     });
 
     manager.stop();
@@ -592,14 +592,14 @@ describe("UniversalMediaManager adapter registration bus contract", () => {
 
     expect(() => bus.handlers.get("media-gen:register-adapter")({
       adapter: {
-        id: "jimeng-cli-images",
-        protocolId: "jimeng-cli-images",
+        id: "test-cli-images",
+        protocolId: "test-cli-images",
         types: ["image"],
         submit: vi.fn(),
       },
     })).not.toThrow();
-    expect(manager.registry.getProtocol("jimeng-cli-images")).toMatchObject({
-      id: "jimeng-cli-images",
+    expect(manager.registry.getProtocol("test-cli-images")).toMatchObject({
+      id: "test-cli-images",
     });
 
     manager.stop();
@@ -845,12 +845,12 @@ describe("UniversalMediaManager response delivery", () => {
     };
     const providerRegistry = {
       getMediaProviders: () => [{
-        providerId: "jimeng-cli",
-        displayName: "即梦 CLI",
+        providerId: "test-cli-provider",
+        displayName: "测试 CLI",
         models: [{
           id: "seedance2.0_vip",
           displayName: "Seedance 2.0 VIP",
-          protocolId: "jimeng-cli-videos",
+          protocolId: "test-cli-videos",
           modes: [{
             id: "text2video",
             label: "文生视频",
@@ -875,15 +875,15 @@ describe("UniversalMediaManager response delivery", () => {
       registerSessionFile: () => {},
     });
     manager.registerAdapter({
-      id: "jimeng-cli-videos",
-      protocolId: "jimeng-cli-videos",
+      id: "test-cli-videos",
+      protocolId: "test-cli-videos",
       types: ["video"],
       submit: vi.fn(),
     });
 
     await expect(manager.listVideoProviders()).resolves.toMatchObject({
       providers: {
-        "jimeng-cli": {
+        "test-cli-provider": {
           models: [expect.objectContaining({
             id: "seedance2.0_vip",
             modes: [expect.objectContaining({
@@ -903,10 +903,10 @@ describe("UniversalMediaManager response delivery", () => {
     const providerRegistry = {
       getMediaProviders: () => [],
       resolveMediaModel: vi.fn(() => ({
-        providerId: "jimeng-cli",
+        providerId: "test-cli-provider",
         model: {
           id: "seedance2.0_vip",
-          protocolId: "jimeng-cli-videos",
+          protocolId: "test-cli-videos",
           modes: [{
             id: "text2video",
             defaults: { duration: 5, ratio: "16:9", video_resolution: "720p" },
@@ -927,9 +927,9 @@ describe("UniversalMediaManager response delivery", () => {
       hanakoHome: root,
       preferences: makePreferences(root, {
         videoGeneration: {
-          defaultVideoModel: { provider: "jimeng-cli", id: "seedance2.0_vip" },
+          defaultVideoModel: { provider: "test-cli-provider", id: "seedance2.0_vip" },
           providerDefaults: {
-            "jimeng-cli": {
+            "test-cli-provider": {
               duration: 7,
               options: { video_resolution: "1080p" },
             },
@@ -941,10 +941,10 @@ describe("UniversalMediaManager response delivery", () => {
     });
     const bus = makeBus();
     manager.start(bus);
-    const submit = vi.fn(async () => ({ taskId: "jimeng-video-task" }));
+    const submit = vi.fn(async () => ({ taskId: "test-video-task" }));
     manager.registerAdapter({
-      id: "jimeng-cli-videos",
-      protocolId: "jimeng-cli-videos",
+      id: "test-cli-videos",
+      protocolId: "test-cli-videos",
       types: ["video"],
       submit,
     });
@@ -957,7 +957,7 @@ describe("UniversalMediaManager response delivery", () => {
 
     expect(submit).toHaveBeenCalledWith(
       expect.objectContaining({
-        providerId: "jimeng-cli",
+        providerId: "test-cli-provider",
         modelId: "seedance2.0_vip",
         mode: "text2video",
         duration: 7,
@@ -971,7 +971,7 @@ describe("UniversalMediaManager response delivery", () => {
       }),
       expect.any(Object),
     );
-    expect(manager.getTask("jimeng-video-task")).toMatchObject({
+    expect(manager.getTask("test-video-task")).toMatchObject({
       params: expect.objectContaining({
         resolvedParameters: expect.objectContaining({
           duration: 7,
@@ -990,10 +990,10 @@ describe("UniversalMediaManager response delivery", () => {
     const providerRegistry = {
       getMediaProviders: () => [],
       resolveMediaModel: vi.fn(() => ({
-        providerId: "jimeng-cli",
+        providerId: "test-cli-provider",
         model: {
           id: "seedance2.0fast",
-          protocolId: "jimeng-cli-videos",
+          protocolId: "test-cli-videos",
           modes: [{
             id: "text2video",
             parameterSchema: {
@@ -1011,7 +1011,7 @@ describe("UniversalMediaManager response delivery", () => {
       hanakoHome: root,
       preferences: makePreferences(root, {
         videoGeneration: {
-          defaultVideoModel: { provider: "jimeng-cli", id: "seedance2.0fast" },
+          defaultVideoModel: { provider: "test-cli-provider", id: "seedance2.0fast" },
         },
       }),
       providerRegistry,
@@ -1020,8 +1020,8 @@ describe("UniversalMediaManager response delivery", () => {
     manager.start(makeBus());
     const submit = vi.fn(async () => ({ taskId: "should-not-submit" }));
     manager.registerAdapter({
-      id: "jimeng-cli-videos",
-      protocolId: "jimeng-cli-videos",
+      id: "test-cli-videos",
+      protocolId: "test-cli-videos",
       types: ["video"],
       submit,
     });

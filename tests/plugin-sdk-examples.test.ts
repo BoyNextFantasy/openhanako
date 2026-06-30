@@ -209,16 +209,16 @@ describe("plugin SDK examples and docs", () => {
         "developer",
       ], { cwd: root, stdio: "pipe" });
 
-      const pluginDir = path.join(tmpDir, "jimeng-provider");
+      const pluginDir = path.join(tmpDir, "example-provider");
       const manifest = JSON.parse(fs.readFileSync(path.join(pluginDir, "manifest.json"), "utf-8"));
-      const provider = fs.readFileSync(path.join(pluginDir, "providers", "jimeng-provider-provider.js"), "utf-8");
+      const provider = fs.readFileSync(path.join(pluginDir, "providers", "example-provider-provider.js"), "utf-8");
       const readme = fs.readFileSync(path.join(pluginDir, "README.md"), "utf-8");
 
       expect(manifest).toMatchObject({
-        id: "jimeng-provider",
+        id: "example-provider",
         trust: "full-access",
       });
-      expect(provider).toContain('export const id = "jimeng-provider"');
+      expect(provider).toContain('export const id = "example-provider"');
       expect(provider).toContain('kind: "local-cli"');
       expect(provider).toContain('chat: { projection: "none" }');
       expect(provider).toContain("imageGeneration");
