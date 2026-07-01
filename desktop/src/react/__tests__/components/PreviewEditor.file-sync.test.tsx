@@ -157,6 +157,7 @@ describe('PreviewEditor file sync', () => {
     expect(container.querySelector('.cm-content')?.getAttribute('spellcheck')).toBe('false');
   });
 
+<<<<<<< HEAD
   it('can scroll to a match without stealing focus from the find box', () => {
     const ref = createRef<PreviewEditorHandle>();
     render(
@@ -183,6 +184,8 @@ describe('PreviewEditor file sync', () => {
     expect(focusSpy).toHaveBeenCalledTimes(1);
   });
 
+=======
+>>>>>>> edfa535b (fix: disable spellcheck on text surfaces)
   it('emits selection commit only after a user commit event', () => {
     const ref = createRef<PreviewEditorHandle>();
     const onSelectionChange = vi.fn();
