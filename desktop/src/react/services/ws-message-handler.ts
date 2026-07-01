@@ -429,8 +429,13 @@ export function handleServerMessage(msg: any): void {
       scheduleSessionsRefresh('turn_end');
       const turnSp = msg.sessionPath;
       if (turnSp) {
+        const wasStreaming = sessionScopedListIncludes(useStore.getState(), useStore.getState().streamingSessions, turnSp);
+        applyStreamingStatus(false, turnSp, {
+          streamId: msg.streamId ?? null,
+          turnId: msg.turnId ?? null,
+        });
         requestContextUsage(turnSp);
-        requestInputFocusForCurrentSession(turnSp);
+        if (!wasStreaming) requestInputFocusForCurrentSession(turnSp);
       } else {
         console.warn('[ws] turn_end missing sessionPath, skipping context_usage request');
       }
