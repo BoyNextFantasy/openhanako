@@ -53,8 +53,6 @@ import { createCharacterCardsRoute } from "./routes/character-cards.ts";
 import { createCardsRoute } from "./routes/cards.ts";
 import { createDeskRoute } from "./routes/desk.ts";
 import { createSkillsRoute } from "./routes/skills.ts";
-import { createChannelsRoute } from "./routes/channels.ts";
-import { createDmRoute } from "./routes/dm.ts";
 import { createFsRoute } from "./routes/fs.ts";
 import { createPreferencesRoute } from "./routes/preferences.ts";
 import { createSettingsSnapshotRoute } from "./routes/settings-snapshot.ts";
@@ -319,7 +317,6 @@ dlog.header(appVersion, {
   agent: engine.agentName,
   agentId: engine.currentAgentId, // @ui-focus-ok: startup log
   utilityModel: (() => { try { return engine.resolveUtilityConfig?.()?.utility?.id || "(none)"; } catch { return "(none)"; } })(),
-  channelsDir: engine.channelsDir,
 });
 
 if (process.platform === "win32") engine.startWin32LegacySandboxMaintenance();
@@ -726,18 +723,18 @@ async function startBridgeManager({ autoStart = false } = {}) {
 
   bridgeManagerInitError = null;
   bridgeManagerInitPromise = (async () => {
-    log.log("Bridge manager 初始�?..");
+    log.log("Bridge manager 初始化中...");
     const { BridgeManager } = await import("../lib/bridge/bridge-manager.ts");
     const manager = new BridgeManager({ engine, hub });
     bridgeManager = manager;
     hub.bridgeManager = manager;
     if (bridgeAutoStartRequested) runBridgeAutoStart(manager);
-    log.log("Bridge manager 初始化完�?);
+    log.log("Bridge manager 初始化完毕");
     return manager;
   })().catch((err) => {
     bridgeManagerInitError = err;
     hub.bridgeManager = null;
-    log.error(`Bridge manager 初始化失�? ${err.message}`);
+    log.error(`Bridge manager 初始化失败: ${err.message}`);
     dlog.error("server", `bridge init failed: ${err.stack || err.message}`);
     return null;
   }).finally(() => {
@@ -788,8 +785,6 @@ app.route("/api", createDeskRoute(engine, hub));
 app.route("/api", createMobileWorkbenchRoute(engine));
 app.route("/api", createStudioWorkspacesRoute(engine));
 app.route("/api", createSkillsRoute(engine));
-app.route("/api", createChannelsRoute(engine, hub));
-app.route("/api", createDmRoute(engine, hub));
 app.route("/api", createFsRoute(engine));
 app.route("/api", createPreferencesRoute(engine));
 app.route("/api", createSettingsSnapshotRoute(engine, {
@@ -1090,12 +1085,12 @@ try {
     log.error(`写入 server-info.json 失败: ${e.message}`);
   }
 
-  // 通知就绪（server-info.json 已在上方写入，无需额外动作�?
+  // 通知就绪（server-info.json 已在上方写入，无需额外动作）
   log.log(`ready: port=${actualPort}`);
 
-  // Bridge 平台依赖不属�?HTTP readiness 的前置条件。先让桌面端拿到
-  // server-info，再在后台加载外部平�?adapter，避�?Windows 上依赖加�?
-  // 或杀毒扫描拖垮主启动握手�?
+  // Bridge 平台依赖不属于 HTTP readiness 的前置条件。先让桌面端拿到
+  // server-info，再在后台加载外部平台 adapter，避免 Windows 上依赖加载
+  // 或杀毒扫描拖垮主启动握手
   startBridgeManager({ autoStart: true });
 
   // Legacy explicit attach mode. Normal headless server runs stay quiet.
@@ -1123,7 +1118,7 @@ async function gracefulShutdown() {
 
   // 超时保护�?5 秒内必须完成（含 memory final pass LLM 调用），否则强制退�?
   const forceTimer = setTimeout(() => {
-    log.error("关闭超时，强制退�?);
+    log.error("关闭超时，强制退出");
     process.exit(1);
   }, 15000);
   forceTimer.unref();
@@ -1131,7 +1126,7 @@ async function gracefulShutdown() {
   try {
     // 1. 先停止接受新请求
     server.close();
-    log.log("HTTP server 已关�?);
+    log.log("HTTP server 已关闭");
     dlog.log("server", "HTTP server closed");
 
     // 2. 挂起浏览器（保留冷保存，重启后可恢复卡片�?
@@ -1155,7 +1150,7 @@ async function gracefulShutdown() {
 
     // 5. 清理 Hub + 引擎（停 ticker �?�?tick 完成 �?�?DB �?清理 session�?
     await hub.dispose();
-    log.log("Hub + Engine 已清�?);
+    log.log("Hub + Engine 已清理");
     dlog.log("server", "hub + engine disposed");
   } catch (err) {
     log.error(`关闭出错: ${err.message}`);

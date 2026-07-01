@@ -86,7 +86,7 @@ async function makeApp(root, runtimeState: any = {}) {
     runtimeState: {
       mode: "loopback",
       listenHost: "127.0.0.1",
-      actualPort: 14500,
+      actualPort: 14700,
       ...runtimeState,
     },
     listLanAddresses: () => ["192.168.31.75"],
@@ -115,18 +115,18 @@ describe("access route", () => {
     expect(data).toMatchObject({
       network: {
         mode: "loopback",
-        configuredPort: 14500,
-        actualPort: 14500,
+        configuredPort: 14700,
+        actualPort: 14700,
         restartRequired: false,
         lanAddresses: ["192.168.31.75"],
-        localServerUrl: "http://127.0.0.1:14500/",
-        candidateLanServerUrl: "http://192.168.31.75:14500/",
+        localServerUrl: "http://127.0.0.1:14700/",
+        candidateLanServerUrl: "http://192.168.31.75:14700/",
         lanServerUrl: null,
-        localMobileUrl: "http://127.0.0.1:14500/mobile/",
-        candidateLanMobileUrl: "http://192.168.31.75:14500/mobile/",
+        localMobileUrl: "http://127.0.0.1:14700/mobile/",
+        candidateLanMobileUrl: "http://192.168.31.75:14700/mobile/",
         lanMobileUrl: null,
-        localDesktopUrl: "http://127.0.0.1:14500/desktop/",
-        candidateLanDesktopUrl: "http://192.168.31.75:14500/desktop/",
+        localDesktopUrl: "http://127.0.0.1:14700/desktop/",
+        candidateLanDesktopUrl: "http://192.168.31.75:14700/desktop/",
         lanDesktopUrl: null,
       },
       account: {
@@ -144,12 +144,12 @@ describe("access route", () => {
   it("requires restart when enabling LAN changes the listening host", async () => {
     tmpDir = makeTmpDir();
     writeIdentity(tmpDir);
-    const app = await makeApp(tmpDir, { mode: "loopback", listenHost: "127.0.0.1", actualPort: 14500 });
+    const app = await makeApp(tmpDir, { mode: "loopback", listenHost: "127.0.0.1", actualPort: 14700 });
 
     const res = await app.request("/api/access/network", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ mode: "lan", listenPort: 14500 }),
+      body: JSON.stringify({ mode: "lan", listenPort: 14700 }),
     });
 
     expect(res.status).toBe(200);
@@ -158,26 +158,26 @@ describe("access route", () => {
       network: {
         mode: "lan",
         listenHost: "0.0.0.0",
-        configuredPort: 14500,
+        configuredPort: 14700,
         runtimeMode: "loopback",
         runtimeHost: "127.0.0.1",
         restartRequired: true,
-        candidateLanServerUrl: "http://192.168.31.75:14500/",
-        candidateLanMobileUrl: "http://192.168.31.75:14500/mobile/",
-        candidateLanDesktopUrl: "http://192.168.31.75:14500/desktop/",
+        candidateLanServerUrl: "http://192.168.31.75:14700/",
+        candidateLanMobileUrl: "http://192.168.31.75:14700/mobile/",
+        candidateLanDesktopUrl: "http://192.168.31.75:14700/desktop/",
         lanServerUrl: null,
         lanMobileUrl: null,
         lanDesktopUrl: null,
       },
     });
     expect(JSON.parse(fs.readFileSync(path.join(tmpDir, "server-network.json"), "utf-8")))
-      .toMatchObject({ mode: "lan", listenHost: "0.0.0.0", listenPort: 14500 });
+      .toMatchObject({ mode: "lan", listenHost: "0.0.0.0", listenPort: 14700 });
   });
 
   it("still reports a restart requirement when the listening port changes", async () => {
     tmpDir = makeTmpDir();
     writeIdentity(tmpDir);
-    const app = await makeApp(tmpDir, { mode: "loopback", listenHost: "127.0.0.1", actualPort: 14500 });
+    const app = await makeApp(tmpDir, { mode: "loopback", listenHost: "127.0.0.1", actualPort: 14700 });
 
     const res = await app.request("/api/access/network", {
       method: "PUT",
@@ -190,7 +190,7 @@ describe("access route", () => {
       network: {
         mode: "lan",
         configuredPort: 14550,
-        actualPort: 14500,
+        actualPort: 14700,
         restartRequired: true,
         candidateLanServerUrl: "http://192.168.31.75:14550/",
         candidateLanDesktopUrl: "http://192.168.31.75:14550/desktop/",
@@ -208,12 +208,12 @@ describe("access route", () => {
       schemaVersion: 1,
       mode: "lan",
       listenHost: "0.0.0.0",
-      listenPort: 14500,
+      listenPort: 14700,
       customRemote: { enabled: false, baseUrl: null, wsUrl: null },
       createdAt: "2026-05-16T00:00:00.000Z",
       updatedAt: "2026-05-16T00:00:00.000Z",
     });
-    const app = await makeApp(tmpDir, { mode: "lan", listenHost: "0.0.0.0", actualPort: 14500 });
+    const app = await makeApp(tmpDir, { mode: "lan", listenHost: "0.0.0.0", actualPort: 14700 });
 
     const res = await app.request("/api/access/mobile-credentials", {
       method: "POST",
@@ -228,7 +228,7 @@ describe("access route", () => {
     const data = await res.json();
     expect(data.secret).toMatch(/^hana_dev_/);
     expect(data).toMatchObject({
-      accessUrl: "http://192.168.31.75:14500/mobile/",
+      accessUrl: "http://192.168.31.75:14700/mobile/",
       device: {
         displayName: "User Phone",
         deviceKind: "mobile",
@@ -251,12 +251,12 @@ describe("access route", () => {
       schemaVersion: 1,
       mode: "lan",
       listenHost: "0.0.0.0",
-      listenPort: 14500,
+      listenPort: 14700,
       customRemote: { enabled: false, baseUrl: null, wsUrl: null },
       createdAt: "2026-05-16T00:00:00.000Z",
       updatedAt: "2026-05-16T00:00:00.000Z",
     });
-    const app = await makeApp(tmpDir, { mode: "lan", listenHost: "0.0.0.0", actualPort: 14500 });
+    const app = await makeApp(tmpDir, { mode: "lan", listenHost: "0.0.0.0", actualPort: 14700 });
 
     const res = await app.request("/api/access/desktop-credentials", {
       method: "POST",
@@ -271,7 +271,7 @@ describe("access route", () => {
     const data = await res.json();
     expect(data.secret).toMatch(/^hana_dev_/);
     expect(data).toMatchObject({
-      accessUrl: "http://192.168.31.75:14500/desktop/",
+      accessUrl: "http://192.168.31.75:14700/desktop/",
       device: {
         displayName: "Studio Laptop",
         deviceKind: "desktop",

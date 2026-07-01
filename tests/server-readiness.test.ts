@@ -172,13 +172,13 @@ describe("isModuleResolutionError", () => {
 describe("startup root error extraction", () => {
   it("parses structured PORT_IN_USE startup errors from server stderr", () => {
     const parsed = parsePortInUseStartupError([
-      '[stderr] [server] startup-error {"code":"PORT_IN_USE","host":"0.0.0.0","port":14500,"networkMode":"loopback","listenHost":"127.0.0.1","suggestions":["Close the process using this port."]}\n',
+      '[stderr] [server] startup-error {"code":"PORT_IN_USE","host":"0.0.0.0","port":14700,"networkMode":"loopback","listenHost":"127.0.0.1","suggestions":["Close the process using this port."]}\n',
     ]);
 
     expect(parsed).toEqual({
       code: "PORT_IN_USE",
       host: "0.0.0.0",
-      port: 14500,
+      port: 14700,
       networkMode: "loopback",
       listenHost: "127.0.0.1",
       suggestions: ["Close the process using this port."],
@@ -187,13 +187,13 @@ describe("startup root error extraction", () => {
 
   it("parses structured LISTEN_PERMISSION_DENIED startup errors from server stderr", () => {
     const parsed = parsePortInUseStartupError([
-      '[stderr] [server] startup-error {"code":"LISTEN_PERMISSION_DENIED","host":"0.0.0.0","port":14500,"networkMode":"loopback","listenHost":"127.0.0.1","suggestions":["Use loopback mode or check Windows reserved port policy."]}\n',
+      '[stderr] [server] startup-error {"code":"LISTEN_PERMISSION_DENIED","host":"0.0.0.0","port":14700,"networkMode":"loopback","listenHost":"127.0.0.1","suggestions":["Use loopback mode or check Windows reserved port policy."]}\n',
     ]);
 
     expect(parsed).toEqual({
       code: "LISTEN_PERMISSION_DENIED",
       host: "0.0.0.0",
-      port: 14500,
+      port: 14700,
       networkMode: "loopback",
       listenHost: "127.0.0.1",
       suggestions: ["Use loopback mode or check Windows reserved port policy."],
@@ -202,35 +202,35 @@ describe("startup root error extraction", () => {
 
   it("extracts EADDRINUSE as the root server startup error before diagnostics tails", () => {
     const root = extractRootServerStartupError([
-      "[stderr] Error: listen EADDRINUSE: address already in use 0.0.0.0:14500\n",
+      "[stderr] Error: listen EADDRINUSE: address already in use 0.0.0.0:14700\n",
       "--- GPU Startup ---\n",
       'GPU startup marker: {"status":"failed","reason":"previous-startup-incomplete"}\n',
     ]);
 
     expect(root).toContain("EADDRINUSE");
-    expect(root).toContain("0.0.0.0:14500");
+    expect(root).toContain("0.0.0.0:14700");
     expect(root).not.toContain("GPU startup marker");
   });
 
   it("extracts EACCES listen failures as the root server startup error", () => {
     const root = extractRootServerStartupError([
-      "[stderr] Error: listen EACCES: permission denied 0.0.0.0:14500\n",
+      "[stderr] Error: listen EACCES: permission denied 0.0.0.0:14700\n",
       "--- GPU Startup ---\n",
       'GPU startup marker: {"status":"failed","reason":"previous-startup-incomplete"}\n',
     ]);
 
     expect(root).toContain("LISTEN_PERMISSION_DENIED");
-    expect(root).toContain("0.0.0.0:14500");
+    expect(root).toContain("0.0.0.0:14700");
     expect(root).not.toContain("GPU startup marker");
   });
 
   it("extracts EPERM listen permission failures as the same typed startup diagnostic", () => {
     const root = extractRootServerStartupError([
-      "[stderr] Error: listen EPERM: operation not permitted 0.0.0.0:14500\n",
+      "[stderr] Error: listen EPERM: operation not permitted 0.0.0.0:14700\n",
     ]);
 
     expect(root).toContain("LISTEN_PERMISSION_DENIED");
-    expect(root).toContain("0.0.0.0:14500");
+    expect(root).toContain("0.0.0.0:14700");
   });
 
   it("extracts server entry import failures as the root startup error", () => {
@@ -261,7 +261,7 @@ describe("startup root error extraction", () => {
 
   it("still prefers structured listen errors over generic import failures", () => {
     const root = extractRootServerStartupError([
-      '[stderr] [server-bootstrap] failed to import server entry: Error: listen EADDRINUSE: address already in use 0.0.0.0:14500\n',
+      '[stderr] [server-bootstrap] failed to import server entry: Error: listen EADDRINUSE: address already in use 0.0.0.0:14700\n',
     ]);
 
     expect(root).toContain("EADDRINUSE");
@@ -269,13 +269,13 @@ describe("startup root error extraction", () => {
 
   it("does not let GPU diagnostics override a structured server port conflict", () => {
     const root = extractRootServerStartupError([
-      '[stderr] [server] startup-error {"code":"PORT_IN_USE","host":"0.0.0.0","port":14500,"networkMode":"loopback","suggestions":["Use Access & Devices to change the port."]}\n',
+      '[stderr] [server] startup-error {"code":"PORT_IN_USE","host":"0.0.0.0","port":14700,"networkMode":"loopback","suggestions":["Use Access & Devices to change the port."]}\n',
       "--- GPU Startup ---\n",
       'GPU startup marker: {"status":"failed","reason":"startup-failed"}\n',
     ]);
 
     expect(root).toContain("PORT_IN_USE");
-    expect(root).toContain("14500");
+    expect(root).toContain("14700");
     expect(root).toContain("Access & Devices");
     expect(root).not.toContain("GPU startup marker");
   });

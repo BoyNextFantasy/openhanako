@@ -26,12 +26,12 @@ describe("server network config", () => {
       schemaVersion: 1,
       mode: "loopback",
       listenHost: "127.0.0.1",
-      listenPort: 14500,
+      listenPort: 14700,
     });
     expect(resolveServerListenOptions(tmpDir)).toMatchObject({
       mode: "loopback",
       host: "127.0.0.1",
-      port: 14500,
+      port: 14700,
     });
   });
 
@@ -51,7 +51,7 @@ describe("server network config", () => {
       schemaVersion: 1,
       mode: "loopback",
       listenHost: "127.0.0.1",
-      listenPort: 14500,
+      listenPort: 14700,
     });
   });
 

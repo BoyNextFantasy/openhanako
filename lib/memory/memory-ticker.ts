@@ -27,7 +27,6 @@ import { processDirtySessions } from "./deep-memory.ts";
 import { getLogicalDay } from "../time-utils.ts";
 import { readCompiledResetAt } from "./compiled-memory-state.ts";
 import { listSessionFiles, readSessionMessages, sessionIdFromFilename } from "../session-jsonl.ts";
-import { isAgentPhoneSessionPath } from "../conversations/agent-phone-session.ts";
 import { buildSourceTimeRange } from "./time-context.ts";
 import { writeCacheSnapshotObservation } from "./cache-snapshot-observation.ts";
 import { runMemoryReflection as defaultRunMemoryReflection } from "./memory-reflection-runner.ts";
@@ -101,8 +100,7 @@ export function createMemoryTicker(opts) {
   const _isMemoryMasterOn = () => !getMemoryMasterEnabled || getMemoryMasterEnabled();
   /** 指定 session 是否允许进入记忆流水线 */
   const _isSessionMemoryOn = (sessionPath) =>
-    !isAgentPhoneSessionPath(sessionPath)
-    && _isMemoryMasterOn()
+    _isMemoryMasterOn()
     && (!isSessionMemoryEnabled || isSessionMemoryEnabled(sessionPath));
   const _getCompiledResetAt = () => readCompiledResetAt(memoryDir);
   const _getTimezone = () => getTimezone?.() || Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";

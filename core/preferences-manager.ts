@@ -247,18 +247,6 @@ export class PreferencesManager {
     this.savePreferences(prefs);
   }
 
-  /** 读取频道系统总开关（全局，默认关闭） */
-  getChannelsEnabled() {
-    return this._cache.channels_enabled === true;
-  }
-
-  /** 保存频道系统总开关 */
-  setChannelsEnabled(enabled) {
-    const prefs = this._mutableCopy();
-    prefs.channels_enabled = !!enabled;
-    this.savePreferences(prefs);
-  }
-
   /** 读取 bridge 权限模式（全局，默认自动审核） */
   getBridgePermissionMode() {
     return normalizeBridgePermissionMode(this._cache.bridge || {});

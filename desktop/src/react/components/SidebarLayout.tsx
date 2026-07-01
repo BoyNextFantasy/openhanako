@@ -18,9 +18,6 @@ function getSidebarWidth(): number {
 function getJianWidth(): number {
   return parseInt(getComputedStyle(document.documentElement).getPropertyValue('--jian-sidebar-width')) || 260;
 }
-function getChannelInspectorWidth(): number {
-  return parseInt(getComputedStyle(document.documentElement).getPropertyValue('--channel-inspector-width')) || 280;
-}
 function getPreviewWidth(): number {
   return parseInt(getComputedStyle(document.documentElement).getPropertyValue('--preview-panel-width')) || 580;
 }
@@ -36,14 +33,13 @@ export function updateLayout(): void {
   const leftW = s.sidebarOpen ? getSidebarWidth() : 0;
   const rightW = s.jianOpen ? getJianWidth() : 0;
   const previewW = currentTab === 'chat' && s.previewOpen ? getPreviewWidth() : 0;
-  const channelInspectorW = currentTab === 'channels' && s.currentChannel ? getChannelInspectorWidth() : 0;
-  const contentW = w - leftW - rightW - previewW - channelInspectorW;
+  const contentW = w - leftW - rightW - previewW;
 
   if (contentW < CHAT_MIN_WIDTH) {
     if (s.jianOpen) {
       useStore.setState({ jianOpen: false, jianAutoCollapsed: true });
 
-      const newContentW = w - (s.sidebarOpen ? getSidebarWidth() : 0) - previewW - channelInspectorW;
+      const newContentW = w - (s.sidebarOpen ? getSidebarWidth() : 0) - previewW;
       if (newContentW < CHAT_MIN_WIDTH && s.sidebarOpen) {
         useStore.setState({ sidebarOpen: false, sidebarAutoCollapsed: true });
       }
@@ -53,7 +49,7 @@ export function updateLayout(): void {
   } else {
     if (s.sidebarAutoCollapsed) {
       const neededForLeft = getSidebarWidth();
-      if (w - rightW - previewW - channelInspectorW - neededForLeft >= CHAT_MIN_WIDTH) {
+      if (w - rightW - previewW - neededForLeft >= CHAT_MIN_WIDTH) {
         const tab = s.currentTab || 'chat';
         const savedLeft = localStorage.getItem(`hana-sidebar-${tab}`);
         if (savedLeft !== 'closed') {
@@ -65,7 +61,7 @@ export function updateLayout(): void {
     if (s2.jianAutoCollapsed) {
       const leftW2 = s2.sidebarOpen ? getSidebarWidth() : 0;
       const neededForRight = getJianWidth();
-      if (w - leftW2 - previewW - channelInspectorW - neededForRight >= CHAT_MIN_WIDTH) {
+      if (w - leftW2 - previewW - neededForRight >= CHAT_MIN_WIDTH) {
         const savedRight = localStorage.getItem('hana-jian');
         if (savedRight !== 'closed') {
           useStore.setState({ jianOpen: true, jianAutoCollapsed: false });

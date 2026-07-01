@@ -1,7 +1,6 @@
 import type { ActivePanel } from '../../types';
 import { useStore } from '../../stores';
 import { useAnyBrowserRunning } from '../../stores/browser-slice';
-import { ChannelListSidebar } from '../channels/ChannelList';
 import { RegionalErrorBoundary } from '../RegionalErrorBoundary';
 import { SessionList } from '../SessionList';
 import { SidebarNoticeSlot } from '../notices/SidebarNoticeSlot';
@@ -18,7 +17,6 @@ interface ChatSidebarContentProps {
 
 interface ChatSidebarProps extends ChatSidebarContentProps {
   open: boolean;
-  includeChannels?: boolean;
 }
 
 function AutomationBadge() {
@@ -124,23 +122,12 @@ export function ChatSidebarContent({
 
 export function ChatSidebar({
   open,
-  includeChannels = true,
   ...contentProps
 }: ChatSidebarProps) {
-  const currentTab = useStore(s => s.currentTab);
-
   return (
     <aside className={`sidebar${open ? '' : ' collapsed'}`} id="sidebar">
       <div className="sidebar-inner">
-        <div className={`sidebar-chat-content${currentTab === 'chat' ? '' : ' hidden'}`}>
-          <ChatSidebarContent {...contentProps} />
-        </div>
-
-        {includeChannels && (
-          <div className={`sidebar-channel-content${currentTab === 'channels' ? '' : ' hidden'}`}>
-            <ChannelListSidebar />
-          </div>
-        )}
+        <ChatSidebarContent {...contentProps} />
       </div>
       <div className="resize-handle resize-handle-right" id="sidebarResizeHandle"></div>
     </aside>

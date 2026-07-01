@@ -7,10 +7,10 @@ describe("CLI args", () => {
   });
 
   it("parses chat connection options", () => {
-    expect(parseCliArgs(["chat", "--plain", "--url", "http://host:14500", "--token", "abc", "--session", "s1"])).toMatchObject({
+    expect(parseCliArgs(["chat", "--plain", "--url", "http://host:14700", "--token", "abc", "--session", "s1"])).toMatchObject({
       command: "chat",
       plain: true,
-      url: "http://host:14500",
+      url: "http://host:14700",
       token: "abc",
       session: "s1",
     });

@@ -14,13 +14,6 @@ import { sessionScopedKey, sessionScopedListIncludes, sessionScopedValue } from 
 import { browserStateForPath, setBrowserStateForPath } from '../stores/browser-slice';
 import { scheduleSessionsRefresh } from './session-refresh-scheduler';
 import { handleLegacyArtifactBlock } from '../stores/preview-actions';
-import {
-  appendChannelMessage as appendChannelMessageAction,
-  loadChannels as loadChannelsAction,
-  markChannelMessagesDirty as markChannelMessagesDirtyAction,
-  openChannel as openChannelAction,
-  upsertConversationAgentActivity as upsertConversationAgentActivityAction,
-} from '../stores/channel-actions';
 import { showError } from '../utils/ui-helpers';
 import { handleAppEvent } from './app-event-actions';
 import {
@@ -197,24 +190,6 @@ function resolvePrimaryAgentId(state: any): string | null {
     ? state.agents.find((agent: any) => agent?.isPrimary === true)
     : null;
   return typeof primary?.id === 'string' && primary.id ? primary.id : null;
-}
-
-function resolveDmPeerIdForEvent(state: any, msg: any): string | null {
-  const channels = Array.isArray(state.channels) ? state.channels : [];
-  const known = channels.find((channel: any) => {
-    if (!channel?.isDM || !channel.dmOwnerId || !channel.peerId) return false;
-    return (
-      (msg.from === channel.dmOwnerId && msg.to === channel.peerId)
-      || (msg.to === channel.dmOwnerId && msg.from === channel.peerId)
-    );
-  });
-  if (known?.peerId) return known.peerId;
-
-  const ownerId = resolvePrimaryAgentId(state) || state.currentAgentId || null;
-  if (!ownerId) return typeof msg.from === 'string' ? msg.from : null;
-  if (msg.from === ownerId && typeof msg.to === 'string') return msg.to;
-  if (msg.to === ownerId && typeof msg.from === 'string') return msg.from;
-  return null;
 }
 
 function applyTodoToolEnd(msg: any): void {
@@ -795,55 +770,6 @@ export function handleServerMessage(msg: any): void {
             mode,
           },
         }));
-      }
-      break;
-    }
-
-    case 'channel_new_message': {
-      const store = useStore.getState();
-      const knownChannel = store.channels.some((channel) => channel.id === msg.channelName);
-      const isVisibleCurrentChannel =
-        store.currentTab === 'channels'
-        && store.currentChannel === msg.channelName
-        && document.visibilityState === 'visible';
-      if (msg.channelName && msg.message) {
-        if (!knownChannel) loadChannelsAction();
-        appendChannelMessageAction(msg.channelName, msg.message, { markRead: isVisibleCurrentChannel });
-      } else if (msg.channelName && isVisibleCurrentChannel) {
-        markChannelMessagesDirtyAction(msg.channelName);
-        openChannelAction(msg.channelName);
-      } else if (msg.channelName) {
-        markChannelMessagesDirtyAction(msg.channelName);
-        loadChannelsAction();
-      }
-      break;
-    }
-
-    case 'channel_created': {
-      loadChannelsAction();
-      break;
-    }
-
-    case 'dm_new_message': {
-      const store2 = useStore.getState();
-      const peerId = resolveDmPeerIdForEvent(store2, msg);
-      if (!peerId) {
-        loadChannelsAction();
-        break;
-      }
-      const dmId = `dm:${peerId}`;
-      const isViewingDM = store2.currentTab === 'channels' && store2.currentChannel === dmId && document.visibilityState === 'visible';
-      if (isViewingDM) {
-        openChannelAction(dmId, true);
-      } else {
-        loadChannelsAction();
-      }
-      break;
-    }
-
-    case 'conversation_agent_activity': {
-      if (msg.activity) {
-        upsertConversationAgentActivityAction(msg.activity);
       }
       break;
     }

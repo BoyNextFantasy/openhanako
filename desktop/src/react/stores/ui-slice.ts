@@ -32,8 +32,6 @@ export interface UiSlice {
   settingsModal: SettingsModalState;
   /** Skill catalog revision; bumped by app_event skills-changed to refresh derived lists. */
   skillCatalogVersion: number;
-  /** 频道创建弹窗是否可见 */
-  channelCreateOverlayVisible: boolean;
   setSidebarOpen: (open: boolean) => void;
   setSidebarAutoCollapsed: (collapsed: boolean) => void;
   setJianOpen: (open: boolean) => void;
@@ -44,7 +42,6 @@ export interface UiSlice {
   setActivePanel: (panel: ActivePanel) => void;
   setRightWorkspaceTab: (tab: RightWorkspaceTab) => void;
   setJianDrawerOpen: (open: boolean) => void;
-  setChannelCreateOverlayVisible: (visible: boolean) => void;
   setMediaViewer: (state: MediaViewerState | null) => void;
   setSettingsModal: (state: SettingsModalState) => void;
   setMediaViewerCurrent: (id: string) => void;
@@ -73,7 +70,6 @@ export const createUiSlice = (
   mediaViewer: null,
   settingsModal: { open: false, activeTab: 'agent' },
   skillCatalogVersion: 0,
-  channelCreateOverlayVisible: false,
   setSidebarOpen: (open) => set({ sidebarOpen: open }),
   setSidebarAutoCollapsed: (collapsed) => set({ sidebarAutoCollapsed: collapsed }),
   setJianOpen: (open) => set({ jianOpen: open }),
@@ -84,7 +80,6 @@ export const createUiSlice = (
   setActivePanel: (panel) => set({ activePanel: panel }),
   setRightWorkspaceTab: (tab) => set({ rightWorkspaceTab: tab }),
   setJianDrawerOpen: (open) => set({ jianDrawerOpen: open }),
-  setChannelCreateOverlayVisible: (visible) => set({ channelCreateOverlayVisible: visible }),
   setMediaViewer: (state) => set({ mediaViewer: state }),
   setSettingsModal: (state) => set({ settingsModal: state }),
   setMediaViewerCurrent: (id) => set((s) => ({

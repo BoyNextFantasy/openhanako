@@ -33,7 +33,6 @@ export const CONFIG_SCHEMA = {
   editor:                       { scope: 'global', setter: 'setEditor',         getter: 'getEditor' },
   'capabilities.learn_skills':  { scope: 'global', setter: 'setLearnSkills',    getter: 'getLearnSkills', prefsPath: 'learn_skills' },
   'desk.heartbeat_master':      { scope: 'global', setter: 'setHeartbeatMaster', getter: 'getHeartbeatMaster', prefsPath: 'heartbeat_master', defaultValue: true },
-  'channels.enabled':           { scope: 'global', setter: 'setChannelsEnabled', getter: 'getChannelsEnabled', prefsPath: 'channels_enabled', defaultValue: false },
   'bridge.permissionMode':      { scope: 'global', setter: 'setBridgePermissionMode', getter: 'getBridgePermissionMode', defaultValue: 'auto' },
   'bridge.readOnly':            { scope: 'global', setter: 'setBridgeReadOnly', getter: 'getBridgeReadOnly', defaultValue: false },
   'bridge.receiptEnabled':      { scope: 'global', setter: 'setBridgeReceiptEnabled', getter: 'getBridgeReceiptEnabled', defaultValue: true },

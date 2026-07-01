@@ -237,8 +237,8 @@ describe('SettingsContent title placement', () => {
       userId: 'user_lan',
       studioId: 'studio_lan',
       label: 'LAN Studio',
-      baseUrl: 'http://192.168.31.75:14500',
-      wsUrl: 'ws://192.168.31.75:14500',
+      baseUrl: 'http://192.168.31.75:14700',
+      wsUrl: 'ws://192.168.31.75:14700',
       token: 'hana_dev_remote',
       authState: 'paired',
       trustState: 'lan',
@@ -262,7 +262,7 @@ describe('SettingsContent title placement', () => {
     await waitFor(() => {
       expect(mockState.activeServerConnection).toEqual(expect.objectContaining({
         connectionId: remoteConnection.connectionId,
-        baseUrl: 'http://192.168.31.75:14500',
+        baseUrl: 'http://192.168.31.75:14700',
         token: 'hana_dev_remote',
       }));
     });

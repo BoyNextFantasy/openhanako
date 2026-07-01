@@ -12,8 +12,6 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { RegionalErrorBoundary } from './components/RegionalErrorBoundary';
 
 const SkillViewerOverlay = lazy(() => import('./components/SkillViewerOverlay').then(m => ({ default: m.SkillViewerOverlay })));
-import { ChannelsPanel } from './components/ChannelsPanel';
-import { ChannelCreateOverlay } from './components/channels/ChannelCreateOverlay';
 import { SidebarLayout, toggleSidebar } from './components/SidebarLayout';
 import { FloatSidebar, useFloatSidebar } from './components/FloatSidebar';
 import { useSidebarResize } from './hooks/use-sidebar-resize';
@@ -88,7 +86,6 @@ function App() {
     <ErrorBoundary>
       {/* Headless behavior components */}
       <SidebarLayout />
-      <ChannelsPanel />
 
       {/* ── App shell: titlebar 作为独立布局行（flex column 第一行），
            app body 占剩余高度。取代旧的 fixed overlay + 各内容区 padding-top 避让。 ── */}
@@ -122,9 +119,6 @@ function App() {
 
       {/* Connection status */}
       <ConnectionStatus />
-
-      {/* Channel create overlay */}
-      <ChannelCreateOverlay />
 
       {/* Skill viewer overlay */}
       <Suspense fallback={null}><SkillViewerOverlay /></Suspense>

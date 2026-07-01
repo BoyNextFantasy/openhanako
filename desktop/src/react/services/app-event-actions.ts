@@ -4,7 +4,6 @@ import { applyAgentIdentity, loadAgents } from '../stores/agent-actions';
 import { loadSessions, switchSession } from '../stores/session-actions';
 import { loadModels } from '../utils/ui-helpers';
 import { activateWorkspaceDesk } from '../stores/desk-actions';
-import { loadChannels } from '../stores/channel-actions';
 import { applyChatLayout } from '../chat/layout';
 import { applyEditorTypography } from '../editor/typography';
 import { mergeWorkspaceHistory } from '../../../../shared/workspace-history.ts';
@@ -118,19 +117,6 @@ export function handleAppEvent(type: string, data: any = {}, options: AppEventOp
       }
       loadSessions();
 
-      // Reset channel state for new agent
-      useStore.setState({
-        currentChannel: null,
-        channelMessages: [],
-        channelMembers: [],
-        channelTotalUnread: 0,
-        channelHeaderName: '',
-        channelHeaderMembersText: '',
-        channelInfoName: '',
-        channelIsDM: false,
-      });
-      loadChannels();
-
       // Reload models and reset thinking level
       loadModels();
       useStore.setState({ thinkingLevel: 'auto' });
@@ -171,24 +157,10 @@ export function handleAppEvent(type: string, data: any = {}, options: AppEventOp
     }
     case 'agent-created':
       loadAgents();
-      loadChannels();
       break;
-    case 'agent-deleted': {
-      // If the currently open conversation is a DM with the deleted agent, clear it
-      const deletedDmId = data.agentId ? `dm:${data.agentId}` : null;
-      if (deletedDmId && useStore.getState().currentChannel === deletedDmId) {
-        useStore.setState({
-          currentChannel: null,
-          channelMessages: [],
-          channelHeaderName: '',
-          channelHeaderMembersText: '',
-          channelIsDM: false,
-        });
-      }
+    case 'agent-deleted':
       loadAgents();
-      loadChannels();
       break;
-    }
     case 'agent-updated': {
       const currentAgentId = useStore.getState().currentAgentId;
       if (data.agentId && data.agentId !== currentAgentId) {

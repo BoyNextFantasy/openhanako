@@ -36,7 +36,6 @@ export class FreshCompactMaintainer {
     this._running = true;
     const result = {
       bridgeCompacted: 0,
-      phoneCompacted: 0,
       failed: 0,
       staleRemaining: 0,
     };

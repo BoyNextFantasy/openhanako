@@ -1638,14 +1638,11 @@ export class SessionCoordinator {
     const stableRestoreToolNames = toolNamesFromObjects(allToolObjects, {
       includePluginTools: false,
     });
-    const channelsEnabled = this._d.getPrefs?.()?.getChannelsEnabled?.();
-    const stableFeatureDisabledToolNames = getStableFeatureDisabledToolNames({
-      channelsEnabled,
-    });
+    const stableFeatureDisabledToolNames = getStableFeatureDisabledToolNames();
     const runtimeDisabledToolNames = computeRuntimeDisabledToolNames(
       allToolObjects,
       agent.config,
-      { agentId: creatingAgentId, restore, channelsEnabled },
+      { agentId: creatingAgentId, restore },
       { warn: (msg) => log.warn(msg) },
     );
     const extraDisabledToolNames = [
@@ -3693,13 +3690,12 @@ export class SessionCoordinator {
       ...(built.customTools || []),
     ];
     const allToolNames = toolNamesFromObjects(allToolObjects);
-    const channelsEnabled = this._d.getPrefs?.()?.getChannelsEnabled?.();
     const extraDisabledToolNames = [
-      ...getStableFeatureDisabledToolNames({ channelsEnabled }),
+      ...getStableFeatureDisabledToolNames(),
       ...computeRuntimeDisabledToolNames(
         allToolObjects,
         agent.config,
-        { agentId: entry?.agentId, restore: false, channelsEnabled },
+        { agentId: entry?.agentId, restore: false },
         { warn: (msg) => log.warn(msg) },
       ),
     ];

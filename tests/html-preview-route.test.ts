@@ -21,7 +21,7 @@ describe("HTML preview route", () => {
     });
     const html = '<script src="https://cdn.tailwindcss.com"></script><h1 class="text-red-500">Hello</h1>';
 
-    const register = await app.request("http://127.0.0.1:14500/api/preview/html", {
+    const register = await app.request("http://127.0.0.1:14700/api/preview/html", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title: "demo.html", content: html }),
@@ -29,7 +29,7 @@ describe("HTML preview route", () => {
 
     expect(register.status).toBe(200);
     const registered = await register.json();
-    expect(registered.previewUrl).toBe("http://127.0.0.1:14500/preview/html/pv_test?previewToken=preview_secret");
+    expect(registered.previewUrl).toBe("http://127.0.0.1:14700/preview/html/pv_test?previewToken=preview_secret");
 
     const rendered = await app.request(registered.previewUrl);
 
@@ -64,7 +64,7 @@ describe("HTML preview route", () => {
       now: () => 1000,
     });
 
-    const register = await app.request("http://127.0.0.1:14500/api/preview/html", {
+    const register = await app.request("http://127.0.0.1:14700/api/preview/html", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -77,7 +77,7 @@ describe("HTML preview route", () => {
     const rendered = await app.request(registered.previewUrl);
     const html = await rendered.text();
     const csp = rendered.headers.get("Content-Security-Policy") || "";
-    const assetBase = "http://127.0.0.1:14500/preview/html/pv_assets/assets/preview_secret/";
+    const assetBase = "http://127.0.0.1:14700/preview/html/pv_assets/assets/preview_secret/";
 
     expect(html).toContain(`<base href="${assetBase}">`);
     expect(html.indexOf(`<base href="${assetBase}">`))
@@ -89,12 +89,12 @@ describe("HTML preview route", () => {
     expect(csp).toContain(`img-src ${assetBase} https: data: blob:`);
     expect(csp).toContain(`media-src ${assetBase} https: data: blob:`);
 
-    const asset = await app.request("http://127.0.0.1:14500/preview/html/pv_assets/assets/preview_secret/assets/pic.png");
+    const asset = await app.request("http://127.0.0.1:14700/preview/html/pv_assets/assets/preview_secret/assets/pic.png");
     expect(asset.status).toBe(200);
     expect(asset.headers.get("Content-Type")).toContain("image/png");
     expect(await asset.text()).toBe("PNG");
 
-    const traversal = await app.request("http://127.0.0.1:14500/preview/html/pv_assets/assets/preview_secret/../demo.html");
+    const traversal = await app.request("http://127.0.0.1:14700/preview/html/pv_assets/assets/preview_secret/../demo.html");
     expect(traversal.status).toBe(404);
   });
 
@@ -119,7 +119,7 @@ describe("HTML preview route", () => {
       now: () => 1000,
     });
 
-    const register = await app.request("http://127.0.0.1:14500/api/preview/html", {
+    const register = await app.request("http://127.0.0.1:14700/api/preview/html", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -138,8 +138,8 @@ describe("HTML preview route", () => {
     const registered = await register.json();
     const rendered = await app.request(registered.previewUrl);
     const html = await rendered.text();
-    const assetBase = "http://127.0.0.1:14500/preview/html/pv_rooted/assets/preview_secret/pages/";
-    const assetUrl = "http://127.0.0.1:14500/preview/html/pv_rooted/assets/preview_secret/assets/Cover%20Image.png";
+    const assetBase = "http://127.0.0.1:14700/preview/html/pv_rooted/assets/preview_secret/pages/";
+    const assetUrl = "http://127.0.0.1:14700/preview/html/pv_rooted/assets/preview_secret/assets/Cover%20Image.png";
 
     expect(html).toContain(`<base href="${assetBase}">`);
     expect(html).toContain(`id="relative" src="../assets/Cover%20Image.png"`);
@@ -151,7 +151,7 @@ describe("HTML preview route", () => {
     expect(relativeAsset.headers.get("Content-Type")).toContain("image/png");
     expect(await relativeAsset.text()).toBe("PNG");
 
-    const directTraversal = await app.request("http://127.0.0.1:14500/preview/html/pv_rooted/assets/preview_secret/pages/../demo.html");
+    const directTraversal = await app.request("http://127.0.0.1:14700/preview/html/pv_rooted/assets/preview_secret/pages/../demo.html");
     expect(directTraversal.status).toBe(404);
   });
 
@@ -164,14 +164,14 @@ describe("HTML preview route", () => {
       ttlMs: 10,
     });
 
-    const register = await app.request("http://127.0.0.1:14500/api/preview/html", {
+    const register = await app.request("http://127.0.0.1:14700/api/preview/html", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title: "demo.html", content: "<h1>Hello</h1>" }),
     });
     const { previewUrl } = await register.json();
 
-    expect((await app.request("http://127.0.0.1:14500/preview/html/pv_expiring?previewToken=wrong")).status).toBe(404);
+    expect((await app.request("http://127.0.0.1:14700/preview/html/pv_expiring?previewToken=wrong")).status).toBe(404);
     expect((await app.request(previewUrl)).status).toBe(200);
 
     now = 1011;
@@ -185,7 +185,7 @@ describe("HTML preview route", () => {
       maxContentBytes: 8,
     });
 
-    const register = await app.request("http://127.0.0.1:14500/api/preview/html", {
+    const register = await app.request("http://127.0.0.1:14700/api/preview/html", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title: "demo.html", content: "<h1>too large</h1>" }),

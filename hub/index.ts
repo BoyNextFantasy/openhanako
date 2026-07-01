@@ -7,7 +7,6 @@
  *
  * 模块：
  *   EventBus      — 统一事件总线
- *   ChannelRouter  — 频道手机送达 + 调度
  *   GuestHandler   — Guest 留言机
  *   Scheduler      — Heartbeat + Cron
  */
@@ -16,11 +15,8 @@ import path from "path";
 import fs from "fs";
 import crypto from "crypto";
 import { EventBus } from "./event-bus.ts";
-import { ChannelRouter } from "./channel-router.ts";
 import { GuestHandler } from "./guest-handler.ts";
 import { Scheduler } from "./scheduler.ts";
-import { DmRouter } from "./dm-router.ts";
-import { AgentPhoneActivityStore } from "../lib/conversations/agent-phone-activity.ts";
 import {
   extractTextContent,
   filterUnreferencedInlineImages,
@@ -36,11 +32,7 @@ import { findModel } from "../shared/model-ref.ts";
 const log = createModuleLogger("hub");
 
 export class Hub {
-  declare _agentPhoneAbortHandlers: any;
-  declare _agentPhoneActivities: any;
   declare _bridgeManager: any;
-  declare _channelRouter: any;
-  declare _dmRouter: any;
   declare _engine: any;
   declare _eventBus: any;
   declare _guestHandler: any;
@@ -53,27 +45,16 @@ export class Hub {
   constructor({ engine }) {
     this._engine = engine;
     this._eventBus = new EventBus();
-    this._channelRouter = new ChannelRouter({ hub: this });
     this._guestHandler = new GuestHandler({ hub: this });
     this._scheduler = new Scheduler({ hub: this });
-    this._dmRouter = new DmRouter({ hub: this });
-    this._agentPhoneActivities = new AgentPhoneActivityStore({
-      emit: (event) => this._eventBus.emit(event, null),
-    });
-    this._agentPhoneAbortHandlers = new Set();
 
     // 注入 Hub 回调到 Engine（单向：Hub → Engine，不再双向引用）
     engine.setHubCallbacks({
       hub: this,  // 用于 slash dispatcher setHub 注入；engine.setHubCallbacks 内部会调 dispatcher.setHub(hub)
       scheduler: this._scheduler,
-      dmRouter: this._dmRouter,
-      channelRouter: this._channelRouter,
       eventBus: this._eventBus,
-      registerAgentPhoneAbortHandler: (handler, meta) => this.registerAgentPhoneAbortHandler(handler, meta),
       pauseForAgentSwitch: () => this.pauseForAgentSwitch(),
       resumeAfterAgentSwitch: () => this.resumeAfterAgentSwitch(),
-      triggerChannelDelivery: (name, opts) => this._channelRouter.triggerImmediate(name, opts),
-      triggerChannelTriage: (name, opts) => this._channelRouter.triggerImmediate(name, opts),
     });
 
     // 注入 EventBus（替代旧的 proxy hack）
@@ -81,7 +62,6 @@ export class Hub {
 
     this._sessionHandlerCleanups = [];
     this._setupSessionHandlers();
-    this._setupDmHandler();
   }
 
   /** @returns {import('../core/engine.ts').HanaEngine} */
@@ -90,41 +70,12 @@ export class Hub {
   /** @returns {EventBus} */
   get eventBus() { return this._eventBus; }
 
-  /** @returns {ChannelRouter} */
-  get channelRouter() { return this._channelRouter; }
-
   /** @returns {Scheduler} */
   get scheduler() { return this._scheduler; }
 
   /** @returns {import('../lib/bridge/bridge-manager.ts').BridgeManager|null} */
   get bridgeManager() { return this._bridgeManager || null; }
   set bridgeManager(bm) { this._bridgeManager = bm; }
-
-  get agentPhoneActivities() { return this._agentPhoneActivities; }
-
-  registerAgentPhoneAbortHandler(handler, meta: any = {}) {
-    if (typeof handler !== "function") return () => {};
-    const entry = { handler, meta };
-    this._agentPhoneAbortHandlers.add(entry);
-    return () => {
-      this._agentPhoneAbortHandlers.delete(entry);
-    };
-  }
-
-  abortAgentPhoneSessions(reason = "phone-disabled", filter = null) {
-    const entries = [...this._agentPhoneAbortHandlers];
-    let aborted = 0;
-    for (const { handler, meta } of entries) {
-      if (!matchesAgentPhoneAbortFilter(meta, filter)) continue;
-      try {
-        handler(reason);
-        aborted += 1;
-      } catch (err) {
-        log.warn(`agent phone abort handler failed: ${err.message}`);
-      }
-    }
-    return aborted;
-  }
 
   // ──────────── 订阅 ────────────
 
@@ -301,24 +252,16 @@ export class Hub {
   // ──────────── 调度器管理 ────────────
 
   /**
-   * 初始化所有调度器（Scheduler + ChannelRouter）
+   * 初始化所有调度器
    * 在 engine.init() 完成后由 server/index.js 调用
    */
   initSchedulers() {
-    const engine = this._engine;
-
     // Scheduler（heartbeat + cron）
     this._scheduler.start();
-
-    // ChannelRouter：仅在频道总开关为开时启动
-    if (engine.isChannelsEnabled?.()) {
-      this._channelRouter.start();
-      this._channelRouter.setupPostHandler();
-    }
   }
 
   /**
-   * Agent 切换前暂停：停所有 heartbeat（cron 全 agent 并发，不中断），ChannelRouter 持续跑
+   * Agent 切换前暂停：停所有 heartbeat（cron 全 agent 并发，不中断）
    */
   async pauseForAgentSwitch() {
     await this._scheduler.stopHeartbeat();
@@ -329,8 +272,6 @@ export class Hub {
    */
   resumeAfterAgentSwitch() {
     this._scheduler.startHeartbeat();
-    this._setupDmHandler();
-    this._channelRouter.setupPostHandler();
   }
 
   /**
@@ -338,26 +279,6 @@ export class Hub {
    */
   async stopSchedulers() {
     await this._scheduler.stop();
-    await this._channelRouter.stop();
-  }
-
-  // ──────────── 频道代理方法 ────────────
-
-  triggerChannelDelivery(channelName, opts) {
-    return this._channelRouter.triggerImmediate(channelName, opts);
-  }
-
-  triggerChannelTriage(channelName, opts) {
-    return this.triggerChannelDelivery(channelName, opts);
-  }
-
-  async toggleChannels(enabled) {
-    if (!enabled) this.abortAgentPhoneSessions("channels-disabled");
-    return this._channelRouter.toggle(enabled);
-  }
-
-  refreshChannelProactiveSchedule() {
-    return this._channelRouter.refreshProactiveSchedule();
   }
 
   // ──────────── 生命周期 ────────────
@@ -371,9 +292,6 @@ export class Hub {
   }
 
   // ──────────── 内部 ────────────
-
-  /** @returns {DmRouter} */
-  get dmRouter() { return this._dmRouter; }
 
   _setupSessionHandlers() {
     const bus = this._eventBus;
@@ -848,25 +766,6 @@ export class Hub {
     }));
   }
 
-  _setupDmHandler() {
-    const engine = this._engine;
-    // 给所有 agent 注入 DM 回调
-    for (const [, agent] of engine.agents || []) {
-      agent.setDmSentHandler((fromId, toId) =>
-        this._dmRouter.handleNewDm(fromId, toId));
-    }
-  }
-
-}
-
-function matchesAgentPhoneAbortFilter( meta: any = {}, filter = null) {
-  if (!filter) return true;
-  if (typeof filter === "function") return filter(meta);
-  for (const [key, value] of Object.entries(filter)) {
-    if (value === undefined || value === null) continue;
-    if (meta?.[key] !== value) return false;
-  }
-  return true;
 }
 
 function textOrNull(value) {

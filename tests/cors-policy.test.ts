@@ -9,7 +9,7 @@ describe("CORS policy", () => {
 
   it("keeps the default browser allowance limited to loopback web frontends", () => {
     expect(isCorsOriginAllowed({ origin: "http://localhost:5173" })).toBe(true);
-    expect(isCorsOriginAllowed({ origin: "http://127.0.0.1:14500" })).toBe(true);
+    expect(isCorsOriginAllowed({ origin: "http://127.0.0.1:14700" })).toBe(true);
     expect(isCorsOriginAllowed({ origin: "http://192.168.31.75:5173" })).toBe(false);
   });
 

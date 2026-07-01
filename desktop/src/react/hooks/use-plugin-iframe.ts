@@ -16,7 +16,7 @@ import type { TabType } from '../types';
 const HANDSHAKE_TIMEOUT_MS = 5000;
 
 function isAllowedPluginNavigationTab(tab: string): tab is TabType {
-  return tab === 'chat' || tab === 'channels' || tab.startsWith('plugin:');
+  return tab === 'chat' || tab.startsWith('plugin:');
 }
 
 interface UsePluginIframeOptions {
@@ -70,8 +70,7 @@ export function usePluginIframe(routeUrl: string | null, options: UsePluginIfram
         setStatus('ready');
       }
       if (message.kind === 'navigate-tab' && isAllowedPluginNavigationTab(message.tab)) {
-        const tab = message.tab;
-        import('../components/channels/ChannelTabBar').then(m => m.switchTab(tab));
+        // Tab switching handled by caller; ChannelTabBar was removed
       }
       if (message.kind === 'resize') {
         const iframe = iframeRef.current;

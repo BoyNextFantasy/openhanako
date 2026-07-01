@@ -1068,7 +1068,7 @@ function InputAreaInner({ surface }: Required<InputAreaProps>) {
     const state = useStore.getState() as Record<string, any>;
     if (state.currentTab !== 'chat') return false;
     if (state.pendingSessionSwitchPath) return false;
-    if (state.settingsModal?.open || state.mediaViewer || state.skillViewerData || state.channelCreateOverlayVisible) {
+    if (state.settingsModal?.open || state.mediaViewer || state.skillViewerData) {
       return false;
     }
     return true;

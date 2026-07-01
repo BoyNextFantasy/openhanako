@@ -123,74 +123,6 @@ export interface Model {
   input?: ("text" | "image" | "video")[];
 }
 
-export interface Channel {
-  id: string;
-  name: string;
-  description?: string;
-  members: string[];
-  lastMessage: string;
-  lastSender: string;
-  lastTimestamp: string;
-  messageCount?: number;
-  newMessageCount: number;
-  isDM?: boolean;
-  dmOwnerId?: string;
-  peerId?: string;
-  peerName?: string;
-}
-
-export interface ChannelMessage {
-  sender: string;
-  timestamp: string;
-  body: string;
-}
-
-export interface AgentPhoneActivity {
-  conversationId: string;
-  conversationType: 'channel' | 'dm';
-  agentId: string;
-  state: 'idle' | 'viewed' | 'triaging' | 'no_reply' | 'replying' | 'using_tool' | 'waiting_permission' | 'compacting' | 'error' | string;
-  summary: string;
-  timestamp: string;
-  details?: Record<string, unknown> | null;
-}
-
-export type ChannelAgentActivities = Record<string, Record<string, AgentPhoneActivity[]>>;
-
-export interface ChannelTickerStatus {
-  active?: {
-    channelName?: string;
-    agentId?: string;
-    activeAgentId?: string;
-    delivered?: number;
-    agentCount?: number;
-    checks?: number;
-    maxChecks?: number;
-    mode?: string;
-  } | null;
-  nextReminder?: {
-    channelName?: string;
-    dueAt?: string;
-    dueAtMs?: number;
-    intervalMs?: number;
-  } | null;
-  running?: boolean;
-  queued?: boolean;
-}
-
-export type ChannelTickerStatusMap = Record<string, ChannelTickerStatus | null>;
-export type AgentPhoneToolMode = 'read_only' | 'write';
-
-export interface AgentPhoneSettings {
-  mode: AgentPhoneToolMode;
-  replyMinChars: number | null;
-  replyMaxChars: number | null;
-  proactiveEnabled: boolean;
-  reminderIntervalMinutes: number;
-  guardLimit: number;
-  modelOverrideEnabled: boolean;
-  modelOverrideModel: { id: string; provider: string } | null;
-}
 
 export interface Activity {
   id: string;
@@ -272,7 +204,7 @@ export interface TodoItem {
 
 // ── 浮动面板类型 ──
 export type ActivePanel = 'activity' | 'automation' | 'bridge' | 'skills' | null;
-export type TabType = 'chat' | 'channels' | `plugin:${string}`;
+export type TabType = 'chat' | `plugin:${string}`;
 export type RightWorkspaceTab = 'session-files' | 'workspace' | `plugin-widget:${string}`;
 
 export interface FileVersion {

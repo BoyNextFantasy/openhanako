@@ -42,10 +42,10 @@ export const READ_WRITE_AGENT_DIRS = [
 export const READ_ONLY_AGENT_DIRS = [];
 
 /** agentDir 下可读写的文件 */
-export const READ_WRITE_AGENT_FILES = ["pinned.md", "channels.md"];
+export const READ_WRITE_AGENT_FILES = ["pinned.md"];
 
 /** hanakoHome 根级别可读写的目录 */
-export const READ_WRITE_HOME_DIRS = ["channels", "logs", "uploads", ".ephemeral"];
+export const READ_WRITE_HOME_DIRS = ["logs", "uploads", ".ephemeral"];
 
 export const SANDBOX_ACCESS_CONTRACT = Object.freeze({
   read: "all",

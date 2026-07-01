@@ -6,7 +6,6 @@
  *   - AgentManager       — agent CRUD / init / switch
  *   - SessionCoordinator — session 生命周期 / listing
  *   - ConfigCoordinator  — 配置读写 / 模型 / 搜索 / utility
- *   - ChannelManager     — 频道 CRUD / 成员管理
  *   - BridgeSessionManager — 外部平台 session
  *   - ModelManager        — 模型注册 / 发现
  *   - PreferencesManager  — 全局偏好
@@ -77,26 +76,6 @@ function resolveRequestReasoningLevel(models, prefs, ctx) {
     : (sessionThinkingLevel || preferenceThinkingLevel);
 }
 
-function resolveChannelsEnabledForToolAvailability(engine) {
-  try {
-    if (
-      Object.prototype.hasOwnProperty.call(engine, "isChannelsEnabled")
-      && typeof engine.isChannelsEnabled === "function"
-    ) {
-      return engine.isChannelsEnabled();
-    }
-    if (typeof engine._configCoord?.getChannelsEnabled === "function") {
-      return engine._configCoord.getChannelsEnabled();
-    }
-    if (typeof engine._prefs?.getChannelsEnabled === "function") {
-      return engine._prefs.getChannelsEnabled();
-    }
-  } catch {
-    return undefined;
-  }
-  return undefined;
-}
-
 import { PreferencesManager } from "./preferences-manager.ts";
 import { ModelManager } from "./model-manager.ts";
 import { SessionProjectCatalogStore } from "./session-project-catalog-store.ts";
@@ -116,7 +95,6 @@ import {
   sanitizeSessionManifestFileSuffix,
 } from "./session-manifest/db-files.ts";
 import { ConfigCoordinator, SHARED_MODEL_KEYS } from "./config-coordinator.ts";
-import { ChannelManager } from "./channel-manager.ts";
 import {
   summarizeTitle as _summarizeTitle,
   translateSkillNames as _translateSkillNames,
@@ -188,7 +166,6 @@ export class HanaEngine {
   declare _approvalGateway: any;
   declare _automationSuggestionStore: any;
   declare _bridge: any;
-  declare _channels: any;
   declare _checkpointStore: any;
   declare _computerHost: any;
   declare _computerProviders: any;
@@ -246,7 +223,6 @@ export class HanaEngine {
   declare _win32LegacySandboxCleanupQueue: any;
   declare agentsDir: any;
   declare appVersion: any;
-  declare channelsDir: any;
   declare hanakoHome: any;
   declare productDir: any;
   declare userDir: any;
@@ -268,8 +244,6 @@ export class HanaEngine {
     this._resourceEventBus = null;
     this.agentsDir = path.join(hanakoHome, "agents");
     this.userDir = path.join(hanakoHome, "user");
-    this.channelsDir = path.join(hanakoHome, "channels");
-    fs.mkdirSync(this.channelsDir, { recursive: true });
     this._studioCronService = new StudioCronService({
       hanakoHome: this.hanakoHome,
       agentsDir: this.agentsDir,
@@ -333,21 +307,12 @@ export class HanaEngine {
     const startId = agentId || this._prefs.getPrimaryAgent() || this._prefs.findFirstAgent();
     if (!startId) throw new Error(t("error.noAgentsFound"));
 
-    // ── Channel Manager ──
-    this._channels = new ChannelManager({
-      channelsDir: this.channelsDir,
-      agentsDir: this.agentsDir,
-      userDir: this.userDir,
-      getHub: () => this._hubCallbacks,
-    });
-
     // ── Agent Manager ──
     this._agentMgr = new AgentManager({
       hanakoHome: this.hanakoHome,
       agentsDir: this.agentsDir,
       productDir: this.productDir,
       userDir: this.userDir,
-      channelsDir: this.channelsDir,
       getPrefs: () => this._prefs,
       getModels: () => this._models,
       getHub: () => this._hubCallbacks,
@@ -355,7 +320,6 @@ export class HanaEngine {
       getSearchConfig: () => this.getSearchConfig(),
       resolveUtilityConfig: (options) => this.resolveUtilityConfig(options),
       getSharedModels: () => this._configCoord.getSharedModels(),
-      getChannelManager: () => this._channels,
       getSessionCoordinator: () => this._sessionCoord,
       getEngine: () => this,
       getResourceLoader: () => this._resourceLoader,
@@ -1240,9 +1204,6 @@ export class HanaEngine {
   setHomeFolder(agentId, folder) { return this._configCoord.setHomeFolder(agentId, folder); }
   getHeartbeatMaster() { return this._configCoord.getHeartbeatMaster(); }
   setHeartbeatMaster(v) { return this._configCoord.setHeartbeatMaster(v); }
-  getChannelsEnabled() { return this._configCoord.getChannelsEnabled(); }
-  async setChannelsEnabled(v) { return this._configCoord.setChannelsEnabled(v); }
-  isChannelsEnabled() { return this._configCoord.getChannelsEnabled(); }
   getBridgePermissionMode() { return this._prefs.getBridgePermissionMode(); }
   setBridgePermissionMode(v) { return this._prefs.setBridgePermissionMode(v); }
   getAutomationPermissionMode() { return this._prefs.getAutomationPermissionMode(); }
@@ -1471,15 +1432,6 @@ export class HanaEngine {
 
   getPreferences() { return this._readPreferences(); }
   savePreferences(p) { return this._writePreferences(p); }
-
-  // ════════════════════════════
-  //  Channel 代理（→ ChannelManager）
-  // ════════════════════════════
-
-  async createChannelEntry(input) { return this._channels.createChannelEntry(input); }
-  async deleteChannelByName(n) { return this._channels.deleteChannelByName(n); }
-  async triggerChannelDelivery(n, o) { return this._channels.triggerChannelDelivery(n, o); }
-  async triggerChannelTriage(n, o) { return this.triggerChannelDelivery(n, o); }
 
   // ════════════════════════════
   //  Bridge 代理（→ BridgeSessionManager）
@@ -1787,12 +1739,6 @@ export class HanaEngine {
     log(`[init] 2/5 初始化所有 agent...`);
     await this._agentMgr.initAllAgents(log, this._agentMgr.activeAgentId);
     log(`[init] 2/5 ${this._agentMgr.agents.size} 个 agent 已就绪`);
-
-    // 2b. 补齐频道游标投影（老用户升级兼容）。
-    // repairChannelCursorProjection 扫描所有频道，为每个"已是成员且有 config"
-    // 的 agent 把缺失的 last-read cursor 补进 channels.md，是按成员真相源
-    // 重建投影的单一入口，覆盖缺 channels.md 的老 agent。
-    await this._channels.repairChannelCursorProjection();
 
     // 3. ResourceLoader + Skills
     log(`[init] 3/5 ResourceLoader 初始化...`);
@@ -2243,7 +2189,6 @@ export class HanaEngine {
       toolAgent?.config || {},
       {
         agentId,
-        channelsEnabled: resolveChannelsEnabledForToolAvailability(this),
       },
       { warn: (msg) => toolAvailabilityLog.warn(msg) },
     );

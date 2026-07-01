@@ -113,8 +113,8 @@ describe('CSP sync', () => {
           'lan:node:studio': {
             connectionId: 'lan:node:studio',
             kind: 'lan',
-            baseUrl: 'http://192.168.1.9:14500',
-            wsUrl: 'ws://192.168.1.9:14500',
+            baseUrl: 'http://192.168.1.9:14700',
+            wsUrl: 'ws://192.168.1.9:14700',
           },
         },
       }),
@@ -139,7 +139,7 @@ describe('CSP sync', () => {
       },
     });
 
-    expect(written).toContain('http://192.168.1.9:14500');
-    expect(written).toContain('ws://192.168.1.9:14500');
+    expect(written).toContain('http://192.168.1.9:14700');
+    expect(written).toContain('ws://192.168.1.9:14700');
   });
 });

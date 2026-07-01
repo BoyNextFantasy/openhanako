@@ -68,7 +68,7 @@ describe('PreviewRenderer HTML isolation', () => {
     window.platform = legacyNativePreviewApi as unknown as typeof window.platform;
     mocks.hanaFetch.mockReset();
     mocks.hanaFetch.mockResolvedValue(new Response(JSON.stringify({
-      previewUrl: 'http://127.0.0.1:14500/preview/html/pv_123?previewToken=preview_only_token',
+      previewUrl: 'http://127.0.0.1:14700/preview/html/pv_123?previewToken=preview_only_token',
     }), {
       status: 200,
       headers: { 'Content-Type': 'application/json' },
@@ -101,7 +101,7 @@ describe('PreviewRenderer HTML isolation', () => {
     await waitFor(() => {
       expect(iframe).toHaveAttribute(
         'src',
-        'http://127.0.0.1:14500/preview/html/pv_123?previewToken=preview_only_token',
+        'http://127.0.0.1:14700/preview/html/pv_123?previewToken=preview_only_token',
       );
     });
 
@@ -140,7 +140,7 @@ describe('PreviewRenderer HTML isolation', () => {
     await waitFor(() => {
       expect(iframe).toHaveAttribute(
         'src',
-        'http://127.0.0.1:14500/preview/html/pv_123?previewToken=preview_only_token',
+        'http://127.0.0.1:14700/preview/html/pv_123?previewToken=preview_only_token',
       );
     });
 
@@ -157,7 +157,7 @@ describe('PreviewRenderer HTML isolation', () => {
     await waitFor(() => {
       expect(iframe).toHaveAttribute(
         'src',
-        'http://127.0.0.1:14500/preview/html/pv_123?previewToken=preview_only_token',
+        'http://127.0.0.1:14700/preview/html/pv_123?previewToken=preview_only_token',
       );
     });
 

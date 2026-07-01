@@ -5,11 +5,11 @@ describe("HTTP transport context", () => {
     const { inferHttpConnectionKind } = await import("../server/http/transport-context.ts");
 
     expect(inferHttpConnectionKind({
-      hostHeader: "127.0.0.1:14500",
+      hostHeader: "127.0.0.1:14700",
       networkMode: "loopback",
     })).toEqual({ connectionKind: "local", reason: null });
     expect(inferHttpConnectionKind({
-      hostHeader: "localhost:14500",
+      hostHeader: "localhost:14700",
       networkMode: "loopback",
     })).toEqual({ connectionKind: "local", reason: null });
   });
@@ -25,7 +25,7 @@ describe("HTTP transport context", () => {
       reason: "loopback_host_mismatch",
     });
     expect(inferHttpConnectionKind({
-      hostHeader: "127.0.0.1:14500",
+      hostHeader: "127.0.0.1:14700",
       remoteAddress: "192.168.1.20",
       networkMode: "loopback",
     })).toEqual({
@@ -38,7 +38,7 @@ describe("HTTP transport context", () => {
     const { inferHttpConnectionKind } = await import("../server/http/transport-context.ts");
 
     expect(inferHttpConnectionKind({
-      hostHeader: "192.168.1.20:14500",
+      hostHeader: "192.168.1.20:14700",
       networkMode: "lan",
     })).toEqual({ connectionKind: "lan", reason: null });
 
@@ -52,13 +52,13 @@ describe("HTTP transport context", () => {
     const { inferHttpConnectionKind } = await import("../server/http/transport-context.ts");
 
     expect(inferHttpConnectionKind({
-      hostHeader: "localhost:14500",
+      hostHeader: "localhost:14700",
       remoteAddress: "192.168.1.20",
       networkMode: "lan",
     })).toEqual({ connectionKind: "lan", reason: null });
 
     expect(inferHttpConnectionKind({
-      hostHeader: "127.0.0.1:14500",
+      hostHeader: "127.0.0.1:14700",
       remoteAddress: "203.0.113.10",
       networkMode: "custom_remote",
     })).toEqual({ connectionKind: "custom_remote", reason: null });
@@ -68,12 +68,12 @@ describe("HTTP transport context", () => {
     const { inferHttpConnectionKind } = await import("../server/http/transport-context.ts");
 
     expect(inferHttpConnectionKind({
-      hostHeader: "127.0.0.1:14500",
+      hostHeader: "127.0.0.1:14700",
       networkMode: "lan",
     })).toEqual({ connectionKind: "lan", reason: null });
 
     expect(inferHttpConnectionKind({
-      hostHeader: "127.0.0.1:14500",
+      hostHeader: "127.0.0.1:14700",
       remoteAddress: "127.0.0.1",
       networkMode: "lan",
     })).toEqual({ connectionKind: "local", reason: null });

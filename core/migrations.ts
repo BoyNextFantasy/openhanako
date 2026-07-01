@@ -1,14 +1,15 @@
 /**
  * 数据迁移 runner
  *
- * 所有用户数据格式变更集中在此文件�?
- * preferences.json._dataVersion 记录已执行到的版本号（整数）�?
- * 启动时只�?> _dataVersion 的条目�?
+ * 所有用户数据格式变更集中在此文件�?
+ * preferences.json._dataVersion 记录已执行到的版本号（整数）�?
+ * 启动时只�?> _dataVersion 的条目�?
  *
- * 添加新迁移：�?migrations 对象末尾加一条，key 为递增整数�?
+ * 添加新迁移：�?migrations 对象末尾加一条，key 为递增整数�?
  */
 import fs from "fs";
 import path from "path";
+import crypto from "node:crypto";
 import YAML from "js-yaml";
 import { atomicWriteSync, safeReadYAMLSync } from "../shared/safe-fs.ts";
 import {
@@ -41,7 +42,6 @@ import { migrateLegacyApiKeyAuthToProviders } from "./provider-auth-migration.ts
 import { createModuleLogger } from "../lib/debug-log.ts";
 import { patchAutomationJobForMigration } from "../lib/desk/automation-normalizer.ts";
 import { parseSkillMetadata } from "../lib/skills/skill-metadata.ts";
-import { safeConversationStem } from "../lib/conversations/agent-phone-projection.ts";
 import { DEFAULT_DISABLED_TOOL_NAMES } from "../shared/tool-categories.ts";
 import { ProviderCatalogStore } from "./provider-catalog.ts";
 import { sessionIdFromFilename } from "../lib/session-jsonl.ts";
@@ -52,99 +52,109 @@ import {
   readDirectoryLikeDirentsSync,
 } from "../shared/link-aware-fs.ts";
 
+export function safeConversationStem(conversationId) {
+  const raw = String(conversationId || "").trim() || "conversation";
+  const readable = raw
+    .replace(/[^a-zA-Z0-9._-]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 80) || "conversation";
+  const hash = crypto.createHash("sha256").update(raw).digest("hex").slice(0, 8);
+  return `${readable}-${hash}`;
+}
+
 const moduleLog = createModuleLogger("migrations");
 
-// ── 迁移�?──────────────────────────────────────────────────────────────────
+// ── 迁移�?──────────────────────────────────────────────────────────────────
 
 const migrations = {
-  // #356: 清理悬空 provider 引用（agent config + preferences�?
+  // #356: 清理悬空 provider 引用（agent config + preferences�?
   1: cleanDanglingProviderRefs,
-  // bridge 配置从全局 preferences 迁移到各 agent �?config.yaml
+  // bridge 配置从全局 preferences 迁移到各 agent �?config.yaml
   2: migrateBridgeToPerAgent,
   // workspace (home_folder) 从全局 preferences 迁移到主 agent config.yaml
   3: migrateWorkspaceToPerAgent,
   // subagent executor metadata 显式化，避免历史回放依赖目录推断
   4: migrateSubagentExecutorMetadata,
-  // models.* 字段全量迁移�?{id, provider} 复合键对象；
-  // �?id / "provider/id" 字符串统一归一�?
+  // models.* 字段全量迁移�?{id, provider} 复合键对象；
+  // �?id / "provider/id" 字符串统一归一�?
   5: migrateModelRefsToCompositeKey,
-  // channels.enabled �?agent scope 错位位置迁到 global preferences�?
-  // 尊重老用户显式意图：任一 agent 显式 true �?保留开，否则默认关
+  // channels.enabled �?agent scope 错位位置迁到 global preferences�?
+  // 尊重老用户显式意图：任一 agent 显式 true �?保留开，否则默认关
   6: migrateChannelsToGlobalDefaultOff,
-  // 模型能力字段 vision �?image 全量重命名（added-models.yaml + agent config.yaml�?
-  // 配合 core/model-sync.js �?core/provider-registry.js 的读时兼容形成双保险
+  // 模型能力字段 vision �?image 全量重命名（added-models.yaml + agent config.yaml�?
+  // 配合 core/model-sync.js �?core/provider-registry.js 的读时兼容形成双保险
   7: migrateVisionToImage,
-  // 修复 migration #5 之后仍有入口�?models.* 写回旧字符串格式的问�?
+  // 修复 migration #5 之后仍有入口�?models.* 写回旧字符串格式的问�?
   8: repairPostMigrationModelRefs,
-  // bridge.readOnly �?agent scope 收敛回全局 preferences
+  // bridge.readOnly �?agent scope 收敛回全局 preferences
   9: migrateBridgeReadOnlyToGlobal,
-  // summarizer / compiler 角色从未接通业务，删除 preferences �?agent config 里的残留字段
+  // summarizer / compiler 角色从未接通业务，删除 preferences �?agent config 里的残留字段
   10: cleanupSummarizerCompilerRemnants,
-  // cron job �?model 字段补齐�?{id, provider}，修复旧任务只保存裸 id 的问�?
+  // cron job �?model 字段补齐�?{id, provider}，修复旧任务只保存裸 id 的问�?
   11: repairCronJobModelRefs,
-  // �?session 的文件引用补齐到 session file sidecar；作为最后一步，不重写历�?JSONL
+  // �?session 的文件引用补齐到 session file sidecar；作为最后一步，不重写历�?JSONL
   12: backfillLegacySessionFiles,
   // 最近版本把默认值和 provider 校验收紧后，对旧磁盘数据做一次显式化修补
   13: normalizeRecentLegacyCompatibilityState,
-  // Gemini 3 工具调用需�?native Google 协议保留 thoughtSignature
+  // Gemini 3 工具调用需�?native Google 协议保留 thoughtSignature
   14: migrateGeminiOpenAICompatToNative,
-  // �?prompt snapshot 会话里无法证�?xhigh 支持的记录显式降级为 high
+  // �?prompt snapshot 会话里无法证�?xhigh 支持的记录显式降级为 high
   15: repairLegacySessionSidecarThinkingLevels,
-  // 视频能力进入 model.input 后，修补老的模型投影和残�?override
+  // 视频能力进入 model.input 后，修补老的模型投影和残�?override
   16: migrateVideoCapabilityProjection,
-  // bridge sessionKey 引入 @agentId 后，修补�?index 中无 agent 维度�?key
+  // bridge sessionKey 引入 @agentId 后，修补�?index 中无 agent 维度�?key
   17: migrateBridgeSessionKeysToAgentScoped,
-  // Studio 基础身份：为�?SATORI_HOME 补齐 server / legacy owner / default Studio registry
+  // Studio 基础身份：为�?SATORI_HOME 补齐 server / legacy owner / default Studio registry
   18: migrateLocalIdentityRegistries,
-  // API-key provider 凭证真相源迁移：auth.json �?added-models.yaml
+  // API-key provider 凭证真相源迁移：auth.json �?added-models.yaml
   19: migrateLegacyApiKeyAuthEntriesToProviders,
   // Pi SDK 0.70+ 严格限制 model.input，只允许 text/image；Hana 视频能力迁入 compat
   20: migratePiInputSchemaVideoCompat,
-  // 刷新高确定性视频模型能力；补齐已升级用�?models.json 里的 Hana compat
+  // 刷新高确定性视频模型能力；补齐已升级用�?models.json 里的 Hana compat
   21: refreshVideoCapabilityProjection,
-  // 频道 phone 设置显式化：主动提醒默认 31 分钟，模型覆写默认关�?
+  // 频道 phone 设置显式化：主动提醒默认 31 分钟，模型覆写默认关�?
   22: migrateChannelPhoneSettingsDefaults,
   // 删除本轮开发期间加入但已废弃的自由文本回复范围设置
   23: removeAgentPhoneReplyInstructions,
   // 频道 phone 轮次 guard limit 显式化，默认按成员数 × 12
   24: migrateChannelPhoneGuardLimitDefaults,
-  // 频道主动发起开关显式化，旧频道保持开�?
+  // 频道主动发起开关显式化，旧频道保持开�?
   25: migrateChannelPhoneProactiveDefaults,
-  // Space �?Studio：把已落过盘�?spaces.json 迁出�?studios.json
+  // Space �?Studio：把已落过盘�?spaces.json 迁出�?studios.json
   26: migrateStudioIdentityRegistries,
-  // 远程访问 UI 前地基：补齐设备、网络和挂载�?registry
+  // 远程访问 UI 前地基：补齐设备、网络和挂载�?registry
   27: migrateRemoteAccessFoundationRegistries,
-  // subagent 子会话长期映射：把临�?deferred 队列里的历史事实迁入 durable registry
+  // subagent 子会话长期映射：把临�?deferred 队列里的历史事实迁入 durable registry
   28: migrateDurableSubagentRunRegistry,
-  // 巡检显式 opt-in：历史缺省值统一落盘�?false，避免旧配置被运行时当成开�?
+  // 巡检显式 opt-in：历史缺省值统一落盘�?false，避免旧配置被运行时当成开�?
   29: migrateHeartbeatDefaultExplicitOff,
-  // cron �?automation read model：补�?trigger / executor / createdBy，保留旧字段兼容
+  // cron �?automation read model：补�?trigger / executor / createdBy，保留旧字段兼容
   30: migrateCronJobsToAutomationReadModel,
   // learned-skills 收敛进全局 skill pool，并只为来源 agent 默认启用
   31: migrateLearnedSkillsToGlobalSkillPool,
   // Agent Phone runtime 状态从 projection 迁入独立 sidecar
   32: migrateAgentPhoneRuntimeOutOfProjection,
-  // 小花美术默认显式关闭；旧 Agent 配置只有用户手动开启后才可�?
+  // 小花美术默认显式关闭；旧 Agent 配置只有用户手动开启后才可�?
   33: migrateBeautifyDefaultExplicitOff,
-  // workflow 默认显式关闭：从全局设置页开关迁移为 per-agent 工具开关后，�?agent �?disabled
+  // workflow 默认显式关闭：从全局设置页开关迁移为 per-agent 工具开关后，�?agent �?disabled
   34: migrateWorkflowDefaultExplicitOff,
   // MiniMax Token Plan 官方入口迁到 Anthropic-compatible endpoint，但保留独立 provider 边界
   35: migrateMiniMaxTokenPlanAnthropicEndpoint,
-  // subagent thread/run 分层：从�?run/reusable 账本迁出显式 thread registry
+  // subagent thread/run 分层：从�?run/reusable 账本迁出显式 thread registry
   36: migrateSubagentThreadRegistry,
-  // subagent direct instance：旧 ephemeral/reusable kind 归一�?direct，instance 变成展示 label
+  // subagent direct instance：旧 ephemeral/reusable kind 归一�?direct，instance 变成展示 label
   37: migrateSubagentDirectThreadSemantics,
-  // automation 执行模型收敛：旧 direct notify 显式改写�?Agent Run
+  // automation 执行模型收敛：旧 direct notify 显式改写�?Agent Run
   38: migrateDirectNotifyAutomationsToAgentRuns,
-  // automation 归属修复：所有可运行任务必须能确定执�?Agent；旧 plugin/direct 执行器收敛为 Agent Run
+  // automation 归属修复：所有可运行任务必须能确定执�?Agent；旧 plugin/direct 执行器收敛为 Agent Run
   39: repairAutomationOwnershipAfterAgentRunConsolidation,
-  // session permission mode 收敛：旧 sidecar �?planMode/accessMode 补齐 canonical permissionMode
+  // session permission mode 收敛：旧 sidecar �?planMode/accessMode 补齐 canonical permissionMode
   40: migrateSessionPermissionModeSidecars,
-  // identity 首启种子曾把 {{userName}} 写成空串，修回动态用户名占位�?
+  // identity 首启种子曾把 {{userName}} 写成空串，修回动态用户名占位�?
   41: migrateIdentityUserNamePlaceholders,
-  // Provider Catalog v2：provider/model/capability canonical store 一次�?cutover
+  // Provider Catalog v2：provider/model/capability canonical store 一次�?cutover
   42: migrateProviderCatalogV2Cutover,
-  // Codex 生图参数改为 mode schema �?resolution 后，清掉旧配置残留的 size 默认�?
+  // Codex 生图参数改为 mode schema �?resolution 后，清掉旧配置残留的 size 默认�?
   43: migrateCodexImageGenerationDefaultsToResolutionSchema,
 };
 
@@ -178,10 +188,10 @@ export function runMigrations(ctx) {
       log(`[migrations] #${v} 完成`);
     } catch (err) {
       moduleLog.error(`#${v} 失败: ${err.message}`);
-      // 失败则停在当前版本，不继续后续迁�?
+      // 失败则停在当前版本，不继续后续迁�?
       break;
     }
-    // 每跑完一条就持久化版本号，防止中途崩溃导致重跑已成功的迁�?
+    // 每跑完一条就持久化版本号，防止中途崩溃导致重跑已成功的迁�?
     const fresh = prefs.getPreferences();
     fresh._dataVersion = v;
     prefs.savePreferences(fresh);
@@ -191,11 +201,11 @@ export function runMigrations(ctx) {
 // ── 迁移实现 ─────────────────────────────────────────────────────────────────
 
 /**
- * #1 �?清理悬空 provider 引用
+ * #1 �?清理悬空 provider 引用
  *
- * 用户删除 provider 后，agent config.yaml �?preferences.json �?
- * 可能残留指向已不存在 provider 的引用，导致启动时模型解析失败�?
- * 本迁移扫描所有引用位置，将悬空引用清空�?
+ * 用户删除 provider 后，agent config.yaml �?preferences.json �?
+ * 可能残留指向已不存在 provider 的引用，导致启动时模型解析失败�?
+ * 本迁移扫描所有引用位置，将悬空引用清空�?
  */
 function cleanDanglingProviderRefs(ctx) {
   const { agentsDir, prefs, providerRegistry, log } = ctx;
@@ -226,7 +236,7 @@ function cleanDanglingProviderRefs(ctx) {
       }
     }
 
-    // models.* �?字符�?"provider/model" �?{ id, provider } 对象
+    // models.* �?字符�?"provider/model" �?{ id, provider } 对象
     if (config.models) {
       for (const role of ["chat", "utility", "utility_large", "embedding"]) {
         const ref = config.models[role];
@@ -291,12 +301,12 @@ function cleanDanglingProviderRefs(ctx) {
 }
 
 /**
- * #2 �?bridge 配置从全局 preferences 迁移�?per-agent config.yaml
+ * #2 �?bridge 配置从全局 preferences 迁移�?per-agent config.yaml
  *
  * preferences.json 中的 bridge.telegram / feishu / qq / wechat / whatsapp
- * 各自可能�?agentId 字段指定归属 agent。迁移后每个 platform config
- * 写入对应 agent �?config.yaml，owner 信息一并合入�?
- * bridge.permissionMode / readOnly / receiptEnabled / richStreamingEnabled 保留为全局偏好�?
+ * 各自可能�?agentId 字段指定归属 agent。迁移后每个 platform config
+ * 写入对应 agent �?config.yaml，owner 信息一并合入�?
+ * bridge.permissionMode / readOnly / receiptEnabled / richStreamingEnabled 保留为全局偏好�?
  */
 function migrateBridgeToPerAgent(ctx) {
   const { agentsDir, prefs, log } = ctx;
@@ -316,7 +326,7 @@ function migrateBridgeToPerAgent(ctx) {
   const richStreamingEnabled = bridge.richStreamingEnabled === false ? false : undefined;
 
   const PLATFORMS = ["telegram", "feishu", "qq", "wechat", "whatsapp"];
-  const agentConfigs = new Map(); // agentId �?{ platform: config }
+  const agentConfigs = new Map(); // agentId �?{ platform: config }
 
   // Find fallback agent: primary if it exists, otherwise first available
   let fallbackAgentId = null;
@@ -382,10 +392,10 @@ function migrateBridgeToPerAgent(ctx) {
       continue;
     }
     saveConfig(cfgPath, { bridge: { ...bridgeConfig } });
-    log(`[migrations] migrated bridge config �?agent ${agentId} (${Object.keys(bridgeConfig).join(", ")})`);
+    log(`[migrations] migrated bridge config �?agent ${agentId} (${Object.keys(bridgeConfig).join(", ")})`);
   }
 
-  // 清理旧的 platform / owner 键，只保留新的全局偏好�?
+  // 清理旧的 platform / owner 键，只保留新的全局偏好�?
   const nextBridgePrefs: any = {};
   if (explicitPermissionMode && explicitPermissionMode !== SESSION_PERMISSION_MODES.AUTO) {
     nextBridgePrefs.permissionMode = explicitPermissionMode;
@@ -587,29 +597,29 @@ function migrateSubagentExecutorMetadata(ctx) {
 }
 
 /**
- * #5 �?models.* 字段全量迁移�?{id, provider} 复合键对�?
+ * #5 �?models.* 字段全量迁移�?{id, provider} 复合键对�?
  *
- * 目标：运行时（非 UI 层）模型引用只有一种合法形态——{id, provider} 对象�?
- * 之前历史数据里混存了三种�?
- *   1. �?id 字符�?"glm-5.1"                 �?通过 added-models.yaml 推断 provider
- *   2. "provider/id" 字符�?"zhipu/glm-5.1"   �?拆成 {id, provider}
- *   3. {id, provider: ""} 半成品对�?         �?视作�?id 推断
+ * 目标：运行时（非 UI 层）模型引用只有一种合法形态——{id, provider} 对象�?
+ * 之前历史数据里混存了三种�?
+ *   1. �?id 字符�?"glm-5.1"                 �?通过 added-models.yaml 推断 provider
+ *   2. "provider/id" 字符�?"zhipu/glm-5.1"   �?拆成 {id, provider}
+ *   3. {id, provider: ""} 半成品对�?         �?视作�?id 推断
  *
- * 作用范围�?
- *   - 每个 agent 目录�?config.yaml 里的 models.{chat,utility,utility_large}
- *     （embedding 角色不在复合键范围内——走 embedding_api 独立配置�?
- *   - preferences.json �?{utility,utility_large}_model
+ * 作用范围�?
+ *   - 每个 agent 目录�?config.yaml 里的 models.{chat,utility,utility_large}
+ *     （embedding 角色不在复合键范围内——走 embedding_api 独立配置�?
+ *   - preferences.json �?{utility,utility_large}_model
  *
- * 推断规则�?
- *   - "provider/id" �?{provider, id}（直接拆�?
- *   - �?id 或半成品对象：遍�?added-models.yaml 里每�?provider �?models�?
- *     取首个命中。多 provider �?id 时取 added-models.yaml 第一个（已有行为不变）�?
- *     找不到保留原值（避免热删有效配置�?providers 设置页重启会自愈）�?
+ * 推断规则�?
+ *   - "provider/id" �?{provider, id}（直接拆�?
+ *   - �?id 或半成品对象：遍�?added-models.yaml 里每�?provider �?models�?
+ *     取首个命中。多 provider �?id 时取 added-models.yaml 第一个（已有行为不变）�?
+ *     找不到保留原值（避免热删有效配置�?providers 设置页重启会自愈）�?
  */
 function normalizeCompositeModelRefs(ctx, { migrationId }) {
   const { agentsDir, prefs, providerRegistry, log } = ctx;
 
-  // ── 构建 id �?provider 查找表（�?provider �?id 取首个） ──
+  // ── 构建 id �?provider 查找表（�?provider �?id 取首个） ──
   const idToProvider = new Map();
   const rawProviders = providerRegistry.getAllProvidersRaw?.() || {};
   for (const [providerId, p] of Object.entries(rawProviders || {}) as [string, any][]) {
@@ -642,7 +652,7 @@ function normalizeCompositeModelRefs(ctx, { migrationId }) {
       return { value: { provider: ref.slice(0, slashIdx), id: ref.slice(slashIdx + 1) }, changed: true };
     }
 
-    // �?id
+    // �?id
     const guess = idToProvider.get(ref);
     if (guess) return { value: { id: ref, provider: guess }, changed: true };
     return { value: ref, changed: false };
@@ -670,7 +680,7 @@ function normalizeCompositeModelRefs(ctx, { migrationId }) {
       if (ch) {
         next[role] = value;
         changed = true;
-        log(`[migrations] #${migrationId} ${dir.name}: models.${role} �?${value.provider}/${value.id}`);
+        log(`[migrations] #${migrationId} ${dir.name}: models.${role} �?${value.provider}/${value.id}`);
       }
     }
 
@@ -688,7 +698,7 @@ function normalizeCompositeModelRefs(ctx, { migrationId }) {
     if (changed) {
       preferences[key] = value;
       prefsChanged = true;
-      log(`[migrations] #${migrationId} preferences.${key} �?${value.provider}/${value.id}`);
+      log(`[migrations] #${migrationId} preferences.${key} �?${value.provider}/${value.id}`);
     }
   }
   if (prefsChanged) prefs.savePreferences(preferences);
@@ -703,19 +713,19 @@ function repairPostMigrationModelRefs(ctx) {
 }
 
 /**
- * #6 �?channels.enabled 统一迁移�?global preferences，尊重老用户意�?
+ * #6 �?channels.enabled 统一迁移�?global preferences，尊重老用户意�?
  *
- * 背景：旧版本 /channels/toggle �?`channels.enabled` 通过 updateConfig 写入�?
- * 每个�?toggle 过的 agent �?config.yaml（因�?schema 当时没登记这�?global 字段）�?
- * 现在把真相源收敛�?preferences.channels_enabled�?
+ * 背景：旧版本 /channels/toggle �?`channels.enabled` 通过 updateConfig 写入�?
+ * 每个�?toggle 过的 agent �?config.yaml（因�?schema 当时没登记这�?global 字段）�?
+ * 现在把真相源收敛�?preferences.channels_enabled�?
  *
- * 合并策略（因为老数据没时间戳，无法�?最后一�?取值）�?
- *   - 任一 agent config 显式 `channels.enabled === true` �?最终保�?true（说明用户想用）
- *   - 所有显式值都�?false，或根本没人设过 �?最�?false（产品默认）
+ * 合并策略（因为老数据没时间戳，无法�?最后一�?取值）�?
+ *   - 任一 agent config 显式 `channels.enabled === true` �?最终保�?true（说明用户想用）
+ *   - 所有显式值都�?false，或根本没人设过 �?最�?false（产品默认）
  *
  * 这样既尊重显式开过的老用户、不让他们升级后发现功能被强关，
- * 又让从没用过频道的大多数用户默认关闭（产品判断：bug 修之�?ticker 无条件跑�?
- * 所以老行为里"config 显示开"并不代表用户真的想开，只�?显式设过 true"才能说明意图）�?
+ * 又让从没用过频道的大多数用户默认关闭（产品判断：bug 修之�?ticker 无条件跑�?
+ * 所以老行为里"config 显示开"并不代表用户真的想开，只�?显式设过 true"才能说明意图）�?
  */
 function migrateChannelsToGlobalDefaultOff(ctx) {
   const { agentsDir, prefs, log } = ctx;
@@ -740,7 +750,7 @@ function migrateChannelsToGlobalDefaultOff(ctx) {
     if (config.channels.enabled === true) anyEnabledTrue = true;
   }
 
-  // ── 2. 清理所�?agent config.yaml 中错位的 channels.enabled ──
+  // ── 2. 清理所�?agent config.yaml 中错位的 channels.enabled ──
   for (const dir of agentDirs) {
     const cfgPath = path.join(agentsDir, dir.name, "config.yaml");
     const config = safeReadYAMLSync(cfgPath, null, YAML);
@@ -771,7 +781,7 @@ function migrateChannelsToGlobalDefaultOff(ctx) {
   prefs.savePreferences(preferences);
 
   if (anyEnabledTrue) {
-    log(`[migrations] #6: preferences.channels_enabled = true（保留：检测到至少一�?agent 显式开启过）`);
+    log(`[migrations] #6: preferences.channels_enabled = true（保留：检测到至少一�?agent 显式开启过）`);
   } else if (anyExplicit) {
     log(`[migrations] #6: preferences.channels_enabled = false（所有显式设置都是关闭）`);
   } else {
@@ -780,14 +790,14 @@ function migrateChannelsToGlobalDefaultOff(ctx) {
 }
 
 /**
- * #9 �?bridge.readOnly �?per-agent 收敛�?global preferences
+ * #9 �?bridge.readOnly �?per-agent 收敛�?global preferences
  *
- * 历史�?readOnly 被放�?agent.config.bridge.readOnly，但页面语义后来演进�?
- * 总开关。这里收敛到 preferences.bridge.readOnly，并清理所�?agent-level
- * 残留字段�?
+ * 历史�?readOnly 被放�?agent.config.bridge.readOnly，但页面语义后来演进�?
+ * 总开关。这里收敛到 preferences.bridge.readOnly，并清理所�?agent-level
+ * 残留字段�?
  *
- * 冲突策略：任一 agent 显式 true �?全局 true，保证更保守的权限边界�?
- * �?preferences 已有 bridge.readOnly，则�?preferences 为准，只做清理�?
+ * 冲突策略：任一 agent 显式 true �?全局 true，保证更保守的权限边界�?
+ * �?preferences 已有 bridge.readOnly，则�?preferences 为准，只做清理�?
  */
 function migrateBridgeReadOnlyToGlobal(ctx) {
   const { agentsDir, prefs, log } = ctx;
@@ -839,9 +849,9 @@ function migrateBridgeReadOnlyToGlobal(ctx) {
   prefs.savePreferences(preferences);
 
   if (hadPrefsValue && !anyExplicit) {
-    log(`[migrations] #9: preferences.bridge.readOnly 保持现�?${finalValue}`);
+    log(`[migrations] #9: preferences.bridge.readOnly 保持现�?${finalValue}`);
   } else if (anyReadOnlyTrue) {
-    log(`[migrations] #9: preferences.bridge.readOnly = true（检测到至少一�?agent 显式开启）`);
+    log(`[migrations] #9: preferences.bridge.readOnly = true（检测到至少一�?agent 显式开启）`);
   } else if (anyExplicit) {
     log(`[migrations] #9: preferences.bridge.readOnly = false（所有显式设置都是关闭）`);
   } else {
@@ -850,11 +860,11 @@ function migrateBridgeReadOnlyToGlobal(ctx) {
 }
 
 /**
- * #3 �?workspace 迁移 + 非主 agent 巡检默认关闭
+ * #3 �?workspace 迁移 + 非主 agent 巡检默认关闭
  *
  * 两件事：
- * 1. home_folder 从全局 preferences 迁移到主 agent �?config.yaml
- * 2. 非主 agent �?heartbeat_enabled 设为 false（老用户预期只有主 agent 巡检�?
+ * 1. home_folder 从全局 preferences 迁移到主 agent �?config.yaml
+ * 2. 非主 agent �?heartbeat_enabled 设为 false（老用户预期只有主 agent 巡检�?
  */
 function migrateWorkspaceToPerAgent(ctx) {
   const { agentsDir, prefs, log } = ctx;
@@ -862,7 +872,7 @@ function migrateWorkspaceToPerAgent(ctx) {
   const homeFolder = preferences.home_folder;
   const primaryAgentId = preferences.primaryAgent || null;
 
-  // ── 1. 找到�?agent ──
+  // ── 1. 找到�?agent ──
 
   let targetAgentId = null;
 
@@ -905,7 +915,7 @@ function migrateWorkspaceToPerAgent(ctx) {
 
     delete preferences.home_folder;
     prefs.savePreferences(preferences);
-    log(`[migrations] #3: migrated home_folder "${homeFolder}" �?agent ${targetAgentId}`);
+    log(`[migrations] #3: migrated home_folder "${homeFolder}" �?agent ${targetAgentId}`);
   }
 
   // ── 3. 非主 agent 的巡检默认关闭 ──
@@ -913,29 +923,29 @@ function migrateWorkspaceToPerAgent(ctx) {
   try {
     const dirs = readDirectoryLikeDirentsSync(agentsDir);
     for (const d of dirs) {
-      if (d.name === targetAgentId) continue; // �?agent 保持原状
+      if (d.name === targetAgentId) continue; // �?agent 保持原状
       const cfgPath = path.join(agentsDir, d.name, "config.yaml");
       if (!fs.existsSync(cfgPath)) continue;
 
       const config = safeReadYAMLSync(cfgPath, null, YAML);
       if (!config) continue;
-      // 只在未显式设置过时关闭（如果用户已经手动设了，尊重他的选择�?
+      // 只在未显式设置过时关闭（如果用户已经手动设了，尊重他的选择�?
       if (config.desk?.heartbeat_enabled !== undefined) continue;
 
       saveConfig(cfgPath, { desk: { heartbeat_enabled: false } });
       log(`[migrations] #3: disabled heartbeat for non-primary agent "${d.name}"`);
     }
   } catch (err) {
-    log(`[migrations] #3: warning �?failed to disable non-primary heartbeats: ${err.message}`);
+    log(`[migrations] #3: warning �?failed to disable non-primary heartbeats: ${err.message}`);
   }
 }
 
 /**
- * #29 �?巡检默认显式关闭
+ * #29 �?巡检默认显式关闭
  *
- * 旧配置里缺失 desk.heartbeat_enabled 时，运行时代码曾把它当成开启�?
- * 现在产品默认�?opt-in：只有明确写 true 才启动巡检�?
- * 迁移只补缺省 false，尊重用户已�?true / false�?
+ * 旧配置里缺失 desk.heartbeat_enabled 时，运行时代码曾把它当成开启�?
+ * 现在产品默认�?opt-in：只有明确写 true 才启动巡检�?
+ * 迁移只补缺省 false，尊重用户已�?true / false�?
  */
 function migrateHeartbeatDefaultExplicitOff(ctx) {
   const { agentsDir, log } = ctx;
@@ -958,12 +968,12 @@ function migrateHeartbeatDefaultExplicitOff(ctx) {
 }
 
 /**
- * #33 �?小花美术默认显式关闭
+ * #33 �?小花美术默认显式关闭
  *
- * Beautify 是新加入的低频审美生成工具，默认�?opt-in。老配置若已经
- * 写过 tools.disabled: []，运行时无法判断它是否代表用户想开启这�?
- * 未来工具，所以迁移显式把 beautify 补进 disabled。用户之后手动开�?
- * 会正常覆盖这个值�?
+ * Beautify 是新加入的低频审美生成工具，默认�?opt-in。老配置若已经
+ * 写过 tools.disabled: []，运行时无法判断它是否代表用户想开启这�?
+ * 未来工具，所以迁移显式把 beautify 补进 disabled。用户之后手动开�?
+ * 会正常覆盖这个值�?
  */
 function migrateBeautifyDefaultExplicitOff(ctx) {
   const { agentsDir, log } = ctx;
@@ -989,12 +999,12 @@ function migrateBeautifyDefaultExplicitOff(ctx) {
 }
 
 /**
- * #34 �?workflow 工具默认显式关闭
+ * #34 �?workflow 工具默认显式关闭
  *
- * workflow 从全局高权限设置页开关迁移为 per-agent 工具开关，默认 opt-in 关闭�?
+ * workflow 从全局高权限设置页开关迁移为 per-agent 工具开关，默认 opt-in 关闭�?
  * 老配置的 tools.disabled 里不会有 workflow（旧机制下它不是 per-agent 工具），
- * 迁移显式�?workflow 补进 disabled，让升级用户默认关，需在助手页手动开启�?
- * 已含则跳过（幂等），用户后续手动开关会正常覆盖�?
+ * 迁移显式�?workflow 补进 disabled，让升级用户默认关，需在助手页手动开启�?
+ * 已含则跳过（幂等），用户后续手动开关会正常覆盖�?
  */
 function migrateWorkflowDefaultExplicitOff(ctx) {
   const { agentsDir, log } = ctx;
@@ -1034,11 +1044,11 @@ function normalizeProviderUrlForMigration(value) {
 }
 
 /**
- * #35 �?MiniMax Token Plan 接入点迁到当前官�?Anthropic-compatible API
+ * #35 �?MiniMax Token Plan 接入点迁到当前官�?Anthropic-compatible API
  *
- * Token Plan 和普�?MiniMax 现在都走 api.minimaxi.com/anthropic，但密钥�?
- * 套餐�?Provider ID 仍然是两套边界。本迁移只修旧官方默认值，遇到自定�?
- * 代理或非官方 URL 时不猜测�?
+ * Token Plan 和普�?MiniMax 现在都走 api.minimaxi.com/anthropic，但密钥�?
+ * 套餐�?Provider ID 仍然是两套边界。本迁移只修旧官方默认值，遇到自定�?
+ * 代理或非官方 URL 时不猜测�?
  */
 function migrateMiniMaxTokenPlanAnthropicEndpoint(ctx) {
   const { hanakoHome, log } = ctx;
@@ -1089,19 +1099,19 @@ function migrateMiniMaxTokenPlanAnthropicEndpoint(ctx) {
 }
 
 /**
- * #7 �?模型能力字段 vision �?image 全量重命�?
+ * #7 �?模型能力字段 vision �?image 全量重命�?
  *
- * 历史包袱：项目早期在 Pi SDK Model 对象上挂了一份自定义�?vision:boolean 字段�?
- * �?Pi SDK 标准字段 input 数组重复。本次统一�?Pi SDK 标准�?
- * 把用户意图层（added-models.yaml + agent config.yaml）的 vision 重命名为 image�?
- * 运行时层只保�?input 数组�?
+ * 历史包袱：项目早期在 Pi SDK Model 对象上挂了一份自定义�?vision:boolean 字段�?
+ * �?Pi SDK 标准字段 input 数组重复。本次统一�?Pi SDK 标准�?
+ * 把用户意图层（added-models.yaml + agent config.yaml）的 vision 重命名为 image�?
+ * 运行时层只保�?input 数组�?
  *
- * 覆盖位置�?
- *   1. ~/.hanako/added-models.yaml �?providers.*.models[] 数组（用户主战场�?
- *   2. ~/.hanako/agents/*\/config.yaml �?models.overrides（历史残留兜底）
+ * 覆盖位置�?
+ *   1. ~/.hanako/added-models.yaml �?providers.*.models[] 数组（用户主战场�?
+ *   2. ~/.hanako/agents/*\/config.yaml �?models.overrides（历史残留兜底）
  *
- * 幂等：只在发�?vision 字段时改写；image 已存在时保留不覆盖�?
- * 配合读时兼容（model-sync.js、provider-registry.js）形成双保险�?
+ * 幂等：只在发�?vision 字段时改写；image 已存在时保留不覆盖�?
+ * 配合读时兼容（model-sync.js、provider-registry.js）形成双保险�?
  */
 function migrateVisionToImage(ctx) {
   const { hanakoHome, agentsDir, log } = ctx;
@@ -1141,7 +1151,7 @@ function migrateVisionToImage(ctx) {
     }
   }
 
-  // ── 2. agent/*/config.yaml �?models.overrides（兜底残留）──
+  // ── 2. agent/*/config.yaml �?models.overrides（兜底残留）──
   let agentDirs;
   try {
     agentDirs = readDirectoryLikeDirentsSync(agentsDir);
@@ -1212,7 +1222,7 @@ function normalizeCronModelRefForMigration(ref, index) {
   const s = ref.trim();
   if (!s) return { value: "", changed: ref !== "" };
 
-  // 先按完整 id 查，避免�?openrouter 这类包含 "/" 的裸模型 id 误拆�?provider/id�?
+  // 先按完整 id 查，避免�?openrouter 这类包含 "/" 的裸模型 id 误拆�?provider/id�?
   const exactProvider = index.idToProvider.get(s);
   if (exactProvider) return { value: { id: s, provider: exactProvider }, changed: true };
 
@@ -1230,10 +1240,10 @@ function normalizeCronModelRefForMigration(ref, index) {
 }
 
 /**
- * #11 �?cron job �?model 字段迁移为复合键对象
+ * #11 �?cron job �?model 字段迁移为复合键对象
  *
  * v0.11x 的模型复合键重构要求运行期模型引用必须带 provider，但 cron 任务
- * 仍把 UI 选择的模型保存为�?id，导致后台执行时偶发 "找不到模�?�?
+ * 仍把 UI 选择的模型保存为�?id，导致后台执行时偶发 "找不到模�?�?
  */
 function repairCronJobModelRefs(ctx) {
   const { agentsDir, providerRegistry, log } = ctx;
@@ -1281,10 +1291,10 @@ function repairCronJobModelRefs(ctx) {
 }
 
 /**
- * #30 �?cron job 补齐 automation read model 字段
+ * #30 �?cron job 补齐 automation read model 字段
  *
- * v0 Automation Executor 把旧 cron job �?"什么时�? �?"做什�? 拆成
- * trigger + executor。迁移只补字段，不删�?type / schedule / prompt 等旧字段�?
+ * v0 Automation Executor 把旧 cron job �?"什么时�? �?"做什�? 拆成
+ * trigger + executor。迁移只补字段，不删�?type / schedule / prompt 等旧字段�?
  */
 function migrateCronJobsToAutomationReadModel(ctx) {
   const { hanakoHome, agentsDir, log } = ctx;
@@ -1720,13 +1730,13 @@ function enableSkillForAgentConfig(configPath, skillNames) {
 }
 
 /**
- * #31 �?learned-skills 收敛到全局 skill pool
+ * #31 �?learned-skills 收敛到全局 skill pool
  *
- * 旧结构把 Agent 自学技能放�?`agents/<id>/learned-skills/`，这会让“经验”�?
- * “反省”和“技能安装”混在一起，也让列表刷新出现多条来源链。新结构只有一�?
+ * 旧结构把 Agent 自学技能放�?`agents/<id>/learned-skills/`，这会让“经验”�?
+ * “反省”和“技能安装”混在一起，也让列表刷新出现多条来源链。新结构只有一�?
  * 全局 skill pool：迁移时复制旧技能到 `{SATORI_HOME}/skills`，并只把复制后的
- * skill name 写入来源 Agent �?enabled 列表。为避免未来�?Agent 默认打开这些
- * 个性化技能，迁移出的 SKILL.md 会显式写�?`default-enabled: false`�?
+ * skill name 写入来源 Agent �?enabled 列表。为避免未来�?Agent 默认打开这些
+ * 个性化技能，迁移出的 SKILL.md 会显式写�?`default-enabled: false`�?
  */
 function migrateLearnedSkillsToGlobalSkillPool(ctx) {
   const { hanakoHome, agentsDir, log } = ctx;
@@ -1801,12 +1811,12 @@ const AGENT_PHONE_PROJECTION_RUNTIME_KEYS = new Set([
 ]);
 
 /**
- * #32 �?Agent Phone runtime 状态从 projection 迁入 sidecar
+ * #32 �?Agent Phone runtime 状态从 projection 迁入 sidecar
  *
- * projection 是每�?Agent 的手机视图记录，不应该决定下一�?session 如何恢复�?
- * 老版本把 session file、prompt snapshot、toolNames 等运行时字段写进 projection�?
- * 会让旧工具面和旧 prompt 反过来污染新一轮执行。迁移把可复�?session 所需字段
- * 搬到 `phone/session-runtime/*.json`，并�?projection 删除 runtime 残留�?
+ * projection 是每�?Agent 的手机视图记录，不应该决定下一�?session 如何恢复�?
+ * 老版本把 session file、prompt snapshot、toolNames 等运行时字段写进 projection�?
+ * 会让旧工具面和旧 prompt 反过来污染新一轮执行。迁移把可复�?session 所需字段
+ * 搬到 `phone/session-runtime/*.json`，并�?projection 删除 runtime 残留�?
  */
 function migrateAgentPhoneRuntimeOutOfProjection(ctx) {
   const { agentsDir, log } = ctx;
@@ -1888,15 +1898,15 @@ function migrateAgentPhoneRuntimeOutOfProjection(ctx) {
 }
 
 /**
- * #10 �?清除 summarizer / compiler 残留字段
+ * #10 �?清除 summarizer / compiler 残留字段
  *
- * 这两个角色在 v0.55 架构重构时被列入 schema，但业务路径从未接通过任何调用�?
- * 此次连同 ROLE_TO_PREF_KEY / SHARED_MODEL_KEYS / config.example.yaml 一起清理�?
- * 用户机器上可能有以下残留，全�?delete key（不是写 null）：
- *   - preferences.json �?summarizer_model / compiler_model
- *   - 每个 agent config.yaml �?models.summarizer / models.compiler
+ * 这两个角色在 v0.55 架构重构时被列入 schema，但业务路径从未接通过任何调用�?
+ * 此次连同 ROLE_TO_PREF_KEY / SHARED_MODEL_KEYS / config.example.yaml 一起清理�?
+ * 用户机器上可能有以下残留，全�?delete key（不是写 null）：
+ *   - preferences.json �?summarizer_model / compiler_model
+ *   - 每个 agent config.yaml �?models.summarizer / models.compiler
  *
- * 幂等：缺失字段直接跳过；不抛错，避免拦住启动�?
+ * 幂等：缺失字段直接跳过；不抛错，避免拦住启动�?
  */
 function cleanupSummarizerCompilerRemnants(ctx) {
   const { agentsDir, prefs, log } = ctx;
@@ -1948,16 +1958,16 @@ function cleanupSummarizerCompilerRemnants(ctx) {
 }
 
 /**
- * #12 �?�?session 文件引用补齐�?sidecar
+ * #12 �?�?session 文件引用补齐�?sidecar
  *
- * 这次 StageFile 收口后，历史消息恢复需要能�?sidecar 查询文件生命周期�?
- * �?JSONL 里可能只�?toolResult.details.files / artifactFile / inline screenshot�?
+ * 这次 StageFile 收口后，历史消息恢复需要能�?sidecar 查询文件生命周期�?
+ * �?JSONL 里可能只�?toolResult.details.files / artifactFile / inline screenshot�?
  * 因此迁移只做两件事：
- *   1. 扫描历史消息里的本地文件路径，注册到对应 session �?.files.json�?
- *   2. 把旧 browser inline screenshot 物化�?session-files 缓存图片并注册�?
+ *   1. 扫描历史消息里的本地文件路径，注册到对应 session �?.files.json�?
+ *   2. 把旧 browser inline screenshot 物化�?session-files 缓存图片并注册�?
  *
- * 迁移不重�?JSONL。恢复时�?sessions route �?fileId / filePath / deterministic screenshot
- * path 回填 block 的生命周期字段�?
+ * 迁移不重�?JSONL。恢复时�?sessions route �?fileId / filePath / deterministic screenshot
+ * path 回填 block 的生命周期字段�?
  */
 function backfillLegacySessionFiles(ctx) {
   const { hanakoHome, agentsDir, log } = ctx;
@@ -2023,16 +2033,16 @@ function backfillLegacySessionFiles(ctx) {
 }
 
 /**
- * #13 �?最近兼容状态显式化
+ * #13 �?最近兼容状态显式化
  *
- * v0.142.x 连续收紧了两个运行时契约�?
- *   1. 官方 DeepSeek provider 不能�?provider id "deepseek" 当作模型 id�?
- *   2. v0.142.x 时新�?agent �?memory.enabled 曾改为默认关闭�?
+ * v0.142.x 连续收紧了两个运行时契约�?
+ *   1. 官方 DeepSeek provider 不能�?provider id "deepseek" 当作模型 id�?
+ *   2. v0.142.x 时新�?agent �?memory.enabled 曾改为默认关闭�?
  *
- * 老数据里这两处都可能靠“隐式旧语义”存活：DeepSeek 旧列表可能含非法 id�?
- * �?agent �?memory.enabled 时，旧运行时一直按开启处理。迁移只修磁盘真相源�?
- * 不把兼容判断散落到同步模型、Agent 初始化或前端读配置路径里�?
- * 当前版本的新写入路径重新默认开启，迁移仍不覆盖已有显式用户选择�?
+ * 老数据里这两处都可能靠“隐式旧语义”存活：DeepSeek 旧列表可能含非法 id�?
+ * �?agent �?memory.enabled 时，旧运行时一直按开启处理。迁移只修磁盘真相源�?
+ * 不把兼容判断散落到同步模型、Agent 初始化或前端读配置路径里�?
+ * 当前版本的新写入路径重新默认开启，迁移仍不覆盖已有显式用户选择�?
  */
 function normalizeRecentLegacyCompatibilityState(ctx) {
   const deepseekPatched = repairLegacyDeepSeekProviderModelIds(ctx);
@@ -2146,13 +2156,13 @@ function repairLegacySessionSidecarThinkingLevels(ctx) {
 }
 
 /**
- * #16 �?视频输入能力投影的老数据修�?
+ * #16 �?视频输入能力投影的老数据修�?
  *
  * 覆盖两类旧状态：
- *   1. models.json 是投影文件，老版本里已存在的已知视频模型可能只有 ["text","image"]�?
- *   2. 少量手写 agent config.models.overrides 可能已经�?video，需要提升到 added-models.yaml�?
+ *   1. models.json 是投影文件，老版本里已存在的已知视频模型可能只有 ["text","image"]�?
+ *   2. 少量手写 agent config.models.overrides 可能已经�?video，需要提升到 added-models.yaml�?
  *
- * 幂等：视频能力写�?Hana compat，Pi-facing input 只保�?text/image；运行期模型对象不保�?video 字段�?
+ * 幂等：视频能力写�?Hana compat，Pi-facing input 只保�?text/image；运行期模型对象不保�?video 字段�?
  */
 function migrateVideoCapabilityProjection(ctx) {
   const modelsPatched = repairModelsJsonPiInputSchema(ctx);
@@ -2161,11 +2171,11 @@ function migrateVideoCapabilityProjection(ctx) {
 }
 
 /**
- * #20 �?修复已运行过 #16 或新版本投影留下的非�?Pi input 模�?
+ * #20 �?修复已运行过 #16 或新版本投影留下的非�?Pi input 模�?
  *
- * Pi SDK models.json �?input 是外部契约，只允�?text/image。Hana 自己�?
- * video 能力必须放在 compat.hanaVideoInput，避�?ModelRegistry 因单个非�?
- * 模型把整张模型表判空�?
+ * Pi SDK models.json �?input 是外部契约，只允�?text/image。Hana 自己�?
+ * video 能力必须放在 compat.hanaVideoInput，避�?ModelRegistry 因单个非�?
+ * 模型把整张模型表判空�?
  */
 function migratePiInputSchemaVideoCompat(ctx) {
   const patched = repairModelsJsonPiInputSchema(ctx);
@@ -2173,12 +2183,12 @@ function migratePiInputSchemaVideoCompat(ctx) {
 }
 
 /**
- * #21 �?视频传输能力抽象落地后的投影刷新
+ * #21 �?视频传输能力抽象落地后的投影刷新
  *
- * 这次变更�?模型会看视频"�?provider 协议能直传视�?拆开。新增的已知
- * 视频模型仍复�?compat.hanaVideoInput 表示语义能力，传输能力由运行时根�?
- * provider/api/baseUrl 推导。老用户已存在�?models.json 需要重跑一次投影修补，
- * 否则新增�?Kimi 等模型不会拿�?Hana 视频能力字段�?
+ * 这次变更�?模型会看视频"�?provider 协议能直传视�?拆开。新增的已知
+ * 视频模型仍复�?compat.hanaVideoInput 表示语义能力，传输能力由运行时根�?
+ * provider/api/baseUrl 推导。老用户已存在�?models.json 需要重跑一次投影修补，
+ * 否则新增�?Kimi 等模型不会拿�?Hana 视频能力字段�?
  */
 function refreshVideoCapabilityProjection(ctx) {
   const patched = repairModelsJsonPiInputSchema(ctx);
@@ -2186,14 +2196,14 @@ function refreshVideoCapabilityProjection(ctx) {
 }
 
 /**
- * #17 �?bridge sessionKey 补齐 agent 维度
+ * #17 �?bridge sessionKey 补齐 agent 维度
  *
  * 旧格式：wx_dm_user / tg_dm_user
  * 新格式：wx_dm_user@hana / tg_dm_user@hana
  *
- * index 文件本身已经位于 per-agent 目录下，因此 agentId 的权威来源是目录名�?
- * 微信 userId 可能自带 @（例�?openim），不能�?"包含 @" 判断是否已迁移，
- * 只能判断 key 是否以当�?owner agent �?@agentId 结尾�?
+ * index 文件本身已经位于 per-agent 目录下，因此 agentId 的权威来源是目录名�?
+ * 微信 userId 可能自带 @（例�?openim），不能�?"包含 @" 判断是否已迁移，
+ * 只能判断 key 是否以当�?owner agent �?@agentId 结尾�?
  */
 function migrateBridgeSessionKeysToAgentScoped(ctx) {
   const { agentsDir, log } = ctx;
@@ -2638,7 +2648,7 @@ function repairIdentityUserNamePlaceholder(identityPath, log) {
 function restoreBlankUserNameIdentityTemplate(raw) {
   if (typeof raw !== "string" || raw.includes("{{userName}}")) return raw;
   return raw
-    .replace(/(^|\r?\n)([ \t]*)的个人助�?g, "$1$2{{userName}}的个人助�?)
+    .replace(/(^|\r?\n)([ \t]*)的个人助手/g, "$1$2{{userName}}的个人助手")
     .replace(/(^|\r?\n)([ \t]*)'s personal assistant/g, "$1$2{{userName}}'s personal assistant");
 }
 
@@ -2776,7 +2786,7 @@ function repairLegacyDeepSeekProviderModelIds(ctx) {
     });
 
     // TODO(remove after v0.150.0): 兼容 v0.142.3 及更早版本可能把
-    // DeepSeek provider id "deepseek" 误写�?models[] 的旧数据�?
+    // DeepSeek provider id "deepseek" 误写�?models[] 的旧数据�?
     provider.models = nextModels.length > 0
       ? nextModels
       : defaultDeepSeekModelsForMigration(ctx, providerId);
@@ -2824,8 +2834,8 @@ function normalizeLegacyMemoryMasterDefaults(ctx) {
     const memoryIsObject = cfg.memory && typeof cfg.memory === "object" && !Array.isArray(cfg.memory);
     if (memoryIsObject && Object.prototype.hasOwnProperty.call(cfg.memory, "enabled")) continue;
 
-    // TODO(remove after v0.150.0): 兼容 v0.142.3 及更早版本的�?agent�?
-    // 当时�?memory.enabled 的运行时语义是开启，这里把隐式旧语义写成显式值�?
+    // TODO(remove after v0.150.0): 兼容 v0.142.3 及更早版本的�?agent�?
+    // 当时�?memory.enabled 的运行时语义是开启，这里把隐式旧语义写成显式值�?
     cfg.memory = memoryIsObject
       ? { ...cfg.memory, enabled: true }
       : { enabled: true };

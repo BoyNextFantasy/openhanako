@@ -21,14 +21,14 @@ describe("desktop onboarding completion contract", () => {
     }));
 
     await completeOnboardingAndOpenMain({
-      serverPort: 14500,
+      serverPort: 14700,
       serverToken: "token",
       createMainWindow,
       fetchImpl,
     });
 
     expect(fetchImpl).toHaveBeenCalledWith(
-      "http://127.0.0.1:14500/api/preferences/setup-complete",
+      "http://127.0.0.1:14700/api/preferences/setup-complete",
       expect.objectContaining({
         method: "POST",
         headers: { Authorization: "Bearer token" },
@@ -47,7 +47,7 @@ describe("desktop onboarding completion contract", () => {
     }));
 
     await expect(completeOnboardingAndOpenMain({
-      serverPort: 14500,
+      serverPort: 14700,
       serverToken: "token",
       createMainWindow,
       fetchImpl,
@@ -66,7 +66,7 @@ describe("desktop onboarding completion contract", () => {
     }));
 
     await expect(completeOnboardingAndOpenMain({
-      serverPort: 14500,
+      serverPort: 14700,
       serverToken: "token",
       createMainWindow,
       fetchImpl,

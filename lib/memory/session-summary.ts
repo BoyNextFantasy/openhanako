@@ -329,10 +329,6 @@ export class SessionSummaryManager {
         return isZh ? `搜索了记忆 ${shorten(pick("query"), 80)}` : `Searched memory ${shorten(pick("query"), 80)}`;
       case "subagent":
         return isZh ? `启动了子代理${pick("task", "prompt") ? `：${shorten(pick("task", "prompt"), 80)}` : ""}` : `Started subagent${pick("task", "prompt") ? `: ${shorten(pick("task", "prompt"), 80)}` : ""}`;
-      case "dm":
-        return isZh ? `发送了私信${pick("to") ? ` 给 ${pick("to")}` : ""}` : `Sent DM${pick("to") ? ` to ${pick("to")}` : ""}`;
-      case "channel":
-        return isZh ? `操作了频道 ${pick("channel", "name")}` : `Used channel ${pick("channel", "name")}`;
       case "cron":
         return isZh ? `设置了定时任务${pick("label", "prompt") ? `：${shorten(pick("label", "prompt"), 80)}` : ""}` : `Scheduled task${pick("label", "prompt") ? `: ${shorten(pick("label", "prompt"), 80)}` : ""}`;
       case "notify":

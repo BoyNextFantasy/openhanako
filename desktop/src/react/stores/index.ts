@@ -5,7 +5,6 @@ import { createSessionProjectSlice, type SessionProjectSlice } from './session-p
 import { createStreamingSlice, type StreamingSlice } from './streaming-slice';
 import { createUiSlice, type UiSlice } from './ui-slice';
 import { createAgentSlice, type AgentSlice } from './agent-slice';
-import { createChannelSlice, type ChannelSlice } from './channel-slice';
 import { createDeskSlice, type DeskSlice } from './desk-slice';
 import { createModelSlice, type ModelSlice } from './model-slice';
 import { createInputSlice, type InputSlice } from './input-slice';
@@ -31,7 +30,6 @@ export type StoreState = ConnectionSlice &
   StreamingSlice &
   UiSlice &
   AgentSlice &
-  ChannelSlice &
   DeskSlice &
   ModelSlice &
   InputSlice &
@@ -57,7 +55,6 @@ export const useStore = create<StoreState>()((set, _get, _api) => ({
   ...createStreamingSlice(set, _get),
   ...createUiSlice(set),
   ...createAgentSlice(set),
-  ...createChannelSlice(set),
   ...createDeskSlice(set),
   ...createModelSlice(set),
   ...createInputSlice(set),
@@ -89,7 +86,6 @@ export type {
   StreamingSlice,
   UiSlice,
   AgentSlice,
-  ChannelSlice,
   DeskSlice,
   ModelSlice,
   InputSlice,

@@ -117,7 +117,6 @@ export class AgentManager {
    * @param {string} deps.agentsDir
    * @param {string} deps.productDir
    * @param {string} deps.userDir
-   * @param {string} deps.channelsDir
    * @param {() => import('./preferences-manager.ts').PreferencesManager} deps.getPrefs
    * @param {() => import('./model-manager.ts').ModelManager} deps.getModels
    * @param {() => object|null} deps.getHub
@@ -125,7 +124,6 @@ export class AgentManager {
    * @param {() => object} deps.getSearchConfig
    * @param {() => object} deps.resolveUtilityConfig
    * @param {() => object} deps.getSharedModels
-   * @param {() => import('./channel-manager.ts').ChannelManager} deps.getChannelManager
    * @param {() => import('./session-coordinator.ts').SessionCoordinator} deps.getSessionCoordinator
    */
   constructor(deps) {
@@ -551,7 +549,6 @@ export class AgentManager {
    */
   async _rollbackAgentCreation(agentDir, agentId) {
     try { fs.rmSync(agentDir, { recursive: true, force: true }); } catch {}
-    try { await this._d.getChannelManager().cleanupAgentFromChannels(agentId); } catch {}
   }
 
   async createAgent({ name, id, yuan, enabledSkills, initialFiles, avatarPath, initialMemory }) {
@@ -695,14 +692,6 @@ export class AgentManager {
       }
     }
 
-    // 频道系统
-    try {
-      await this._d.getChannelManager().setupChannelsForNewAgent(agentId);
-    } catch (err) {
-      await this._rollbackAgentCreation(agentDir, agentId);
-      throw err;
-    }
-
     // 初始化并加入长驻 Map
     const ag = this._createAgentInstance(agentId, () => ({}));
     ag.setGetOwnerIds(this._makeOwnerIdsFn(ag));
@@ -738,12 +727,6 @@ export class AgentManager {
     const newAgent = this._agents.get(agentId);
     if (newAgent) {
       hub?.scheduler?.startAgentHeartbeat?.(agentId, newAgent);
-    }
-
-    // 注入 DM 回调
-    const dmRouter = hub?.dmRouter;
-    if (dmRouter) {
-      ag.setDmSentHandler((fromId, toId) => dmRouter.handleNewDm(fromId, toId));
     }
 
     this.invalidateAgentListCache();
@@ -883,13 +866,6 @@ export class AgentManager {
       await this._d.getHub()?.scheduler?.removeAgentCron(agentId);
       await this._d.getHub()?.scheduler?.stopHeartbeat(agentId);
       await ag.dispose();
-    }
-
-    // 频道清理
-    try {
-      await this._d.getChannelManager().cleanupAgentFromChannels(agentId);
-    } catch (err) {
-      log.error(`频道清理失败 (${agentId}): ${err.message}`);
     }
 
     const tombstone = {
@@ -1059,7 +1035,6 @@ export class AgentManager {
       agentsDir: this._d.agentsDir,
       productDir: this._d.productDir,
       userDir: this._d.userDir,
-      channelsDir: this._d.channelsDir,
       searchConfigResolver: () => this._d.getSearchConfig(),
     });
     ag.setGetOwnerIds(getOwnerIds);
@@ -1092,10 +1067,8 @@ export class AgentManager {
       getSkillsDir:         () => getEngine()?.skillsDir ?? null,
       getLearnSkills:       () => getEngine()?.getLearnSkills?.() ?? {},
       getPreferences:       () => getEngine()?.preferences ?? null,
-      isChannelsEnabled:    () => getEngine()?.isChannelsEnabled?.() ?? false,
       // 花名册唯一事实源：tombstone / 坏目录已在 AgentManager 层过滤
       listActiveAgents:     () => this.listActiveAgentsForRoster(),
-      createChannelEntry:    (input) => getEngine()?.createChannelEntry?.(input),
       resolveUtilityConfig: () => getEngine()?.resolveUtilityConfig?.({ agentId: ag.id }),
       getCwd:               () => getEngine()?.cwd ?? "",
       getTimezone:          () => getEngine()?.getTimezone?.() ?? "",

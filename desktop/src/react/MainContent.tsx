@@ -59,9 +59,7 @@ async function installSkillFile(filePath: string, sessionPath?: string | null): 
 }
 
 function blockChatAttachmentDropOutsideChat(): boolean {
-  if (useStore.getState().currentTab !== 'channels') return false;
-  useStore.getState().addToast(t('channel.filesUnsupported'), 'error');
-  return true;
+  return false;
 }
 
 function chatAudioMimeTypeForName(name: string): string {

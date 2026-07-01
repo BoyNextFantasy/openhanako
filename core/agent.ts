@@ -20,8 +20,6 @@ import { createAutomationTool } from "../lib/tools/automation-tool.ts";
 import { createWebFetchTool } from "../lib/tools/web-fetch.ts";
 import { createStageFilesTool } from "../lib/tools/output-file-tool.ts";
 import { createFileTool } from "../lib/tools/file-tool.ts";
-import { createChannelTool } from "../lib/tools/channel-tool.ts";
-import { createDmTool } from "../lib/tools/dm-tool.ts";
 import { createBrowserTool } from "../lib/tools/browser-tool.ts";
 import { createComputerUseTool } from "../lib/tools/computer-use-tool.ts";
 import { createPinnedMemoryTools } from "../lib/tools/pinned-memory.ts";
@@ -94,8 +92,6 @@ export class Agent {
   declare _automationTool: any;
   declare _browserTool: any;
   declare _cb: any;
-  declare _channelPostHandler: any;
-  declare _channelTool: any;
   declare _checkDeferredTool: any;
   declare _computerUseTool: any;
   declare _config: any;
@@ -104,8 +100,6 @@ export class Agent {
   declare _descriptionRefreshHandler: any;
   declare _deskManager: any;
   declare _disposing: any;
-  declare _dmSentHandler: any;
-  declare _dmTool: any;
   declare _enabledSkills: any;
   declare _experienceEnabled: any;
   declare _experienceTools: any;
@@ -147,7 +141,6 @@ export class Agent {
   declare agentDir: any;
   declare agentName: any;
   declare agentsDir: any;
-  declare channelsDir: any;
   declare configPath: any;
   declare deskDir: any;
   declare factsDbPath: any;
@@ -169,7 +162,7 @@ export class Agent {
    * @param {string} opts.productDir - 产品模板目录（ishiki.example.md, yuan 模板等）
    * @param {string} opts.userDir    - 用户数据目录（user.md, 用户头像）—— 跨助手共享
    */
-  constructor({ id, agentsDir, productDir, userDir, channelsDir, searchConfigResolver }) {
+  constructor({ id, agentsDir, productDir, userDir, searchConfigResolver }) {
     if (!id) throw new Error("Agent: id is required");
     if (!agentsDir) throw new Error("Agent: agentsDir is required");
 
@@ -181,7 +174,6 @@ export class Agent {
     this.agentDir = path.join(agentsDir, id);
     this.productDir = productDir;
     this.userDir = userDir;
-    this.channelsDir = channelsDir || null;
     this._searchConfigResolver = searchConfigResolver || null;
 
     // 路径（全部从 this.agentDir 派生）
@@ -226,7 +218,6 @@ export class Agent {
     this._automationTool = null;
     this._stageFilesTool = null;
     this._fileTool = null;
-    this._channelTool = null;
     this._browserTool = null;
     this._computerUseTool = null;
     this._notifyTool = null;
@@ -246,11 +237,7 @@ export class Agent {
      */
     this._cb = null;
 
-    // 团队花名册唯一事实源：AgentManager 注入的 active-agent provider，
-    // tombstone / 坏目录已在 manager 层过滤。Agent 自身禁止私扫 agentsDir，
-    // 否则删除标记对 prompt / subagent / DM / workflow 不可见（#1657 / #1633）。
-    // 与旧行为保持一致：仅在频道能力可用（channelsDir 存在）时暴露花名册。
-    if (this.channelsDir && this.agentsDir) {
+    if (this.agentsDir) {
       this._listAgents = () => this._cb?.listActiveAgents?.() ?? [];
     }
   }
@@ -549,34 +536,6 @@ export class Agent {
       emitEvent: (event, sp) => { if (sp) this._cb?.emitEvent?.(event, sp); },
     });
 
-    // 9. 频道工具 + 私信工具（需要 channelsDir 和 agentsDir）
-    if (this.channelsDir && this.agentsDir) {
-      const agentId = this.id;
-      // 花名册来自构造期装配的 active-agent provider（见 constructor），
-      // 这里只取引用传给各工具，不在 Agent 内部扫盘。
-      const listAgents = this._listAgents;
-
-      this._channelTool = createChannelTool({
-        channelsDir: this.channelsDir,
-        agentsDir: this.agentsDir,
-        agentId,
-        listAgents,
-        isEnabled: () => this._cb?.isChannelsEnabled?.() ?? false,
-        createChannelEntry: (input) => this._cb?.createChannelEntry?.(input),
-        onPost: (channelName, senderId, message) => {
-          this._channelPostHandler?.(channelName, senderId, message);
-        },
-      });
-
-      this._dmTool = createDmTool({
-        agentId,
-        agentsDir: path.dirname(this.agentDir),
-        listAgents,
-        isEnabled: () => this._cb?.isChannelsEnabled?.() ?? false,
-        onDmSent: (fromId, toId) => this._dmSentHandler?.(fromId, toId),
-      });
-    }
-
     // 10. install_skill 工具（需要 agentDir + config + engine.resolveUtilityConfig）
     this._installSkillTool = createInstallSkillTool({
       agentDir: this.agentDir,
@@ -620,7 +579,7 @@ export class Agent {
       // 用户在主 session 里可能把 cwd 切到某个子项目，派出 subagent 时应当在同一处干活。
       getParentCwd: () => this._cb?.getCwd?.() || null,
       listAgents: this._listAgents || null,
-      currentAgentId: this.channelsDir && this.agentsDir ? this.id : undefined,
+      currentAgentId: this.id,
       agentDir: this.agentDir,
       emitEvent: (event, sp) => this._cb?.emitEvent?.(event, sp),
       persistSubagentSessionMeta: (sessionPath, meta) => (
@@ -726,8 +685,6 @@ export class Agent {
   setOnInstallCallback(fn) { this._onInstallCallback = fn; }
   setNotifyHandler(fn) { this._notifyHandler = fn; }
   setDescriptionRefreshHandler(fn) { this._descriptionRefreshHandler = fn; }
-  setDmSentHandler(fn) { this._dmSentHandler = fn; }
-  setChannelPostHandler(fn) { this._channelPostHandler = fn; }
   setUtilityModel(val) { this._utilityModel = val; }
   setMemoryModel(val) { this._memoryModel = val; }
 
@@ -871,8 +828,6 @@ export class Agent {
       this._automationTool,
       this._stageFilesTool,
       this._fileTool,
-      this._channelTool,
-      this._dmTool,
       this._browserTool,
       ...computerUseTools,
       this._installSkillTool,

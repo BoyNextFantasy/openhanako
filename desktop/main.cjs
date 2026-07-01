@@ -1,8 +1,8 @@
 /**
- * HanaAgent Desktop �?Electron 主进�?
+ * HanaAgent Desktop �?Electron 主进�?
  *
- * 职责�?
- * 1. 创建启动窗口（splash�?
+ * 职责�?
+ * 1. 创建启动窗口（splash�?
  * 2. spawn() 启动 HanaAgent Server
  * 3. 等待 server 就绪 + 主窗口初始化完成
  * 4. 关闭 splash，显示主窗口
@@ -101,8 +101,8 @@ const {
 
 const APP_USER_MODEL_ID = "com.hanako.app"; // Keep in sync with package.json build.appId.
 
-// preload 缺失�?Electron 会静默忽略，renderer 拿不�?window.hana �?
-// onboarding/主窗口白屏且无前端报错。此处硬崩，拒绝以不可用状态启动�?
+// preload 缺失�?Electron 会静默忽略，renderer 拿不�?window.hana �?
+// onboarding/主窗口白屏且无前端报错。此处硬崩，拒绝以不可用状态启动�?
 {
   const preloadPath = path.join(__dirname, "preload.bundle.cjs");
   if (!fs.existsSync(preloadPath)) {
@@ -113,9 +113,9 @@ const APP_USER_MODEL_ID = "com.hanako.app"; // Keep in sync with package.json bu
   }
 }
 
-// macOS/Linux: Electron �?Dock/Finder 启动�?PATH 只有系统默认值，
-// Homebrew、npm global 等路径全部丢失。用登录 shell 解析完整 PATH�?
-// 异步执行，避免阻�?Electron 事件循环启动（login shell 可能需�?1~3 秒）�?
+// macOS/Linux: Electron �?Dock/Finder 启动�?PATH 只有系统默认值，
+// Homebrew、npm global 等路径全部丢失。用登录 shell 解析完整 PATH�?
+// 异步执行，避免阻�?Electron 事件循环启动（login shell 可能需�?1~3 秒）�?
 function resolveLoginShellPath() {
   if (process.platform === "win32") return Promise.resolve();
   return new Promise((resolve) => {
@@ -243,9 +243,9 @@ async function serverEnvironmentForNetworkProxy(baseEnv) {
   }, baseEnv, config);
 }
 
-// �?SATORI_HOME 隔离 Electron userData（localStorage / cache / session�?
-// 生产: ~/Library/Application Support/Hanako（历史目录，�?HanaAgent 显示名保留）
-// 开�? ~/Library/Application Support/Hanako-dev
+// �?SATORI_HOME 隔离 Electron userData（localStorage / cache / session�?
+// 生产: ~/Library/Application Support/Hanako（历史目录，�?HanaAgent 显示名保留）
+// 开�? ~/Library/Application Support/Hanako-dev
 const defaultHome = path.join(os.homedir(), ".hanako");
 configureClientSingleInstance(app, {
   hanakoHome,
@@ -344,14 +344,14 @@ let registeredQuickChatShortcut = null;
 let settingsWindow = null;
 
 let browserViewerWindow = null;
-let _browserWebView = null;        // 当前活跃�?WebContentsView
+let _browserWebView = null;        // 当前活跃�?WebContentsView
 const _browserViews = new Map();   // sessionPath -> BrowserWorkspace; BrowserWorkspace.tabs: tabId -> WebContentsView
 let _currentBrowserSession = null; // 当前浏览器绑定的 sessionPath
 let _currentBrowserTabId = null;   // 当前浏览器绑定的 tabId
 let _browserAcceptCookies = true;
 let _browserCookiePolicyInstalled = false;
 
-/** Vite 入口页面统一加载（dev �?Vite dev server，其他优�?dist-renderer，最后才回退 src�?*/
+/** Vite 入口页面统一加载（dev �?Vite dev server，其他优�?dist-renderer，最后才回退 src�?*/
 const _isDev = process.argv.includes("--dev");
 const _distRenderer = path.join(__dirname, "dist-renderer");
 
@@ -426,7 +426,7 @@ function attachRendererLaunchDiagnostics(win, label) {
   });
 }
 
-/** 校验浏览�?URL：仅允许 http/https */
+/** 校验浏览�?URL：仅允许 http/https */
 function isAllowedBrowserUrl(url) {
   try {
     const p = new URL(url);
@@ -434,26 +434,26 @@ function isAllowedBrowserUrl(url) {
   } catch { return false; }
 }
 
-let _browserViewerTheme = themeRegistry.DEFAULT_THEME; // 当前主题（用�?backgroundColor�?
-const TITLEBAR_HEIGHT = 44;        // 浏览器窗口标题栏高度（px�?
+let _browserViewerTheme = themeRegistry.DEFAULT_THEME; // 当前主题（用�?backgroundColor�?
+const TITLEBAR_HEIGHT = 44;        // 浏览器窗口标题栏高度（px�?
 let serverProcess = null;
 let serverPort = null;
 let serverToken = null;
-let isQuitting = false;  // 区分关窗口（hide）和真正退出（quit�?
+let isQuitting = false;  // 区分关窗口（hide）和真正退出（quit�?
 let tray = null;
 let reusedServerPid = null; // 复用已有 server 时记录其 PID，用 owner 字段决定是否关闭
-let reusedServerOwned = false; // �?desktop-owned 的复�?server 才由 desktop 退出时关闭
-let isExitingServer = false; // 只有托盘"退�?时才 kill server，其余路径仅关前�?
+let reusedServerOwned = false; // �?desktop-owned 的复�?server 才由 desktop 退出时关闭
+let isExitingServer = false; // 只有托盘"退�?时才 kill server，其余路径仅关前�?
 let _isUpdating = false;  // auto-updater 正在执行 quitAndInstall，before-quit 跳过 server 清理
 let _autoUpdaterInitialized = false;
 let forceQuitApp = false;   // 启动失败等场景需要真正退出，绕过"隐藏保持运行"拦截
-let _startHiddenAtLogin = false; // 登录项启动时不抢前台，只在托盘常�?
+let _startHiddenAtLogin = false; // 登录项启动时不抢前台，只在托盘常�?
 const SERVER_SHUTDOWN_GRACE_MS = 17000; // server gracefulShutdown 内部 15s force timer + 余量
 const SERVER_FORCE_KILL_WAIT_MS = 5000;
 const SERVER_SHUTDOWN_POLL_MS = 200;
 
-// ── 主进�?i18n ──
-// �?agent config.yaml 读取 locale，加载对应语言包的 "main" 部分
+// ── 主进�?i18n ──
+// �?agent config.yaml 读取 locale，加载对应语言包的 "main" 部分
 let _mainI18nData = null;
 
 function _resolveLocaleKey(locale) {
@@ -468,7 +468,7 @@ function _resolveLocaleKey(locale) {
 function _getMainI18n() {
   if (_mainI18nData) return _mainI18nData;
   try {
-    // �?preferences.json 读取全局 locale（和 server/renderer 一致）
+    // �?preferences.json 读取全局 locale（和 server/renderer 一致）
     let locale = null;
     try {
       const prefs = JSON.parse(fs.readFileSync(path.join(hanakoHome, "user", "preferences.json"), "utf-8"));
@@ -485,9 +485,9 @@ function _getMainI18n() {
 }
 
 /**
- * 主进程翻译函�?
- * @param {string} dotPath  �?"tray.show" �?main.tray.show
- * @param {object} [vars]   占位符变�?{key: value}
+ * 主进程翻译函�?
+ * @param {string} dotPath  �?"tray.show" �?main.tray.show
+ * @param {object} [vars]   占位符变�?{key: value}
  * @param {string} [fallback] 找不到时的回退文本
  */
 function mt(dotPath, vars, fallback) {
@@ -505,7 +505,7 @@ function mt(dotPath, vars, fallback) {
 /** 重置 i18n 缓存（locale 变更时调用） */
 function resetMainI18n() { _mainI18nData = null; }
 
-/** 跨平台杀进程：Windows �?taskkill，POSIX �?signal */
+/** 跨平台杀进程：Windows �?taskkill，POSIX �?signal */
 function killPid(pid, force = false) {
   if (process.platform === "win32") {
     try {
@@ -537,7 +537,7 @@ function titleBarOpts(trafficLight = { x: 16, y: 16 }) {
   if (process.platform === "darwin") {
     return { titleBarStyle: "hiddenInset", trafficLightPosition: trafficLight };
   }
-  // Windows/Linux：无框窗�?+ 前端自绘 window controls
+  // Windows/Linux：无框窗�?+ 前端自绘 window controls
   return framelessWindowOpts();
 }
 
@@ -564,8 +564,8 @@ function applyWindowThemeColors(win, rawTheme) {
     console.warn("[desktop] set window background color failed:", redactMainLogText(err.message));
   }
 
-  // Windows �?frameless thick frame 仍由 DWM 绘制。这里用主题背景�?
-  // 压低 active border 的存在感，而不是使用更醒目�?accent token�?
+  // Windows �?frameless thick frame 仍由 DWM 绘制。这里用主题背景�?
+  // 压低 active border 的存在感，而不是使用更醒目�?accent token�?
   if (process.platform === "win32" && typeof win.setAccentColor === "function") {
     try {
       win.setAccentColor(backgroundColor);
@@ -637,14 +637,14 @@ function applyTransparentWindowBackground(win) {
 }
 
 /**
- * 获取当前 agent ID（不依赖 server�?
- * 优先�?user/preferences.json，fallback 扫描 agents/ 第一个有效目�?
+ * 获取当前 agent ID（不依赖 server�?
+ * 优先�?user/preferences.json，fallback 扫描 agents/ 第一个有效目�?
  */
 function getCurrentAgentId() {
   const prefsPath = path.join(hanakoHome, "user", "preferences.json");
   const agentsDir = path.join(hanakoHome, "agents");
 
-  // 1. �?preferences
+  // 1. �?preferences
   try {
     const prefs = JSON.parse(fs.readFileSync(prefsPath, "utf-8"));
     if (prefs.primaryAgent) {
@@ -656,7 +656,7 @@ function getCurrentAgentId() {
     }
   } catch {}
 
-  // 2. 扫描 agents/ 目录，返回第一个有�?agent
+  // 2. 扫描 agents/ 目录，返回第一个有�?agent
   try {
     const entries = fs.readdirSync(agentsDir, { withFileTypes: true });
     for (const entry of entries) {
@@ -666,13 +666,13 @@ function getCurrentAgentId() {
     }
   } catch {}
 
-  // 3. 没有任何 agent（首次启�?first-run 还没跑，或全被删了）
+  // 3. 没有任何 agent（首次启�?first-run 还没跑，或全被删了）
   return null;
 }
 
 /**
  * 检查是否已完成首次配置引导
- * 只看 preferences.json �?setupComplete 标记
+ * 只看 preferences.json �?setupComplete 标记
  */
 function isSetupComplete() {
   const prefsPath = path.join(hanakoHome, "user", "preferences.json");
@@ -683,8 +683,8 @@ function isSetupComplete() {
 }
 
 /**
- * 检查当�?agent �?config.yaml 是否已有有效 api_key
- * 用于老用户兼容：�?key 说明配置过了，跳过填写直接看教程
+ * 检查当�?agent �?config.yaml 是否已有有效 api_key
+ * 用于老用户兼容：�?key 说明配置过了，跳过填写直接看教程
  */
 function hasExistingConfig() {
   try {
@@ -698,9 +698,9 @@ function hasExistingConfig() {
 }
 
 function hasLegacyProviderConfig() {
-  // 判断依据：added-models.yaml 存在且含有真�?api_key �?老用户配置过 provider�?
-  // 不能只看 agents/*/config.yaml 是否存在，因�?ensureFirstRun 会为全新用户
-  // 播种默认 agent（含 config.yaml），导致新用户被误判为老用户而跳�?onboarding�?
+  // 判断依据：added-models.yaml 存在且含有真�?api_key �?老用户配置过 provider�?
+  // 不能只看 agents/*/config.yaml 是否存在，因�?ensureFirstRun 会为全新用户
+  // 播种默认 agent（含 config.yaml），导致新用户被误判为老用户而跳�?onboarding�?
   try {
     const modelsPath = path.join(hanakoHome, "added-models.yaml");
     if (!fs.existsSync(modelsPath)) return false;
@@ -720,7 +720,7 @@ async function migrateSetupCompleteViaServerIfNeeded() {
 }
 
 // ── 启动 Server ──
-// 收集 server �?stdout/stderr 用于崩溃诊断
+// 收集 server �?stdout/stderr 用于崩溃诊断
 let _serverLogs = [];
 let _lastServerSpawn = null;
 let _lastServerProgressAtMs = null;
@@ -764,7 +764,7 @@ async function waitForProcessExit(proc, pid, timeoutMs) {
   }
 }
 
-// Server 启动前的就绪性校验：处理自动更新文件落地竞�?
+// Server 启动前的就绪性校验：处理自动更新文件落地竞�?
 const {
   ensureServerFilesReady,
   isModuleResolutionError,
@@ -796,7 +796,7 @@ function pollServerInfo(infoPath, {
             ? mt("dialog.serverKilledBySignal", { signal })
             : mt("dialog.serverExitedWithCode", { code })
         );
-        // �?exit code/signal 挂在 error 上，给上层判�?retryable �?
+        // �?exit code/signal 挂在 error 上，给上层判�?retryable �?
         err.exitCode = code;
         err.exitSignal = signal;
         reject(err);
@@ -836,7 +836,7 @@ function pollServerInfo(infoPath, {
 const DEFAULT_SERVER_NETWORK_CONFIG = Object.freeze({
   mode: "loopback",
   listenHost: "127.0.0.1",
-  listenPort: 14500,
+  listenPort: 14700,
 });
 const VALID_SERVER_NETWORK_MODES = new Set(["loopback", "lan", "custom_remote"]);
 const LOOPBACK_LISTEN_HOSTS = new Set(["127.0.0.1", "localhost", "::1", "[::1]"]);
@@ -986,7 +986,7 @@ function isDesktopOwnedServerInfo(info) {
 async function startServer() {
   const serverInfoPath = path.join(hanakoHome, "server-info.json");
 
-  // ── 1. 检查是否有已运行的 server（Electron crash 后遗留的守护进程�?──
+  // ── 1. 检查是否有已运行的 server（Electron crash 后遗留的守护进程�?──
   let existingInfo = null;
   try {
     existingInfo = JSON.parse(fs.readFileSync(serverInfoPath, "utf-8"));
@@ -1000,7 +1000,7 @@ async function startServer() {
     if (pidAlive) {
       const verification = await verifyReusableServerInfo(existingInfo);
       if (verification.reusable) {
-        console.log(`[desktop] 复用已运行的 server，端�? ${existingInfo.port}, 版本: ${existingInfo.version || "unknown"}, studio: ${verification.identity.studioId}`);
+        console.log(`[desktop] 复用已运行的 server，端�? ${existingInfo.port}, 版本: ${existingInfo.version || "unknown"}, studio: ${verification.identity.studioId}`);
         serverPort = existingInfo.port;
         serverToken = existingInfo.token;
         reusedServerPid = existingInfo.pid;
@@ -1009,7 +1009,7 @@ async function startServer() {
       }
 
       if (verification.terminate) {
-        console.log(`[desktop] 可信�?server 不可复用�?{verification.reason}），正在终止 PID ${existingInfo.pid}`);
+        console.log(`[desktop] 可信�?server 不可复用�?{verification.reason}），正在终止 PID ${existingInfo.pid}`);
         killPid(existingInfo.pid);
         const deadline = Date.now() + 2000;
         while (Date.now() < deadline) {
@@ -1027,8 +1027,8 @@ async function startServer() {
   }
 
   // ── 2. 打包模式：先校验关键 external 文件是否齐全 ──
-  // 自动更新（NSIS overlay + Defender 扫描锁）会让新版本文件落地有几秒到几分钟延迟�?
-  // 这里事先做退避检查，避免后续 spawn �?ERR_MODULE_NOT_FOUND�?
+  // 自动更新（NSIS overlay + Defender 扫描锁）会让新版本文件落地有几秒到几分钟延迟�?
+  // 这里事先做退避检查，避免后续 spawn �?ERR_MODULE_NOT_FOUND�?
   const bundledServerRoot = path.join(process.resourcesPath || "", "server");
   const isBundledMode =
     fs.existsSync(path.join(bundledServerRoot, "hana-server")) ||
@@ -1043,10 +1043,10 @@ async function startServer() {
     }
   }
 
-  // ── 3. spawn server，对模块解析错误做一次智能重�?──
-  // 重试条件：stderr �?ERR_MODULE_NOT_FOUND �?"Cannot find package/module"�?
-  // 文件已通过完整性检查仍报模块缺失，说明 transitive 依赖在更新落地中尚未完成�?
-  // 再退避一次，�?NSIS/AV 更多收尾时间�?
+  // ── 3. spawn server，对模块解析错误做一次智能重�?──
+  // 重试条件：stderr �?ERR_MODULE_NOT_FOUND �?"Cannot find package/module"�?
+  // 文件已通过完整性检查仍报模块缺失，说明 transitive 依赖在更新落地中尚未完成�?
+  // 再退避一次，�?NSIS/AV 更多收尾时间�?
   let lastErr;
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
@@ -1073,7 +1073,7 @@ async function startServer() {
         }
         throw err;
       }
-      console.warn(`[desktop] Server 启动�?ERR_MODULE_NOT_FOUND (${missingModule})，疑似自动更新落地竞态，2s 后重试`);
+      console.warn(`[desktop] Server 启动�?ERR_MODULE_NOT_FOUND (${missingModule})，疑似自动更新落地竞态，2s 后重试`);
       // 再扫一遍文件：很可能这次能补齐
       if (isBundledMode) {
         await ensureServerFilesReady(bundledServerRoot).catch(() => {});
@@ -1081,13 +1081,13 @@ async function startServer() {
       await new Promise(r => setTimeout(r, 2000));
     }
   }
-  // 理论不可达（attempt < 2 的循环里 try 块要�?return 要么 throw），保险起见
+  // 理论不可达（attempt < 2 的循环里 try 块要�?return 要么 throw），保险起见
   throw lastErr || new Error("startServer: unknown failure");
 }
 
 /**
- * 实际执行 spawn + 等待 server-info.json 的内部函数�?
- * 失败�?startServer 决定是否重试；本函数只负责单次启动�?
+ * 实际执行 spawn + 等待 server-info.json 的内部函数�?
+ * 失败�?startServer 决定是否重试；本函数只负责单次启动�?
  */
 async function _spawnServerOnce(serverInfoPath) {
   _serverLogs = [];
@@ -1106,7 +1106,7 @@ async function _spawnServerOnce(serverInfoPath) {
   };
   serverEnv = await serverEnvironmentForNetworkProxy(serverEnv);
 
-  // Windows: 注入 PortableGit 路径，并从注册表补齐当前系统 / 用户 PATH�?
+  // Windows: 注入 PortableGit 路径，并从注册表补齐当前系统 / 用户 PATH�?
   if (process.platform === "win32") {
     // PortableGit 结构：cmd/git.exe, bin/bash.exe, usr/bin/*, mingw64/bin/*
     const gitRoot = path.join(process.resourcesPath || "", "git");
@@ -1126,9 +1126,9 @@ async function _spawnServerOnce(serverInfoPath) {
   const bundledServerRoot = path.join(process.resourcesPath || "", "server");
   const bundledServer = path.join(bundledServerRoot, "hana-server");
   if (fs.existsSync(bundledServer) || fs.existsSync(bundledServer + ".exe")) {
-    // 打包模式：使�?extraResources 里的独立 server
-    // macOS/Linux：hana-server �?shell wrapper，内部调�?bootstrap.js，无需额外参数
-    // Windows：hana-server.exe 是裸 Node 二进制（改名），需要显式传�?bootstrap.js
+    // 打包模式：使�?extraResources 里的独立 server
+    // macOS/Linux：hana-server �?shell wrapper，内部调�?bootstrap.js，无需额外参数
+    // Windows：hana-server.exe 是裸 Node 二进制（改名），需要显式传�?bootstrap.js
     const bin = process.platform === "win32" ? bundledServer + ".exe" : bundledServer;
     const entry = path.join(bundledServerRoot, "bundle", "index.js");
     serverBin = bin;
@@ -1141,9 +1141,9 @@ async function _spawnServerOnce(serverInfoPath) {
     // must not block the HTTP server readiness handshake.
     serverEnv.HANA_CREATE_STARTUP_SESSION = "0";
   } else {
-    // 开发模式：沿用 launch.js 传下来的独立 Node runtime �?source server�?
-    // 让源码模式和 BUILD 文档保持同一 ABI 合同，避免本�?npm install �?
-    // native addon �?Electron 自带 Node 误加载�?
+    // 开发模式：沿用 launch.js 传下来的独立 Node runtime �?source server�?
+    // 让源码模式和 BUILD 文档保持同一 ABI 合同，避免本�?npm install �?
+    // native addon �?Electron 自带 Node 误加载�?
     const devRoot = path.join(__dirname, "..");
     serverBin = process.env.HANA_DEV_NODE_BIN || process.env.npm_node_execpath || "node";
     serverArgs = [path.join(devRoot, "server", "bootstrap.ts")];
@@ -1154,7 +1154,7 @@ async function _spawnServerOnce(serverInfoPath) {
     delete serverEnv.ELECTRON_RUN_AS_NODE;
   }
 
-  // 删除�?server-info.json
+  // 删除�?server-info.json
   try { fs.unlinkSync(serverInfoPath); } catch {}
 
   _lastServerSpawn = {
@@ -1185,7 +1185,7 @@ async function _spawnServerOnce(serverInfoPath) {
     }
   });
 
-  // 捕获 stdout/stderr �?buffer（打包后 console 不可见，崩溃时需要这些信息）
+  // 捕获 stdout/stderr �?buffer（打包后 console 不可见，崩溃时需要这些信息）
   serverProcess.stdout?.on("data", (chunk) => {
     const text = redactMainLogText(chunk.toString());
     _lastServerProgressAtMs = Date.now();
@@ -1201,30 +1201,30 @@ async function _spawnServerOnce(serverInfoPath) {
     if (_serverLogs.length > 500) _serverLogs.splice(0, _serverLogs.length - 500);
   });
 
-  // 等待 server ready（通过轮询 server-info.json�?
+  // 等待 server ready（通过轮询 server-info.json�?
   const info = await pollServerInfo(serverInfoPath, {
     process: serverProcess,
     getLastProgressAtMs: () => _lastServerProgressAtMs,
   });
   serverPort = info.port;
   serverToken = info.token;
-  serverProcess.unref(); // 脱离 Electron 事件循环，允�?Electron 独立退�?
+  serverProcess.unref(); // 脱离 Electron 事件循环，允�?Electron 独立退�?
 }
 
 /**
- * 持久监控 server 进程：崩溃后自动重启一次，再失败则�?crash log 并通知用户
+ * 持久监控 server 进程：崩溃后自动重启一次，再失败则�?crash log 并通知用户
  */
 let _serverRestartAttempts = 0;
 function monitorServer() {
   if (!serverProcess) return;
   serverProcess.on("exit", async (code, signal) => {
-    // 任何"主动退�?路径都跳过：用户 quit、托�?quit、auto-updater 安装�?
-    // shutdownServer 主动 kill。否则这里会�?quitAndInstall / shutdownServer
-    // 抢时间去 spawn �?server，造成 serverProcess 被并发改写成 null�?
-    // 后续 serverProcess.unref() �?"Cannot read properties of null"�?
+    // 任何"主动退�?路径都跳过：用户 quit、托�?quit、auto-updater 安装�?
+    // shutdownServer 主动 kill。否则这里会�?quitAndInstall / shutdownServer
+    // 抢时间去 spawn �?server，造成 serverProcess 被并发改写成 null�?
+    // 后续 serverProcess.unref() �?"Cannot read properties of null"�?
     if (isQuitting || _isUpdating || isExitingServer) return;
     const reason = signal ? `信号 ${signal}` : `退出码 ${code}`;
-    console.error(`[desktop] Server 意外退�?(${reason})`);
+    console.error(`[desktop] Server 意外退�?(${reason})`);
 
     if (_serverRestartAttempts < 1) {
       _serverRestartAttempts++;
@@ -1232,12 +1232,12 @@ function monitorServer() {
       try {
         await startServer();
         console.log("[desktop] Server 重启成功");
-        monitorServer(); // 重新挂监�?
+        monitorServer(); // 重新挂监�?
         // 通知前端重连
         if (mainWindow && !mainWindow.isDestroyed()) {
           mainWindow.webContents.send("server-restarted", { port: serverPort, token: serverToken });
         }
-        // 设置窗口也需要知道新端口（否则旧端口�?API 全部失败�?
+        // 设置窗口也需要知道新端口（否则旧端口�?API 全部失败�?
         if (settingsWindow && !settingsWindow.isDestroyed()) {
           settingsWindow.webContents.send("server-restarted", { port: serverPort, token: serverToken });
         }
@@ -1260,7 +1260,7 @@ function monitorServer() {
 }
 
 /**
- * 显示主窗口（优先 onboardingWindow，其�?mainWindow�?
+ * 显示主窗口（优先 onboardingWindow，其�?mainWindow�?
  */
 function showPrimaryWindow() {
   if (process.platform === "darwin") app.dock.show();
@@ -1271,7 +1271,7 @@ function showPrimaryWindow() {
 /**
  * 创建系统托盘图标
  * - 双击：显示主窗口
- * - 右键菜单：显�?HanaAgent / 设置 / 退�?
+ * - 右键菜单：显�?HanaAgent / 设置 / 退�?
  */
 function resolveTrayAssetCandidates(fileName) {
   const candidates = [];
@@ -1301,7 +1301,7 @@ function createTray() {
   const isDev = !app.isPackaged;
   let resolved;
   if (process.platform === "win32") {
-    // Windows 优先�?.ico，缺失则回退�?.png
+    // Windows 优先�?.ico，缺失则回退�?.png
     const icoName = isDev ? "tray-dev.ico" : "tray.ico";
     const pngName = isDev ? "tray-dev-template.png" : "tray-template.png";
     resolved = loadTrayImageFromCandidates([icoName, pngName]);
@@ -1326,10 +1326,10 @@ function createTray() {
 }
 
 /**
- * 将崩溃日志写�?SATORI_HOME/crash.log（默�?~/.hanako/crash.log）并返回日志内容
+ * 将崩溃日志写�?SATORI_HOME/crash.log（默�?~/.hanako/crash.log）并返回日志内容
  */
 function buildServerCrashDiagnostics() {
-  // production �?server �?resources/server/，dev 时在 __dirname/../server/
+  // production �?server �?resources/server/，dev 时在 __dirname/../server/
   const isPackaged = process.resourcesPath &&
     fs.existsSync(path.join(process.resourcesPath, "server"));
   const serverDir = isPackaged
@@ -1363,7 +1363,7 @@ function buildServerCrashDiagnostics() {
     if (_lastServerSpawn.error) items.push(`Server spawn error: ${_lastServerSpawn.error}`);
   }
 
-  // Windows: 检�?server 二进制、手动调�?wrapper �?PortableGit
+  // Windows: 检�?server 二进制、手动调�?wrapper �?PortableGit
   if (process.platform === "win32" && isPackaged) {
     const exePath = path.join(serverDir, "hana-server.exe");
     const cmdPath = path.join(serverDir, "hana-server.cmd");
@@ -1421,7 +1421,7 @@ function writeCrashLog(errorMessage) {
     ``,
   ].join("\n"));
 
-  // 写入文件（best effort�?
+  // 写入文件（best effort�?
   try {
     const crashLogPath = path.join(hanakoHome, "crash.log");
     fs.mkdirSync(hanakoHome, { recursive: true });
@@ -1479,7 +1479,7 @@ function createSplashWindow() {
   });
 }
 
-// ── 窗口状态记�?──
+// ── 窗口状态记�?──
 const windowStatePath = path.join(hanakoHome, "user", "window-state.json");
 
 function loadWindowState() {
@@ -1504,12 +1504,12 @@ function saveWindowState() {
     _saveWindowStateChain = _saveWindowStateChain.then(() =>
       fs.promises.writeFile(windowStatePath, JSON.stringify(state, null, 2) + "\n")
     ).catch(e => {
-      console.error("[desktop] 保存窗口状态失�?", e.message);
+      console.error("[desktop] 保存窗口状态失�?", e.message);
     });
   }, 500);
 }
 
-// ── Quick Chat 小窗状态与全局快捷�?──
+// ── Quick Chat 小窗状态与全局快捷�?──
 const quickChatWindowStatePath = path.join(hanakoHome, "user", "quick-chat-window-state.json");
 
 function quickChatHeightForMode(mode, requestedHeight = null) {
@@ -1604,7 +1604,7 @@ function saveQuickChatWindowState() {
       await fs.promises.mkdir(path.dirname(quickChatWindowStatePath), { recursive: true });
       await fs.promises.writeFile(quickChatWindowStatePath, JSON.stringify(state, null, 2) + "\n");
     }).catch(e => {
-      console.error("[desktop] 保存 Quick Chat 窗口状态失�?", e.message);
+      console.error("[desktop] 保存 Quick Chat 窗口状态失�?", e.message);
     });
   }, 300);
 }
@@ -1642,7 +1642,7 @@ function applyQuickChatMode(request) {
     }
     quickChatWindow.setResizable(true);
   } else {
-    // compact 模式：固定大�?
+    // compact 模式：固定大�?
     quickChatWindow.setResizable(false);
   }
 
@@ -1709,7 +1709,7 @@ function suspendMainWindowFocusForQuickChatHide() {
       } catch {}
     }, 300);
   } catch (err) {
-    console.warn("[desktop] Quick Chat 隐藏时焦点保护失�?", redactMainLogText(err.message));
+    console.warn("[desktop] Quick Chat 隐藏时焦点保护失�?", redactMainLogText(err.message));
   }
 }
 
@@ -1783,12 +1783,12 @@ function reloadQuickChatShortcut() {
 function registerQuickChatShortcutBestEffort() {
   const result = reloadQuickChatShortcut();
   if (!result.ok) {
-    console.error("[desktop] Quick Chat 快捷键注册失�?", redactMainLogText(result.error || result.shortcut || "unknown"));
+    console.error("[desktop] Quick Chat 快捷键注册失�?", redactMainLogText(result.error || result.shortcut || "unknown"));
   }
   return result;
 }
 
-// ── 创建主窗�?──
+// ── 创建主窗�?──
 function createMainWindow() {
   const saved = sanitizeWindowState(loadWindowState(), screen.getAllDisplays(), {
     defaultWidth: 960,
@@ -1814,7 +1814,7 @@ function createMainWindow() {
     },
   };
 
-  // 恢复位置（仅当坐标有效时�?
+  // 恢复位置（仅当坐标有效时�?
   if (saved?.x != null && saved?.y != null) {
     opts.x = saved.x;
     opts.y = saved.y;
@@ -1824,7 +1824,7 @@ function createMainWindow() {
   attachRendererLaunchDiagnostics(mainWindow, "main");
   applyWindowThemeColors(mainWindow, initialTheme);
 
-  // auto-updater 是进程级服务：初始化只做一次，窗口重建时只更新目标 window 引用�?
+  // auto-updater 是进程级服务：初始化只做一次，窗口重建时只更新目标 window 引用�?
   if (!_autoUpdaterInitialized) {
     initAutoUpdater(mainWindow, {
       setIsUpdating: (v) => { _isUpdating = v; },
@@ -1841,10 +1841,10 @@ function createMainWindow() {
 
   loadWindowURL(mainWindow, "index");
 
-  // 前端初始化超时保护：30 秒内没收�?app-ready 就强制显示（防止用户卡在空白�?
+  // 前端初始化超时保护：30 秒内没收�?app-ready 就强制显示（防止用户卡在空白�?
   const initTimeout = setTimeout(() => {
     if (_startHiddenAtLogin) return;
-    console.warn("[desktop] �?主窗口初始化超时�?0s），强制显示");
+    console.warn("[desktop] �?主窗口初始化超时�?0s），强制显示");
     writeDesktopLaunchDiagnostic("app-ready-timeout", {
       label: "main",
       timeoutMs: 30000,
@@ -1856,8 +1856,8 @@ function createMainWindow() {
     }
   }, 30000);
   mainWindow.webContents.once("did-finish-load", () => {
-    // did-finish-load 只是 HTML 加载完成，JS init 可能还在�?
-    console.log("[desktop] 主窗�?HTML 加载完成，等待前�?init...");
+    // did-finish-load 只是 HTML 加载完成，JS init 可能还在�?
+    console.log("[desktop] 主窗�?HTML 加载完成，等待前�?init...");
   });
   mainWindow.once("show", () => clearTimeout(initTimeout));
 
@@ -1865,7 +1865,7 @@ function createMainWindow() {
     mainWindow.webContents.openDevTools();
   }
 
-  // renderer 崩溃恢复：自�?reload
+  // renderer 崩溃恢复：自�?reload
   mainWindow.webContents.on("render-process-gone", (_event, details) => {
     console.error(`[desktop] renderer 崩溃: ${details.reason} (code: ${details.exitCode})`);
     if (mainWindow && !mainWindow.isDestroyed()) {
@@ -1883,11 +1883,11 @@ function createMainWindow() {
     console.log("[desktop] 主窗口已恢复响应");
   });
 
-  // 窗口移动/缩放时保存状�?
+  // 窗口移动/缩放时保存状�?
   mainWindow.on("resize", saveWindowState);
   mainWindow.on("move", saveWindowState);
 
-  // 拦截页面内链接导航：外部 URL 用系统浏览器打开，不要导�?Electron 窗口
+  // 拦截页面内链接导航：外部 URL 用系统浏览器打开，不要导�?Electron 窗口
   mainWindow.webContents.on("will-navigate", (event, url) => {
     try {
       const parsed = new URL(url);
@@ -1908,11 +1908,11 @@ function createMainWindow() {
       e.preventDefault();
       mainWindow.hide();
       // 不调 app.dock.hide()，Dock 上保留图标和黑点
-      // 同时隐藏子窗�?
+      // 同时隐藏子窗�?
       if (settingsWindow && !settingsWindow.isDestroyed()) settingsWindow.hide();
       if (browserViewerWindow && !browserViewerWindow.isDestroyed()) browserViewerWindow.hide();
       hideQuickChatWindow();
-      // 派生 viewer 跟着主窗口一起隐藏（不保留后�?viewer�?
+      // 派生 viewer 跟着主窗口一起隐藏（不保留后�?viewer�?
       for (const [, vw] of _viewerWindows) {
         if (vw && !vw.isDestroyed()) vw.hide();
       }
@@ -1934,7 +1934,7 @@ function createMainWindow() {
       quickChatWindow.destroy();
       quickChatWindow = null;
     }
-    // 销毁所有派�?viewer
+    // 销毁所有派�?viewer
     for (const [, vw] of _viewerWindows) {
       if (vw && !vw.isDestroyed()) vw.destroy();
     }
@@ -2000,7 +2000,7 @@ function createSettingsWindow(tab, theme) {
 
   loadWindowURL(settingsWindow, "settings");
 
-  // 窗口加载完后切换到指�?tab
+  // 窗口加载完后切换到指�?tab
   if (tab) {
     settingsWindow.webContents.once("did-finish-load", () => {
       settingsWindow.webContents.send("settings-switch-tab", tab);
@@ -2018,7 +2018,7 @@ function createSettingsWindow(tab, theme) {
     } catch {}
   });
 
-  // renderer 崩溃恢复：标记为 null，下次打开时重�?
+  // renderer 崩溃恢复：标记为 null，下次打开时重�?
   settingsWindow.webContents.on("render-process-gone", (_event, details) => {
     console.error(`[desktop] settings renderer 崩溃: ${details.reason} (code: ${details.exitCode})`);
     if (settingsWindow && !settingsWindow.isDestroyed()) {
@@ -2032,7 +2032,7 @@ function createSettingsWindow(tab, theme) {
   });
 }
 
-// ── Skill 预览 �?主窗�?overlay ──
+// ── Skill 预览 �?主窗�?overlay ──
 function _showSkillViewer(skillInfo, fromSettings) {
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.webContents.send("show-skill-viewer", skillInfo);
@@ -2048,7 +2048,7 @@ function scanSkillDir(dir, rootDir) {
   const entries = fs.readdirSync(dir, { withFileTypes: true })
     .filter(e => !e.name.startsWith("."))
     .sort((a, b) => {
-      // 目录排前面，SKILL.md 排最�?
+      // 目录排前面，SKILL.md 排最�?
       if (a.name === "SKILL.md") return -1;
       if (b.name === "SKILL.md") return 1;
       if (a.isDirectory() && !b.isDirectory()) return -1;
@@ -2065,8 +2065,8 @@ function scanSkillDir(dir, rootDir) {
   });
 }
 
-// ── 创建浏览器查看器窗口（嵌入式 BrowserView�?──
-// opts.show: 是否立刻显示（默�?true），resume 时传 false
+// ── 创建浏览器查看器窗口（嵌入式 BrowserView�?──
+// opts.show: 是否立刻显示（默�?true），resume 时传 false
 function createBrowserViewerWindow(opts = {}) {
   const shouldShow = opts.show !== false;
   if (browserViewerWindow && !browserViewerWindow.isDestroyed()) {
@@ -2075,7 +2075,7 @@ function createBrowserViewerWindow(opts = {}) {
       browserViewerWindow.focus();
       // 窗口从隐藏变为可见时重算 bounds（隐藏窗口的 getContentSize 可能不准确）
       _updateBrowserViewBounds();
-      // 窗口复用时也�?focus WebContentsView，否则滚�?键盘不工�?
+      // 窗口复用时也�?focus WebContentsView，否则滚�?键盘不工�?
       if (_browserWebView) {
         setTimeout(() => {
           if (_browserWebView) _browserWebView.webContents.focus();
@@ -2107,7 +2107,7 @@ function createBrowserViewerWindow(opts = {}) {
 
   loadWindowURL(browserViewerWindow, "browser-viewer");
 
-  // HTML 加载完成后，若浏览器已在运行则附�?WebContentsView
+  // HTML 加载完成后，若浏览器已在运行则附�?WebContentsView
   browserViewerWindow.webContents.on("did-finish-load", () => {
     if (_browserWebView && browserViewerWindow && !browserViewerWindow.isDestroyed()) {
       // 避免重复添加：先移除再添加，确保在最顶层
@@ -2116,7 +2116,7 @@ function createBrowserViewerWindow(opts = {}) {
       _updateBrowserViewBounds();
       const url = _browserWebView.webContents.getURL();
       if (url) _notifyViewerUrl(url);
-      console.log("[browser-viewer] did-finish-load: view 已挂�? bounds:", _browserWebView.getBounds());
+      console.log("[browser-viewer] did-finish-load: view 已挂�? bounds:", _browserWebView.getBounds());
       // 延迟 focus，等 layout 稳定
       setTimeout(() => {
         if (_browserWebView) {
@@ -2128,14 +2128,14 @@ function createBrowserViewerWindow(opts = {}) {
   });
 
   browserViewerWindow.on("resize", () => _updateBrowserViewBounds());
-  // 窗口从隐藏变为可见时重算 bounds（Windows 隐藏窗口�?getContentSize 可能返回错误值）
+  // 窗口从隐藏变为可见时重算 bounds（Windows 隐藏窗口�?getContentSize 可能返回错误值）
   browserViewerWindow.on("show", () => _updateBrowserViewBounds());
 
-  // 窗口获得焦点时，将输入焦点转发到 WebContentsView（否则无法滚�?打字�?
+  // 窗口获得焦点时，将输入焦点转发到 WebContentsView（否则无法滚�?打字�?
   browserViewerWindow.on("focus", () => {
     if (_browserWebView) {
       _browserWebView.webContents.focus();
-      console.log("[browser-viewer] window focus �?view.focus(), isFocused:", _browserWebView.webContents.isFocused());
+      console.log("[browser-viewer] window focus �?view.focus(), isFocused:", _browserWebView.webContents.isFocused());
     }
   });
 
@@ -2154,12 +2154,12 @@ function createBrowserViewerWindow(opts = {}) {
 
 // ══════════════════════════════════════════
 //  嵌入式浏览器控制
-//  Server 通过 WebSocket (/internal/browser) 发�?browser-cmd�?
-//  主进程在 WebContentsView 上执行操�?
+//  Server 通过 WebSocket (/internal/browser) 发�?browser-cmd�?
+//  主进程在 WebContentsView 上执行操�?
 // ══════════════════════════════════════════
 
-// DOM 遍历脚本：生成页面快照（类似 AXTree�?
-// 优化：同构兄弟（�?）压缩为单行，保留全�?ref 和关键文本；�?30k 字符头尾截断
+// DOM 遍历脚本：生成页面快照（类似 AXTree�?
+// 优化：同构兄弟（�?）压缩为单行，保留全�?ref 和关键文本；�?30k 字符头尾截断
 const SNAPSHOT_SCRIPT = `(function() {
   var ref = 0;
   var MAX_TREE = 30000;
@@ -2193,7 +2193,7 @@ const SNAPSHOT_SCRIPT = `(function() {
     return t.trim().replace(/\\s+/g, ' ').slice(0, 80);
   }
 
-  // 结构签名：只看直接子元素�?tag 序列，用于检测同构兄�?
+  // 结构签名：只看直接子元素�?tag 序列，用于检测同构兄�?
   function sig(el) {
     if (el.nodeType !== 1 || !isVisible(el)) return null;
     var tag = el.tagName;
@@ -2208,7 +2208,7 @@ const SNAPSHOT_SCRIPT = `(function() {
     return s;
   }
 
-  // 单行紧凑格式：链�?| 按钮 | 文本1 · 文本2
+  // 单行紧凑格式：链�?| 按钮 | 文本1 · 文本2
   function compact(el, depth) {
     var links = [], ctrls = [], texts = [];
     function collect(node) {
@@ -2225,7 +2225,7 @@ const SNAPSHOT_SCRIPT = `(function() {
         } else {
           ctrls.push('[' + ref + '] ' + name);
         }
-        return; // 交互元素的子树已�?textContent 捕获，不再递归
+        return; // 交互元素的子树已�?textContent 捕获，不再递归
       }
       var txt = directText(node);
       if (txt && txt.length > 2) texts.push(txt);
@@ -2241,7 +2241,7 @@ const SNAPSHOT_SCRIPT = `(function() {
     return pad + line + '\\n';
   }
 
-  // 分组遍历：连�?�? 个同构兄弟用 compact，其余正�?walk
+  // 分组遍历：连�?�? 个同构兄弟用 compact，其余正�?walk
   function walkChildren(el, depth) {
     var out = '';
     var children = [], sigs = [];
@@ -2311,7 +2311,7 @@ const SNAPSHOT_SCRIPT = `(function() {
 
   var tree = walk(document.body, 0);
 
-  // 硬上限：超过 MAX_TREE 时保留头�?80% + 尾部 20%，在行边界截�?
+  // 硬上限：超过 MAX_TREE 时保留头�?80% + 尾部 20%，在行边界截�?
   if (tree.length > MAX_TREE) {
     var h = tree.lastIndexOf('\\n', Math.floor(MAX_TREE * 0.8));
     if (h < MAX_TREE * 0.4) h = Math.floor(MAX_TREE * 0.8);
@@ -2399,7 +2399,7 @@ function _activeBrowserTabRecord(workspace) {
   return workspace.tabs.get(workspace.activeTabId) || workspace.tabs.values().next().value || null;
 }
 
-/** �?sessionPath 查找当前 active tab view，fallback 到当前活�?view（兼容旧调用�?*/
+/** �?sessionPath 查找当前 active tab view，fallback 到当前活�?view（兼容旧调用�?*/
 function _getViewForSession(sessionPath, tabId = null) {
   const workspace = _getBrowserWorkspace(sessionPath);
   if (workspace) {
@@ -2418,7 +2418,7 @@ function _getViewForSession(sessionPath, tabId = null) {
   return _browserWebView;
 }
 
-/** 确保指定 session �?browser view */
+/** 确保指定 session �?browser view */
 function _ensureBrowserForSession(sessionPath, tabId = null) {
   const view = _getViewForSession(sessionPath, tabId);
   if (!view) throw new Error("No browser instance" + (sessionPath ? ` for session ${sessionPath}` : ""));
@@ -2841,7 +2841,7 @@ async function handleBrowserCommand(cmd, params) {
           try { browserViewerWindow.contentView.removeChildView(_browserWebView); } catch {}
           browserViewerWindow.contentView.addChildView(_browserWebView);
           _updateBrowserViewBounds();
-          console.log("[browser] launch: view 已挂�?(silent), bounds:", _browserWebView.getBounds());
+          console.log("[browser] launch: view 已挂�?(silent), bounds:", _browserWebView.getBounds());
           setTimeout(() => {
             if (_browserWebView) {
               _browserWebView.webContents.focus();
@@ -2849,11 +2849,11 @@ async function handleBrowserCommand(cmd, params) {
           }, 300);
         }
       }
-      // 否则，新 view 只存�?Map 中，不挂载到窗口（后台可操作�?
+      // 否则，新 view 只存�?Map 中，不挂载到窗口（后台可操作�?
       return _serializeBrowserWorkspace(workspace);
     }
 
-    // ── close ──（真正销毁指�?session 的浏览器实例�?
+    // ── close ──（真正销毁指�?session 的浏览器实例�?
     case "close": {
       const sp = params.sessionPath;
       const workspace = _getBrowserWorkspace(sp);
@@ -2880,7 +2880,7 @@ async function handleBrowserCommand(cmd, params) {
       return {};
     }
 
-    // ── resume ──（把挂起�?view 挂回窗口，但不自动弹出）
+    // ── resume ──（把挂起�?view 挂回窗口，但不自动弹出）
     case "resume": {
       const sp = params.sessionPath;
       const workspace = _getBrowserWorkspace(sp);
@@ -2897,15 +2897,15 @@ async function handleBrowserCommand(cmd, params) {
       _currentBrowserSession = sp;
       _currentBrowserTabId = tabId;
 
-      // 挂载 view 到窗口（�?show，等用户手动打开�?
+      // 挂载 view 到窗口（�?show，等用户手动打开�?
       createBrowserViewerWindow({ show: false });
       if (browserViewerWindow && !browserViewerWindow.isDestroyed()) {
         browserViewerWindow.contentView.addChildView(view);
         _updateBrowserViewBounds();
-        // 恢复输入焦点（否则无法滚�?交互�?
+        // 恢复输入焦点（否则无法滚�?交互�?
         view.webContents.focus();
       }
-      // 通知标题栏更�?
+      // 通知标题栏更�?
       const url = view.webContents.getURL();
       if (url) _notifyViewerUrl(url);
       return { found: true, url, ..._serializeBrowserWorkspace(workspace) };
@@ -3144,7 +3144,7 @@ async function handleBrowserCommand(cmd, params) {
       }, params.tabId || null);
     }
 
-    // ── show ──（按 sessionPath 切换显示�?view 并弹出窗口）
+    // ── show ──（按 sessionPath 切换显示�?view 并弹出窗口）
     case "show": {
       const sp = params.sessionPath;
       const tabId = params.tabId || null;
@@ -3158,7 +3158,7 @@ async function handleBrowserCommand(cmd, params) {
 
       // 如果不是当前活跃 view，先切换
       if (view !== _browserWebView) {
-        // 摘下�?view
+        // 摘下�?view
         if (_browserWebView && browserViewerWindow && !browserViewerWindow.isDestroyed()) {
           try { browserViewerWindow.contentView.removeChildView(_browserWebView); } catch {}
         }
@@ -3174,7 +3174,7 @@ async function handleBrowserCommand(cmd, params) {
       if (browserViewerWindow && !browserViewerWindow.isDestroyed()) {
         browserViewerWindow.show();
         browserViewerWindow.focus();
-        // 延迟 focus：等窗口完全显示后再转移焦点�?WebContentsView
+        // 延迟 focus：等窗口完全显示后再转移焦点�?WebContentsView
         view.webContents.focus();
         setTimeout(() => {
           if (view === _browserWebView) view.webContents.focus();
@@ -3189,7 +3189,7 @@ async function handleBrowserCommand(cmd, params) {
       return workspace ? _serializeBrowserWorkspace(workspace) : {};
     }
 
-    // ── destroyView ──（销毁指�?session 的挂�?view�?
+    // ── destroyView ──（销毁指�?session 的挂�?view�?
     case "destroyView": {
       const sp = params.sessionPath;
       const workspace = _getBrowserWorkspace(sp);
@@ -3239,19 +3239,19 @@ function setupBrowserCommands() {
       if (msg?.type !== "browser-cmd") return;
       const { id, cmd, params } = msg;
       const _bLog = (line) => { try { require("fs").appendFileSync(require("path").join(hanakoHome, "browser-cmd.log"), `${new Date().toISOString()} ${redactMainLogText(line)}\n`); } catch {} };
-      _bLog(`�?received cmd=${cmd} id=${id}`);
+      _bLog(`�?received cmd=${cmd} id=${id}`);
       try {
         const result = await handleBrowserCommand(cmd, params || {});
         const resultLength = JSON.stringify(result).length;
-        _bLog(`�?cmd=${cmd} resultLength=${resultLength} wsReady=${ws.readyState}`);
+        _bLog(`�?cmd=${cmd} resultLength=${resultLength} wsReady=${ws.readyState}`);
         if (ws.readyState === 1) {
           ws.send(JSON.stringify({ type: "browser-result", id, result }));
-          _bLog(`�?sent result`);
+          _bLog(`�?sent result`);
         } else {
-          _bLog(`�?ws not ready (${ws.readyState}), result dropped`);
+          _bLog(`�?ws not ready (${ws.readyState}), result dropped`);
         }
       } catch (err) {
-        _bLog(`�?cmd=${cmd} error=${err.message}`);
+        _bLog(`�?cmd=${cmd} error=${err.message}`);
         if (ws.readyState === 1) {
           ws.send(JSON.stringify({ type: "browser-result", id, error: err.message }));
         }
@@ -3269,7 +3269,7 @@ function setupBrowserCommands() {
 }
 
 // ── 创建 Onboarding 窗口 ──
-// query: 可选的 URL 参数，如 { skipToTutorial: "1" } �?{ preview: "1" }
+// query: 可选的 URL 参数，如 { skipToTutorial: "1" } �?{ preview: "1" }
 function createOnboardingWindow(query = {}) {
   const initialTheme = themeRegistry.DEFAULT_THEME;
   onboardingWindow = new BrowserWindow({
@@ -3293,7 +3293,7 @@ function createOnboardingWindow(query = {}) {
   loadWindowURL(onboardingWindow, "onboarding", { query });
 
   onboardingWindow.once("ready-to-show", () => {
-    // 关闭 splash，显�?onboarding
+    // 关闭 splash，显�?onboarding
     if (splashWindow && !splashWindow.isDestroyed()) {
       splashWindow.close();
     }
@@ -3305,7 +3305,7 @@ function createOnboardingWindow(query = {}) {
   });
 }
 
-// ── 更新检查（统一�?auto-updater.cjs）──
+// ── 更新检查（统一�?auto-updater.cjs）──
 async function checkForUpdates() {
   await checkForUpdatesAuto();
 }
@@ -3395,7 +3395,7 @@ function getScreenshotResourcePath(...segments) {
   return path.join(__dirname, "src", "screenshot-themes", ...segments);
 }
 
-// 惰性单例：MarkdownIt + KaTeX 实例�?katexCSS 只初始化一�?
+// 惰性单例：MarkdownIt + KaTeX 实例�?katexCSS 只初始化一�?
 let _screenshotMd = null;
 let _screenshotKatexCSS = null;
 
@@ -3458,7 +3458,7 @@ function buildScreenshotHTML(payload) {
     : (isDesktopScreenshotTheme ? "2rem" : "5rem");
   extraCSS += `\n:root { --screenshot-cover-bleed-top: ${coverBleedTop}; }`;
 
-  // Logo 内联�?base64 data URL（asar 内文件无法被离屏窗口�?file:// 加载�?
+  // Logo 内联�?base64 data URL（asar 内文件无法被离屏窗口�?file:// 加载�?
   let logoUrl = "";
   try {
     const logoPath = app.isPackaged
@@ -3466,7 +3466,7 @@ function buildScreenshotHTML(payload) {
       : path.join(__dirname, "src", "icon.png");
     const logoBuf = fs.readFileSync(logoPath);
     logoUrl = `data:image/png;base64,${logoBuf.toString("base64")}`;
-  } catch { /* logo 加载失败时水印无�?*/ }
+  } catch { /* logo 加载失败时水印无�?*/ }
 
   const screenshotAttachmentKinds = new Set(["image", "svg", "video", "audio", "pdf", "doc", "code", "markdown", "directory", "other"]);
 
@@ -3503,7 +3503,7 @@ function buildScreenshotHTML(payload) {
   function renderScreenshotAttachmentStatus(status) {
     if (status !== "expired") return "";
     const locale = String(payload.locale || "").toLowerCase();
-    const label = locale.startsWith("zh") ? "已过�? : "expired";
+    const label = locale.startsWith("zh") ? "已过期" : "expired";
     return `<span class="chat-attachment-status">${escapeAttr(label)}</span>`;
   }
 
@@ -3874,7 +3874,7 @@ wrapIpcHandler("run-edit-command", (event, command) => {
   return true;
 });
 wrapIpcHandler("get-app-version", () => app.getVersion());
-// 旧版兼容：check-update 返回 auto-updater 状态中的可用版本信�?
+// 旧版兼容：check-update 返回 auto-updater 状态中的可用版本信�?
 wrapIpcHandler("check-update", () => {
   const s = getUpdateState();
   if (s.status === "available" || s.status === "downloaded") {
@@ -3947,20 +3947,20 @@ wrapIpcBestEffortHandler("close-browser-viewer", () => {
   if (browserViewerWindow && !browserViewerWindow.isDestroyed()) browserViewerWindow.close();
 });
 wrapIpcBestEffortHandler("browser-emergency-stop", () => {
-  // �?session 归属时必须经�?server �?BrowserManager，保�?UI 和运行时状态一致�?
+  // �?session 归属时必须经�?server �?BrowserManager，保�?UI 和运行时状态一致�?
   if (_currentBrowserSession) {
     return closeBrowserSessionViaServer(_currentBrowserSession);
   }
-  // 兼容�?sessionPath 的旧浏览器实例：没有 server 状态可同步，只能本地清理�?
+  // 兼容�?sessionPath 的旧浏览器实例：没有 server 状态可同步，只能本地清理�?
   if (_browserWebView) {
     _detachActiveBrowserView({ destroy: true, hideIfVisible: true, reason: "emergency-stop" });
   }
 });
 
 // ── 派生 Viewer 窗口（只读文件副本，多实例） ──
-// 语义：接 spawn-viewer �?开�?BrowserWindow，把文件元信息通过 `viewer-load` 推给
-// viewer-window-entry.tsx。Viewer 自己 watchFile �?live 只读刷新，不跟主面板互通；
-// 窗口 close 时只广播一�?`viewer-closed` 给主 renderer �?pinnedViewers store�?
+// 语义：接 spawn-viewer �?开�?BrowserWindow，把文件元信息通过 `viewer-load` 推给
+// viewer-window-entry.tsx。Viewer 自己 watchFile �?live 只读刷新，不跟主面板互通；
+// 窗口 close 时只广播一�?`viewer-closed` 给主 renderer �?pinnedViewers store�?
 const _viewerWindows = new Map(); // windowId -> BrowserWindow
 
 wrapIpcBestEffortHandler("spawn-viewer", (_event, data) => {
@@ -4009,7 +4009,7 @@ wrapIpcBestEffortHandler("spawn-viewer", (_event, data) => {
 });
 
 wrapIpcBestEffortHandler("viewer-close", (event) => {
-  // �?viewer 窗口�?关闭"按钮触发；关闭发起窗口自�?
+  // �?viewer 窗口�?关闭"按钮触发；关闭发起窗口自�?
   const win = BrowserWindow.fromWebContents(event.sender);
   if (win && !win.isDestroyed()) win.close();
 });
@@ -4054,12 +4054,12 @@ wrapIpcOn("settings-changed", (_event, type, data) => {
   if (type === "quick-chat-shortcut-changed") {
     const result = reloadQuickChatShortcut();
     if (!result.ok) {
-      console.error("[desktop] Quick Chat 快捷键注册失�?", redactMainLogText(result.error || result.shortcut || "unknown"));
+      console.error("[desktop] Quick Chat 快捷键注册失�?", redactMainLogText(result.error || result.shortcut || "unknown"));
     }
   }
   if (type === "locale-changed") {
     resetMainI18n();
-    // 重建托盘菜单，使标签跟随�?locale
+    // 重建托盘菜单，使标签跟随�?locale
     if (tray && !tray.isDestroyed()) {
       const buildMenu = () => Menu.buildFromTemplate([
         { label: mt("tray.show", null, "Show HanaAgent"), click: () => showPrimaryWindow() },
@@ -4072,11 +4072,11 @@ wrapIpcOn("settings-changed", (_event, type, data) => {
   }
 });
 
-// 获取头像本地路径（splash 用，不依�?server�?
+// 获取头像本地路径（splash 用，不依�?server�?
 wrapIpcHandler("get-avatar-path", (_event, role) => {
   if (role !== "agent" && role !== "user") return null;
   const agentId = getCurrentAgentId();
-  // agent 头像�?agents/{id}/avatars/，user 头像�?user/avatars/
+  // agent 头像�?agents/{id}/avatars/，user 头像�?user/avatars/
   const baseDir = role === "user"
     ? path.join(hanakoHome, "user")
     : agentId ? path.join(hanakoHome, "agents", agentId) : null;
@@ -4089,14 +4089,14 @@ wrapIpcHandler("get-avatar-path", (_event, role) => {
   return null;
 });
 
-// 读取 config.yaml 基本信息（splash 用，不依�?server�?
+// 读取 config.yaml 基本信息（splash 用，不依�?server�?
 wrapIpcHandler("get-splash-info", () => {
   try {
     const agentId = getCurrentAgentId();
     if (!agentId) return { agentName: null, locale: "zh-CN", yuan: "hanako" };
     const configPath = path.join(hanakoHome, "agents", agentId, "config.yaml");
     const text = fs.readFileSync(configPath, "utf-8");
-    // 简易提取：agent:\n  name: xxx / yuan: xxx 和顶�?locale: xxx
+    // 简易提取：agent:\n  name: xxx / yuan: xxx 和顶�?locale: xxx
     const agentMatch = text.match(/^agent:\s*\n\s+name:\s*([^#\n]+)/m);
     const localeMatch = text.match(/^locale:\s*(.+)/m);
     const yuanMatch = text.match(/^\s+yuan:\s*([^#\n]+)/m);
@@ -4112,7 +4112,7 @@ wrapIpcHandler("get-splash-info", () => {
 
 // 选择文件夹（系统原生对话框）
 wrapIpcBestEffortHandler("select-folder", async (event) => {
-  // 找到发起请求的窗�?
+  // 找到发起请求的窗�?
   const win = BrowserWindow.fromWebContents(event.sender) || mainWindow;
   if (!win) return null;
   const result = await dialog.showOpenDialog(win, {
@@ -4135,7 +4135,7 @@ wrapIpcBestEffortHandler("select-files", async (event) => {
   return result.filePaths;
 });
 
-// 选择技能文�?文件夹（支持 .zip / .skill / 文件夹）
+// 选择技能文�?文件夹（支持 .zip / .skill / 文件夹）
 wrapIpcBestEffortHandler("select-skill", async (event) => {
   const win = BrowserWindow.fromWebContents(event.sender) || mainWindow;
   if (!win) return null;
@@ -4172,13 +4172,13 @@ wrapIpcBestEffortHandler("open-skill-viewer", (_event, data) => {
   const fromSettings = settingsWindow && !settingsWindow.isDestroyed()
     && _event.sender === settingsWindow.webContents;
 
-  // .skill / .zip 文件 �?优先查找已安装目录，否则解压临时目录
+  // .skill / .zip 文件 �?优先查找已安装目录，否则解压临时目录
   if (data.skillPath && path.isAbsolute(data.skillPath)) {
     const fileExt = path.extname(data.skillPath).toLowerCase();
     if (fileExt === ".skill" || fileExt === ".zip") {
       const baseName = path.basename(data.skillPath, fileExt);
 
-      // 先检查同�?skill 是否已安装在 skills 目录
+      // 先检查同�?skill 是否已安装在 skills 目录
       const installedDir = path.join(hanakoHome, "skills", baseName);
       if (fs.existsSync(path.join(installedDir, "SKILL.md"))) {
         _showSkillViewer({ name: baseName, baseDir: installedDir, installed: false }, fromSettings);
@@ -4253,7 +4253,7 @@ wrapIpcBestEffortHandler("skill-viewer-read-file", (_event, filePath) => {
   }
 });
 
-// close-skill-viewer: overlay 模式下由渲染进程 setState 关闭，保�?handler 避免 preload 报错
+// close-skill-viewer: overlay 模式下由渲染进程 setState 关闭，保�?handler 避免 preload 报错
 wrapIpcBestEffortHandler("close-skill-viewer", () => {});
 
 // 在系统文件管理器中打开文件夹（限制为目录且为绝对路径）
@@ -4265,7 +4265,7 @@ wrapIpcBestEffortHandler("open-folder", (_event, folderPath) => {
   shell.openPath(folderPath);
 });
 
-// 原生拖拽：书桌文件拖�?Finder / 聊天�?
+// 原生拖拽：书桌文件拖�?Finder / 聊天�?
 wrapIpcOn("start-drag", async (event, filePaths) => {
   const paths = Array.isArray(filePaths) ? filePaths : [filePaths];
   let icon;
@@ -4320,7 +4320,7 @@ wrapIpcBestEffortHandler("open-external", (_event, url) => {
   } catch {}
 });
 
-// 读取文件内容（仅文本文件，用�?Artifacts 预览�?
+// 读取文件内容（仅文本文件，用�?Artifacts 预览�?
 wrapIpcHandler("read-file", (_event, filePath) => {
   if (!filePath || !path.isAbsolute(filePath)) return null;
   try {
@@ -4353,7 +4353,7 @@ wrapIpcBestEffortHandler("write-file-if-unchanged", (_event, filePath, content, 
   }
 });
 
-// 写入二进制文件（截图用）�?支持 ~ 开头路�?
+// 写入二进制文件（截图用）�?支持 ~ 开头路�?
 wrapIpcBestEffortHandler("write-file-binary", (_event, filePath, base64Data) => {
   if (!filePath) return false;
   const resolved = filePath.startsWith("~")
@@ -4390,7 +4390,7 @@ wrapIpcHandler("screenshot-render", (_event, payload) => {
       const htmlContent = buildScreenshotHTML(payload);
       const pngBuffer = await screenshotCapture(htmlContent, themeConf.width);
 
-      // preview 模式：返�?base64 不存文件
+      // preview 模式：返�?base64 不存文件
       if (payload.preview) {
         return { success: true, base64: pngBuffer.toString("base64") };
       }
@@ -4418,7 +4418,7 @@ wrapIpcHandler("screenshot-render", (_event, payload) => {
   });
 });
 
-// 文件监听（artifact 编辑 �?外部变更刷新用）
+// 文件监听（artifact 编辑 �?外部变更刷新用）
 const _watchedRendererIds = new Set();
 const _fileWatchRegistry = createFileWatchRegistry({
   watch: createStableFileWatcher,
@@ -4450,7 +4450,7 @@ wrapIpcBestEffortHandler("unwatch-file", (event, filePath) => {
   return _fileWatchRegistry.unwatchFile(filePath, event.sender.id);
 });
 
-// 工作区文件树监听：以 workspace root 为粒度递归监听，renderer 只消费目录失效事件�?
+// 工作区文件树监听：以 workspace root 为粒度递归监听，renderer 只消费目录失效事件�?
 const _workspaceWatchedRendererIds = new Set();
 const _workspaceWatchRegistry = createWorkspaceWatchRegistry({
   watch: (rootPath, options) => chokidar.watch(rootPath, options),
@@ -4497,7 +4497,7 @@ wrapIpcHandler("read-file-base64", (_event, filePath) => {
   } catch { return null; }
 });
 
-// 读取 docx 文件并转�?HTML（mammoth�?
+// 读取 docx 文件并转�?HTML（mammoth�?
 wrapIpcHandler("read-docx-html", async (_event, filePath) => {
   if (!filePath || !path.isAbsolute(filePath)) return null;
   try {
@@ -4510,7 +4510,7 @@ wrapIpcHandler("read-docx-html", async (_event, filePath) => {
   } catch { return null; }
 });
 
-// 读取 xlsx 文件并转�?HTML 表格（ExcelJS�?
+// 读取 xlsx 文件并转�?HTML 表格（ExcelJS�?
 wrapIpcHandler("read-xlsx-html", async (_event, filePath) => {
   if (!filePath || !path.isAbsolute(filePath)) return null;
   try {
@@ -4543,10 +4543,10 @@ wrapIpcBestEffortHandler("reload-main-window", () => {
   }
 });
 
-// 系统通知（由 agent �?notify 工具或定时任务触发）
-// agentId 标识触发的助手；据此读取�?agent 头像作为通知 icon，让�?agent 并发通知可分辨身份�?
-// agentId 缺失或头像不存在时退回无 icon，禁止用当前焦点 agent 兜底（会张冠李戴）�?
-// Windows 自定�?icon 依赖 AppUserModelID 已注册（见上�?app.setAppUserModelId），已满足；三平台同一套逻辑�?
+// 系统通知（由 agent �?notify 工具或定时任务触发）
+// agentId 标识触发的助手；据此读取�?agent 头像作为通知 icon，让�?agent 并发通知可分辨身份�?
+// agentId 缺失或头像不存在时退回无 icon，禁止用当前焦点 agent 兜底（会张冠李戴）�?
+// Windows 自定�?icon 依赖 AppUserModelID 已注册（见上�?app.setAppUserModelId），已满足；三平台同一套逻辑�?
 wrapIpcBestEffortHandler("show-notification", (_event, title, body, agentId, rawOptions) => {
   const notificationOptions = normalizeDesktopNotificationOptions(rawOptions);
   if (shouldSuppressDesktopNotification(notificationOptions, { getFocusedWindow: () => BrowserWindow.getFocusedWindow() })) {
@@ -4562,7 +4562,7 @@ wrapIpcBestEffortHandler("show-notification", (_event, title, body, agentId, raw
   const avatarPath = resolveAgentAvatarPath(hanakoHome, agentId);
   if (avatarPath) {
     const icon = nativeImage.createFromPath(avatarPath);
-    // createFromPath 对不支持的格�?损坏文件返回空图；空图会顶掉默认 icon，故只在有效时设置�?
+    // createFromPath 对不支持的格�?损坏文件返回空图；空图会顶掉默认 icon，故只在有效时设置�?
     if (!icon.isEmpty()) options.icon = icon;
   }
   const notif = new Notification(options);
@@ -4586,7 +4586,7 @@ wrapIpcBestEffortHandler("debug-open-onboarding", () => {
   createOnboardingWindow();
 });
 
-// Debug: 预览模式打开 Onboarding（不�?API 不写配置�?
+// Debug: 预览模式打开 Onboarding（不�?API 不写配置�?
 wrapIpcBestEffortHandler("debug-open-onboarding-preview", () => {
   if (onboardingWindow && !onboardingWindow.isDestroyed()) {
     onboardingWindow.focus();
@@ -4595,7 +4595,7 @@ wrapIpcBestEffortHandler("debug-open-onboarding-preview", () => {
   createOnboardingWindow({ preview: "1" });
 });
 
-// Onboarding 完成后，�?server PreferencesManager 持久化，成功后才创建主窗口�?
+// Onboarding 完成后，�?server PreferencesManager 持久化，成功后才创建主窗口�?
 wrapIpcHandler("onboarding-complete", async () => {
   await completeOnboardingAndOpenMain({
     serverPort,
@@ -4621,7 +4621,7 @@ wrapIpcHandler("window-is-maximized", (event) => {
   return BrowserWindow.fromWebContents(event.sender)?.isMaximized() ?? false;
 });
 
-// 前端初始化完成后调用，关�?splash / onboarding，显示主窗口
+// 前端初始化完成后调用，关�?splash / onboarding，显示主窗口
 wrapIpcBestEffortHandler("app-ready", (event) => {
   writeDesktopLaunchDiagnostic("app-ready", {
     label: "main",
@@ -4641,7 +4641,7 @@ wrapIpcBestEffortHandler("app-ready", (event) => {
     mainWindow.show();
   }
 
-  // 首次启动时请求通知权限（macOS�?
+  // 首次启动时请求通知权限（macOS�?
   if (!_startHiddenAtLogin && process.platform === "darwin" && Notification.isSupported()) {
     const settings = systemPreferences.getNotificationSettings?.();
     const status = settings?.authorizationStatus;
@@ -4667,7 +4667,7 @@ app.whenReady().then(async () => {
   try {
     _startHiddenAtLogin = getAutoLaunchStatus({ app }).openedAtLogin === true && isSetupComplete();
 
-    // 1. 立刻显示启动窗口，同时异步获�?login shell PATH。登录项后台启动时跳�?splash�?
+    // 1. 立刻显示启动窗口，同时异步获�?login shell PATH。登录项后台启动时跳�?splash�?
     if (!_startHiddenAtLogin) {
       createSplashWindow();
     }
@@ -4695,7 +4695,7 @@ app.whenReady().then(async () => {
         startupId: desktopStartupId,
       });
     }
-    console.log(`[desktop] Server 就绪，端�? ${serverPort}`);
+    console.log(`[desktop] Server 就绪，端�? ${serverPort}`);
     monitorServer();
     setupBrowserCommands();
     createTray();
@@ -4703,17 +4703,17 @@ app.whenReady().then(async () => {
       app.dock.hide();
     }
 
-    // 3. 确保 splash 至少显示 3 秒；登录项后台启动没�?splash，也不需要等�?
+    // 3. 确保 splash 至少显示 3 秒；登录项后台启动没�?splash，也不需要等�?
     const elapsed = Date.now() - splashShownAt;
     const minSplashMs = 3000;
     if (splashWindow && elapsed < minSplashMs) {
       await new Promise(r => setTimeout(r, minSplashMs - elapsed));
     }
 
-    // 4. 检测是否需�?onboarding
+    // 4. 检测是否需�?onboarding
     const migratedSetupComplete = await migrateSetupCompleteViaServerIfNeeded();
     if (isSetupComplete() || migratedSetupComplete) {
-      // 已完成配置：直接创建主窗�?
+      // 已完成配置：直接创建主窗�?
       if (process.platform === "win32") {
         markGpuStartupPhase({
           hanakoHome,
@@ -4753,8 +4753,8 @@ app.whenReady().then(async () => {
         });
       }
     } else {
-      // 全新用户：完�?onboarding 向导
-      console.log("[desktop] 首次启动，显�?Onboarding 向导");
+      // 全新用户：完�?onboarding 向导
+      console.log("[desktop] 首次启动，显�?Onboarding 向导");
       if (process.platform === "win32") {
         markGpuStartupPhase({
           hanakoHome,
@@ -4775,7 +4775,7 @@ app.whenReady().then(async () => {
     }
 
     // 5. 后台检查更新（不阻塞启动）
-    // �?preferences.json 同步更新通道
+    // �?preferences.json 同步更新通道
     try {
       const prefsPath = path.join(hanakoHome, "user", "preferences.json");
       if (fs.existsSync(prefsPath)) {
@@ -4799,7 +4799,7 @@ app.whenReady().then(async () => {
         reason: err.message || "startup-failed",
       });
     }
-    // 写入 crash.log 并获取详细日�?
+    // 写入 crash.log 并获取详细日�?
     const crashInfo = writeCrashLog(err.message);
     const detail = buildLaunchFailureDialogDetail(err, crashInfo);
     dialog.showErrorBox(
@@ -4827,7 +4827,7 @@ app.on("window-all-closed", () => {
 app.on("activate", () => {
   if (BrowserWindow.getAllWindows().length === 0 && serverPort) {
     createMainWindow();
-    // 不在这里 show()，前�?init 完成后会通过 app-ready IPC 触发显示
+    // 不在这里 show()，前�?init 完成后会通过 app-ready IPC 触发显示
   } else if (mainWindow) {
     mainWindow.show();
   }
@@ -4837,7 +4837,7 @@ app.on("activate", () => {
 app.on("will-quit", () => {
   keepAwakeManager.dispose();
   globalShortcut.unregisterAll();
-  // 销毁托盘图�?
+  // 销毁托盘图�?
   if (tray && !tray.isDestroyed()) {
     tray.destroy();
     tray = null;
@@ -4909,7 +4909,7 @@ async function shutdownServer() {
       reusedServerOwned = false;
     }
   }
-  // 清理 server-info.json，防止更新后新版 Electron 误连�?server
+  // 清理 server-info.json，防止更新后新版 Electron 误连�?server
   if (removeServerInfo) {
     try { fs.unlinkSync(path.join(hanakoHome, "server-info.json")); } catch {}
   } else {
@@ -4920,17 +4920,17 @@ async function shutdownServer() {
 app.on("before-quit", async (event) => {
   isQuitting = true;
 
-  // auto-updater 已完�?server 清理，直接放�?
+  // auto-updater 已完�?server 清理，直接放�?
   if (_isUpdating) return;
 
   isExitingServer = true;
 
-  // 立刻隐藏所有窗�?
+  // 立刻隐藏所有窗�?
   for (const win of BrowserWindow.getAllWindows()) {
     if (!win.isDestroyed()) win.hide();
   }
 
-  // 清理浏览器实�?
+  // 清理浏览器实�?
   for (const workspace of _browserViews.values()) {
     for (const tab of workspace.tabs.values()) {
       try { tab.view.webContents.close(); } catch {}

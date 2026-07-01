@@ -80,7 +80,7 @@ async function makeEngine() {
     schemaVersion: 1,
     mode: "lan",
     listenHost: "0.0.0.0",
-    listenPort: 14500,
+    listenPort: 14700,
     customRemote: { enabled: false, baseUrl: null, wsUrl: null },
     createdAt: "2026-05-16T00:00:00.000Z",
     updatedAt: "2026-05-16T00:00:00.000Z",
@@ -196,7 +196,7 @@ describe("settings snapshot route", () => {
     });
     app.route("/api", createSettingsSnapshotRoute(engine, {
       bridgeManagerRef: bridgeManager,
-      runtimeState: { mode: "lan", listenHost: "0.0.0.0", actualPort: 14500 },
+      runtimeState: { mode: "lan", listenHost: "0.0.0.0", actualPort: 14700 },
       listLanAddresses: () => ["192.168.31.75"],
     } as any));
 
@@ -207,8 +207,8 @@ describe("settings snapshot route", () => {
     expect(body.access.network).toMatchObject({
       mode: "lan",
       listenHost: "0.0.0.0",
-      actualPort: 14500,
-      lanMobileUrl: "http://192.168.31.75:14500/mobile/",
+      actualPort: 14700,
+      lanMobileUrl: "http://192.168.31.75:14700/mobile/",
       restartRequired: false,
     });
     expect(body.bridgeStatus).toMatchObject({

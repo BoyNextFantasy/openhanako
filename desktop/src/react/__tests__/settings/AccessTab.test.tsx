@@ -22,7 +22,7 @@ vi.mock('../../settings/store', () => {
 
 vi.mock('../../settings/api', () => ({
   hanaFetch: (...args: unknown[]) => mockHanaFetch(...args),
-  hanaUrl: (path: string) => `http://127.0.0.1:14500${path}?token=local`,
+  hanaUrl: (path: string) => `http://127.0.0.1:14700${path}?token=local`,
 }));
 
 vi.mock('../../settings/helpers', () => ({
@@ -37,20 +37,20 @@ const baseSummary = {
   network: {
     mode: 'loopback',
     listenHost: '127.0.0.1',
-    configuredPort: 14500,
-    actualPort: 14500,
+    configuredPort: 14700,
+    actualPort: 14700,
     runtimeMode: 'loopback',
     runtimeHost: '127.0.0.1',
     restartRequired: false,
     lanAddresses: ['192.168.31.75'],
-    localServerUrl: 'http://127.0.0.1:14500/',
-    candidateLanServerUrl: 'http://192.168.31.75:14500/',
+    localServerUrl: 'http://127.0.0.1:14700/',
+    candidateLanServerUrl: 'http://192.168.31.75:14700/',
     lanServerUrl: null,
-    localMobileUrl: 'http://127.0.0.1:14500/mobile/',
-    candidateLanMobileUrl: 'http://192.168.31.75:14500/mobile/',
+    localMobileUrl: 'http://127.0.0.1:14700/mobile/',
+    candidateLanMobileUrl: 'http://192.168.31.75:14700/mobile/',
     lanMobileUrl: null,
-    localDesktopUrl: 'http://127.0.0.1:14500/desktop/',
-    candidateLanDesktopUrl: 'http://192.168.31.75:14500/desktop/',
+    localDesktopUrl: 'http://127.0.0.1:14700/desktop/',
+    candidateLanDesktopUrl: 'http://192.168.31.75:14700/desktop/',
     lanDesktopUrl: null,
   },
   account: {
@@ -92,9 +92,9 @@ const lanSummary = {
     listenHost: '0.0.0.0',
     runtimeMode: 'lan',
     runtimeHost: '0.0.0.0',
-    lanServerUrl: 'http://192.168.31.75:14500/',
-    lanMobileUrl: 'http://192.168.31.75:14500/mobile/',
-    lanDesktopUrl: 'http://192.168.31.75:14500/desktop/',
+    lanServerUrl: 'http://192.168.31.75:14700/',
+    lanMobileUrl: 'http://192.168.31.75:14700/mobile/',
+    lanDesktopUrl: 'http://192.168.31.75:14700/desktop/',
   },
 };
 
@@ -104,8 +104,8 @@ const localConnection = {
   serverId: 'local',
   studioId: 'local',
   label: 'Local Hana',
-  baseUrl: 'http://127.0.0.1:14500',
-  wsUrl: 'ws://127.0.0.1:14500',
+  baseUrl: 'http://127.0.0.1:14700',
+  wsUrl: 'ws://127.0.0.1:14700',
   token: 'local',
   authState: 'paired',
   trustState: 'local',
@@ -120,8 +120,8 @@ const remoteConnection = {
   connectionId: 'lan:node_lan:studio_lan',
   kind: 'lan',
   label: 'LAN Studio',
-  baseUrl: 'http://192.168.31.75:14500',
-  wsUrl: 'ws://192.168.31.75:14500',
+  baseUrl: 'http://192.168.31.75:14700',
+  wsUrl: 'ws://192.168.31.75:14700',
   token: 'fixture-key',
   trustState: 'lan',
   credentialKind: 'device_credential',
@@ -155,13 +155,13 @@ describe('AccessTab', () => {
             ...baseSummary.network,
             mode: 'lan',
             listenHost: '0.0.0.0',
-            configuredPort: 14500,
-            lanServerUrl: 'http://192.168.31.75:14500/',
-            candidateLanServerUrl: 'http://192.168.31.75:14500/',
-            lanMobileUrl: 'http://192.168.31.75:14500/mobile/',
-            candidateLanMobileUrl: 'http://192.168.31.75:14500/mobile/',
-            lanDesktopUrl: 'http://192.168.31.75:14500/desktop/',
-            candidateLanDesktopUrl: 'http://192.168.31.75:14500/desktop/',
+            configuredPort: 14700,
+            lanServerUrl: 'http://192.168.31.75:14700/',
+            candidateLanServerUrl: 'http://192.168.31.75:14700/',
+            lanMobileUrl: 'http://192.168.31.75:14700/mobile/',
+            candidateLanMobileUrl: 'http://192.168.31.75:14700/mobile/',
+            lanDesktopUrl: 'http://192.168.31.75:14700/desktop/',
+            candidateLanDesktopUrl: 'http://192.168.31.75:14700/desktop/',
             restartRequired: false,
           },
         }));
@@ -170,7 +170,7 @@ describe('AccessTab', () => {
         return Promise.resolve(jsonResponse({
           ok: true,
           secret: 'hana_dev_visible_once',
-          accessUrl: 'http://192.168.31.75:14500/mobile/',
+          accessUrl: 'http://192.168.31.75:14700/mobile/',
           device: { deviceId: 'device_1', displayName: 'iPhone', status: 'active' },
           credential: { credentialId: 'cred_1', scopes: ['chat', 'files.read', 'files.write'], status: 'active' },
         }));
@@ -179,7 +179,7 @@ describe('AccessTab', () => {
         return Promise.resolve(jsonResponse({
           ok: true,
           secret: 'hana_dev_desktop_visible_once',
-          accessUrl: 'http://192.168.31.75:14500/desktop/',
+          accessUrl: 'http://192.168.31.75:14700/desktop/',
           device: { deviceId: 'device_desktop', displayName: 'Studio Laptop', deviceKind: 'desktop', status: 'active' },
           credential: { credentialId: 'cred_desktop', scopes: ['chat', 'files.read', 'files.write'], status: 'active' },
         }));
@@ -211,10 +211,10 @@ describe('AccessTab', () => {
       clipboard: { writeText: vi.fn(async () => {}) },
     });
     vi.stubGlobal('fetch', vi.fn(async (url: string) => {
-      if (url === 'http://192.168.31.75:14500/api/web-auth/login') {
+      if (url === 'http://192.168.31.75:14700/api/web-auth/login') {
         return { ok: true, json: async () => ({ ok: true }) } as Response;
       }
-      if (url === 'http://192.168.31.75:14500/api/server/identity') {
+      if (url === 'http://192.168.31.75:14700/api/server/identity') {
         return {
           ok: true,
           json: async () => ({
@@ -254,17 +254,17 @@ describe('AccessTab', () => {
     expect(screen.getByText('settings.access.desktopAccess')).toBeInTheDocument();
     expect(screen.getByText('settings.access.status')).toBeInTheDocument();
     expect(screen.getByText('settings.access.runtimeEndpoint')).toBeInTheDocument();
-    expect(screen.getByText('127.0.0.1:14500')).toBeInTheDocument();
-    expect(screen.queryByDisplayValue('http://127.0.0.1:14500/mobile/')).not.toBeInTheDocument();
-    expect(screen.queryByDisplayValue('http://127.0.0.1:14500/desktop/')).not.toBeInTheDocument();
-    expect(screen.getByDisplayValue('14500')).toBeInTheDocument();
+    expect(screen.getByText('127.0.0.1:14700')).toBeInTheDocument();
+    expect(screen.queryByDisplayValue('http://127.0.0.1:14700/mobile/')).not.toBeInTheDocument();
+    expect(screen.queryByDisplayValue('http://127.0.0.1:14700/desktop/')).not.toBeInTheDocument();
+    expect(screen.getByDisplayValue('14700')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('switch', { name: 'settings.access.lanToggle' }));
-    expect(await screen.findByDisplayValue('http://192.168.31.75:14500/mobile/')).toBeInTheDocument();
-    expect(await screen.findByDisplayValue('http://192.168.31.75:14500/desktop/')).toBeInTheDocument();
+    expect(await screen.findByDisplayValue('http://192.168.31.75:14700/mobile/')).toBeInTheDocument();
+    expect(await screen.findByDisplayValue('http://192.168.31.75:14700/desktop/')).toBeInTheDocument();
     expect(screen.getByRole('img', { name: 'settings.access.qrCode' })).toHaveAttribute(
       'src',
-      expect.stringContaining('/api/access/mobile-qr.svg?port=14500'),
+      expect.stringContaining('/api/access/mobile-qr.svg?port=14700'),
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'settings.access.saveNetwork' }));
@@ -272,10 +272,10 @@ describe('AccessTab', () => {
     await waitFor(() => {
       expect(mockHanaFetch).toHaveBeenCalledWith('/api/access/network', expect.objectContaining({
         method: 'PUT',
-        body: JSON.stringify({ mode: 'lan', listenPort: 14500 }),
+        body: JSON.stringify({ mode: 'lan', listenPort: 14700 }),
       }));
     });
-    expect(await screen.findByDisplayValue('http://192.168.31.75:14500/mobile/')).toBeInTheDocument();
+    expect(await screen.findByDisplayValue('http://192.168.31.75:14700/mobile/')).toBeInTheDocument();
     expect(screen.queryByText('settings.access.restartRequired')).not.toBeInTheDocument();
   });
 
@@ -306,9 +306,9 @@ describe('AccessTab', () => {
 
     expect(screen.getByRole('switch', { name: 'settings.access.lanToggle' }))
       .toHaveAttribute('aria-checked', 'true');
-    expect(screen.getByDisplayValue('14500')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('http://192.168.31.75:14500/mobile/')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('http://192.168.31.75:14500/desktop/')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('14700')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('http://192.168.31.75:14700/mobile/')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('http://192.168.31.75:14700/desktop/')).toBeInTheDocument();
 
     resolveSummary(jsonResponse(lanSummary));
     await waitFor(() => {
@@ -326,15 +326,15 @@ describe('AccessTab', () => {
             mode: 'lan',
             listenHost: '0.0.0.0',
             configuredPort: 14550,
-            actualPort: 14500,
+            actualPort: 14700,
             runtimeMode: 'lan',
             runtimeHost: '0.0.0.0',
             restartRequired: true,
-            lanServerUrl: 'http://192.168.31.75:14500/',
+            lanServerUrl: 'http://192.168.31.75:14700/',
             candidateLanServerUrl: 'http://192.168.31.75:14550/',
-            lanMobileUrl: 'http://192.168.31.75:14500/mobile/',
+            lanMobileUrl: 'http://192.168.31.75:14700/mobile/',
             candidateLanMobileUrl: 'http://192.168.31.75:14550/mobile/',
-            lanDesktopUrl: 'http://192.168.31.75:14500/desktop/',
+            lanDesktopUrl: 'http://192.168.31.75:14700/desktop/',
             candidateLanDesktopUrl: 'http://192.168.31.75:14550/desktop/',
           },
         }));
@@ -345,8 +345,8 @@ describe('AccessTab', () => {
 
     render(<AccessTab />);
 
-    expect(await screen.findByDisplayValue('http://192.168.31.75:14500/mobile/')).toBeInTheDocument();
-    expect(await screen.findByDisplayValue('http://192.168.31.75:14500/desktop/')).toBeInTheDocument();
+    expect(await screen.findByDisplayValue('http://192.168.31.75:14700/mobile/')).toBeInTheDocument();
+    expect(await screen.findByDisplayValue('http://192.168.31.75:14700/desktop/')).toBeInTheDocument();
     expect(screen.getByDisplayValue('14550')).toBeInTheDocument();
     expect(screen.queryByDisplayValue('http://192.168.31.75:14550/mobile/')).not.toBeInTheDocument();
     expect(screen.queryByDisplayValue('http://192.168.31.75:14550/desktop/')).not.toBeInTheDocument();
@@ -405,7 +405,7 @@ describe('AccessTab', () => {
     render(<AccessTab />);
 
     fireEvent.change(await screen.findByLabelText('settings.access.remoteServerUrl'), {
-      target: { value: 'http://192.168.31.75:14500' },
+      target: { value: 'http://192.168.31.75:14700' },
     });
     fireEvent.change(screen.getByLabelText('settings.access.remoteServerKey'), {
       target: { value: 'fixture-key' },
@@ -413,14 +413,14 @@ describe('AccessTab', () => {
     fireEvent.click(screen.getByRole('button', { name: 'settings.access.connectLanServer' }));
 
     await waitFor(() => {
-      expect(fetch).toHaveBeenCalledWith('http://192.168.31.75:14500/api/web-auth/login', expect.objectContaining({
+      expect(fetch).toHaveBeenCalledWith('http://192.168.31.75:14700/api/web-auth/login', expect.objectContaining({
         method: 'POST',
         credentials: 'include',
         body: JSON.stringify({ credential: 'fixture-key' }),
       }));
     });
     await waitFor(() => {
-      expect(fetch).toHaveBeenCalledWith('http://192.168.31.75:14500/api/server/identity', expect.objectContaining({
+      expect(fetch).toHaveBeenCalledWith('http://192.168.31.75:14700/api/server/identity', expect.objectContaining({
         credentials: 'include',
         headers: { Authorization: 'Bearer fixture-key' },
       }));

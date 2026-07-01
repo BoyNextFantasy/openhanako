@@ -10,10 +10,8 @@ export function toolNamesFromObjects(tools, { includePluginTools = true } = {}) 
     .filter(Boolean);
 }
 
-export function getStableFeatureDisabledToolNames({ channelsEnabled }: { channelsEnabled?: any } = {}) {
-  const disabled = [];
-  if (channelsEnabled === false) disabled.push("channel", "dm");
-  return disabled;
+export function getStableFeatureDisabledToolNames(_opts: any = {}) {
+  return [];
 }
 
 export function computeRuntimeDisabledToolNames(tools, agentConfig, context = {}, options: { warn?: any } = {}) {

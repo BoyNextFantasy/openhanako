@@ -386,8 +386,8 @@ describe('RightWorkspacePanel', () => {
         userId: 'user_lan',
         studioId: 'studio_lan',
         label: 'LAN Hana',
-        baseUrl: 'http://hana.local:14500',
-        wsUrl: 'ws://hana.local:14500',
+        baseUrl: 'http://hana.local:14700',
+        wsUrl: 'ws://hana.local:14700',
         token: null,
         authState: 'paired',
         trustState: 'lan',
@@ -426,7 +426,7 @@ describe('RightWorkspacePanel', () => {
     fireEvent.click(screen.getByRole('tab', { name: '对话文件' }));
 
     const download = screen.getByRole('link', { name: '下载到本机 report.pdf' });
-    expect(download).toHaveAttribute('href', 'http://hana.local:14500/api/resources/res_sf_report/content');
+    expect(download).toHaveAttribute('href', 'http://hana.local:14700/api/resources/res_sf_report/content');
     expect(download).toHaveAttribute('download', 'report.pdf');
   });
 
@@ -446,8 +446,8 @@ describe('RightWorkspacePanel', () => {
         userId: 'user_lan',
         studioId: 'studio_lan',
         label: 'LAN Hana',
-        baseUrl: 'http://hana.local:14500',
-        wsUrl: 'ws://hana.local:14500',
+        baseUrl: 'http://hana.local:14700',
+        wsUrl: 'ws://hana.local:14700',
         token: null,
         authState: 'paired',
         trustState: 'lan',
@@ -515,8 +515,8 @@ describe('RightWorkspacePanel', () => {
         userId: 'user_lan',
         studioId: 'studio_lan',
         label: 'LAN Hana',
-        baseUrl: 'http://hana.local:14500',
-        wsUrl: 'ws://hana.local:14500',
+        baseUrl: 'http://hana.local:14700',
+        wsUrl: 'ws://hana.local:14700',
         token: null,
         authState: 'paired',
         trustState: 'lan',

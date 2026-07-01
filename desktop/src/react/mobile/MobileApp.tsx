@@ -320,7 +320,6 @@ function MobileDesktopShell({
         previewOpen={previewOpen}
         showPreviewToggle
         showNewSessionButton
-        showChannelTabs={false}
         showWidgetButtons={false}
         centerTitle={titlebarTitle}
         onNewSession={() => void createNewSession()}
@@ -346,7 +345,6 @@ function MobileDesktopShell({
       <div className="app mobile-desktop-app">
         <ChatSidebar
           open={sidebarOpen && currentTab === 'chat'}
-          includeChannels={false}
           showSettingsButton={false}
           showActivityBars={false}
           onNewSession={() => void createNewSession()}

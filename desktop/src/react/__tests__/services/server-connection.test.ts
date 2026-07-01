@@ -133,8 +133,8 @@ describe('server connection helpers', () => {
       connectionId: 'lan:bad',
       kind: 'lan' as const,
       label: 'Bad LAN Studio',
-      baseUrl: 'http://192.168.1.20:14500',
-      wsUrl: 'ws://192.168.1.20:14500',
+      baseUrl: 'http://192.168.1.20:14700',
+      wsUrl: 'ws://192.168.1.20:14700',
       trustState: 'lan' as const,
       credentialKind: 'loopback_token' as const,
     };
@@ -188,8 +188,8 @@ describe('server connection helpers', () => {
       connectionId: 'lan:node_lan:studio_lan',
       kind: 'lan' as const,
       label: 'LAN Studio',
-      baseUrl: 'http://192.168.31.75:14500',
-      wsUrl: 'ws://192.168.31.75:14500',
+      baseUrl: 'http://192.168.31.75:14700',
+      wsUrl: 'ws://192.168.31.75:14700',
       token: 'remote-token',
       trustState: 'lan' as const,
       credentialKind: 'device_credential' as const,
@@ -210,16 +210,16 @@ describe('server connection helpers', () => {
       connectionId: 'lan:node_lan:studio_lan',
       kind: 'lan' as const,
       label: 'LAN Studio',
-      baseUrl: 'http://192.168.31.75:14500',
-      wsUrl: 'ws://192.168.31.75:14500',
+      baseUrl: 'http://192.168.31.75:14700',
+      wsUrl: 'ws://192.168.31.75:14700',
       token: 'remote-token',
       trustState: 'lan' as const,
       credentialKind: 'device_credential' as const,
     };
 
     expect(buildScopedConnectSources(remote)).toEqual([
-      'http://192.168.31.75:14500',
-      'ws://192.168.31.75:14500',
+      'http://192.168.31.75:14700',
+      'ws://192.168.31.75:14700',
     ]);
     expect(buildScopedConnectSources(remote)).not.toContain('http:');
     expect(buildScopedConnectSources(remote)).not.toContain('ws:');
@@ -235,8 +235,8 @@ describe('server connection helpers', () => {
       connectionId: 'lan:node_lan:studio_lan',
       kind: 'lan' as const,
       label: 'LAN Studio',
-      baseUrl: 'http://192.168.31.75:14500',
-      wsUrl: 'ws://192.168.31.75:14500',
+      baseUrl: 'http://192.168.31.75:14700',
+      wsUrl: 'ws://192.168.31.75:14700',
       token: 'remote-token',
       trustState: 'lan' as const,
       credentialKind: 'device_credential' as const,
@@ -261,7 +261,7 @@ describe('server connection helpers', () => {
 
   it('creates a LAN device ServerConnection from manual URL, credential, and server identity', () => {
     const connection = createDeviceServerConnection({
-      baseUrl: '192.168.31.75:14500/mobile/',
+      baseUrl: '192.168.31.75:14700/mobile/',
       credential: 'fixture-key',
       identity: {
         connectionKind: 'lan',
@@ -285,8 +285,8 @@ describe('server connection helpers', () => {
       serverNodeId: 'node_lan',
       studioId: 'studio_lan',
       label: 'Personal Studio',
-      baseUrl: 'http://192.168.31.75:14500',
-      wsUrl: 'ws://192.168.31.75:14500',
+      baseUrl: 'http://192.168.31.75:14700',
+      wsUrl: 'ws://192.168.31.75:14700',
       token: 'fixture-key',
       trustState: 'lan',
       credentialKind: 'device_credential',
@@ -298,7 +298,7 @@ describe('server connection helpers', () => {
     const { createBrowserServerConnection } = await import('../../services/server-connection');
 
     const connection = createBrowserServerConnection({
-      origin: 'http://192.168.31.75:14500/desktop/',
+      origin: 'http://192.168.31.75:14700/desktop/',
       identity: {
         connectionKind: 'lan',
         serverId: 'server_lan',
@@ -350,7 +350,7 @@ describe('server connection helpers', () => {
 
   it('normalizes the browser desktop PWA URL when creating a manual LAN connection', () => {
     const connection = createDeviceServerConnection({
-      baseUrl: '192.168.31.75:14500/desktop/',
+      baseUrl: '192.168.31.75:14700/desktop/',
       credential: 'fixture-key',
       identity: {
         connectionKind: 'lan',
@@ -367,17 +367,17 @@ describe('server connection helpers', () => {
     });
 
     expect(connection).toMatchObject({
-      baseUrl: 'http://192.168.31.75:14500',
-      wsUrl: 'ws://192.168.31.75:14500',
+      baseUrl: 'http://192.168.31.75:14700',
+      wsUrl: 'ws://192.168.31.75:14700',
     });
   });
 
   it('logs in once before creating a manual LAN connection so WebSocket can use the web session cookie', async () => {
     const fetchImpl = vi.fn(async (url: string) => {
-      if (url === 'http://192.168.31.75:14500/api/web-auth/login') {
+      if (url === 'http://192.168.31.75:14700/api/web-auth/login') {
         return { ok: true, json: async () => ({ ok: true }) } as Response;
       }
-      if (url === 'http://192.168.31.75:14500/api/server/identity') {
+      if (url === 'http://192.168.31.75:14700/api/server/identity') {
         return {
           ok: true,
           json: async () => ({
@@ -398,17 +398,17 @@ describe('server connection helpers', () => {
     });
 
     const connection = await connectDeviceServerConnection({
-      baseUrl: 'http://192.168.31.75:14500/',
+      baseUrl: 'http://192.168.31.75:14700/',
       credential: 'fixture-key',
       fetchImpl: fetchImpl as unknown as typeof fetch,
     });
 
-    expect(fetchImpl).toHaveBeenNthCalledWith(1, 'http://192.168.31.75:14500/api/web-auth/login', expect.objectContaining({
+    expect(fetchImpl).toHaveBeenNthCalledWith(1, 'http://192.168.31.75:14700/api/web-auth/login', expect.objectContaining({
       method: 'POST',
       credentials: 'include',
       body: JSON.stringify({ credential: 'fixture-key' }),
     }));
-    expect(fetchImpl).toHaveBeenNthCalledWith(2, 'http://192.168.31.75:14500/api/server/identity', expect.objectContaining({
+    expect(fetchImpl).toHaveBeenNthCalledWith(2, 'http://192.168.31.75:14700/api/server/identity', expect.objectContaining({
       headers: { Authorization: 'Bearer fixture-key' },
       credentials: 'include',
     }));
@@ -427,7 +427,7 @@ describe('server connection helpers', () => {
       serverToken: 'local-token',
     })!;
     const remote = createDeviceServerConnection({
-      baseUrl: 'http://192.168.31.75:14500',
+      baseUrl: 'http://192.168.31.75:14700',
       credential: 'fixture-key',
       identity: {
         connectionKind: 'lan',

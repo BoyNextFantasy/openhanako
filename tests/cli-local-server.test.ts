@@ -30,14 +30,14 @@ describe("CLI local server discovery", () => {
     tmpDir = makeTmpDir();
     fs.writeFileSync(path.join(tmpDir, "server-info.json"), JSON.stringify({
       pid: process.pid,
-      port: 14500,
+      port: 14700,
       token: "hana_token",
       version: "1.2.3",
     }), "utf-8");
 
     expect(resolveConnection({ hanaHome: tmpDir })).toMatchObject({
       ok: true,
-      baseUrl: "http://127.0.0.1:14500",
+      baseUrl: "http://127.0.0.1:14700",
       token: "hana_token",
       source: "server-info",
       queryTokenAllowed: true,
