@@ -1,5 +1,5 @@
 import type { Session, SessionCapabilityDrift, SessionPermissionMode, SessionStream, TodoItem } from '../types';
-import type { SessionConfirmationBlock } from './chat-types';
+import type { SessionConfirmationBlock, PendingQuestionBlock } from './chat-types';
 import type { ThinkingLevel } from './model-slice';
 
 const SESSION_PERMISSION_MODES = new Set(['auto', 'operate', 'ask', 'read_only']);
@@ -160,6 +160,8 @@ export interface SessionSlice {
   capabilityRefreshingSessions: string[];
   /** 输入区确认卡片的 live pending 状态，keyed by session identity，避免后台 session 事件被焦点过滤丢失。 */
   pendingSessionConfirmationsByPath: Record<string, SessionConfirmationBlock>;
+  /** LLM question 工具触发的待处理问题，keyed by session identity。 */
+  pendingQuestionsByPath: Record<string, PendingQuestionBlock>;
   setSessions: (sessions: Session[]) => void;
   setCurrentSessionPath: (path: string | null) => void;
   setCurrentSessionRef: (ref: { sessionId?: string | null; path?: string | null }) => void;
@@ -180,6 +182,8 @@ export interface SessionSlice {
   setSessionCapabilityRefreshing: (sessionPath: string, refreshing: boolean) => void;
   setPendingSessionConfirmation: (sessionPath: string, block: SessionConfirmationBlock | null) => void;
   resolvePendingSessionConfirmation: (confirmId: string) => void;
+  setPendingQuestion: (sessionPath: string, block: PendingQuestionBlock | null) => void;
+  resolvePendingQuestion: (id: string) => void;
 }
 
 export const createSessionSlice = (
@@ -204,6 +208,7 @@ export const createSessionSlice = (
   capabilityDriftBySession: {},
   capabilityRefreshingSessions: [],
   pendingSessionConfirmationsByPath: {},
+  pendingQuestionsByPath: {},
   setSessions: (sessions) => set((s) => ({
     sessions,
     sessionLocatorsById: mergeSessionLocators(s.sessionLocatorsById, sessions),
@@ -336,5 +341,33 @@ export const createSessionSlice = (
         changed = true;
       }
       return changed ? { pendingSessionConfirmationsByPath: next } : {};
+    }),
+  setPendingQuestion: (sessionPath, block) =>
+    set((s) => {
+      const path = typeof sessionPath === 'string' ? sessionPath.trim() : '';
+      if (!path) return {};
+      const key = sessionScopedKey(s, path) || path;
+      const next = { ...s.pendingQuestionsByPath };
+      if (block) {
+        next[key] = block;
+        if (key !== path) delete next[path];
+      } else {
+        delete next[key];
+        delete next[path];
+      }
+      return { pendingQuestionsByPath: next };
+    }),
+  resolvePendingQuestion: (id) =>
+    set((s) => {
+      const qid = typeof id === 'string' ? id.trim() : '';
+      if (!qid) return {};
+      let changed = false;
+      const next = { ...s.pendingQuestionsByPath };
+      for (const [sessionPath, block] of Object.entries(next)) {
+        if (block.id !== qid) continue;
+        delete next[sessionPath];
+        changed = true;
+      }
+      return changed ? { pendingQuestionsByPath: next } : {};
     }),
 });

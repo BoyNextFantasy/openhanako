@@ -8,6 +8,8 @@
  *      null/undefined 表示清空旧值；不进 session.entries。）
  *   { type: "abort" }
  *   { type: "resume_stream", sessionPath: "...", streamId: "...", sinceSeq: 128 }  (按事件序号续传)
+ *   { type: "question_reply", id: "q_...", sessionPath: "...", answers: [["label1"], ["label2"]] }  (用户回答 question 工具提问)
+ *   { type: "question_reject", id: "q_...", sessionPath: "..." }  (用户关闭/忽略 question 弹窗)
  *
  * Server → Client:
  *   { type: "text_delta", delta: "..." }
@@ -30,6 +32,7 @@
  *   { type: "session_user_message", sessionPath: "...", message: { text, attachments?, quotedText?, skills?, deskContext? } }  (桌面/RC 统一用户消息，参与 stream_resume)
  *   { type: "confirmation_resolved", confirmId: "...", action: "confirmed"|"rejected", value?: any }  (用户操作确认卡片后广播，前端更新卡片状态)
  *   { type: "block_update", taskId: "...", patch: { streamStatus: "done"|"failed", summary?: "..." } }  (活跃 block 状态更新)
+ *   { type: "question", id: "q_...", sessionPath: "...", questions: [{ question, header, options, multiple? }] }  (LLM 通过 question 工具提问，前端应弹窗展示)
  *   { type: "browser_status", running: bool, url: "...", thumbnail?: "..." }  (浏览器状态变更，用于前端浮动卡片)
  *   { type: "bridge_status", platform: "telegram"|"feishu"|"dingtalk"|"qq"|"wechat", status: "connected"|"disconnected"|"error", error?: "..." }  (外部平台连接状态变更)
  *   { type: "stream_resume", sessionPath: "...", streamId: "...", sinceSeq: number, nextSeq: number, reset: bool, truncated: bool, isStreaming: bool, runtimeIsStreaming?: bool, events: [{ seq, event, ts }] }  (新协议；isStreaming 是 replay 缓存状态，runtimeIsStreaming 是 engine 运行态)

@@ -17,6 +17,8 @@ const WRITE_MESSAGE_TYPES = new Set([
   "slash",
   "compact",
   "prompt",
+  "question_reply",
+  "question_reject",
 ]);
 
 const READ_MESSAGE_TYPES = new Set([

@@ -593,6 +593,18 @@ export function handleServerMessage(msg: any): void {
       }
       break;
 
+    case 'question': {
+      const qSp = msg.sessionPath || useStore.getState().currentSessionPath;
+      if (qSp) {
+        useStore.getState().setPendingQuestion(qSp, {
+          id: msg.id,
+          sessionPath: qSp,
+          questions: msg.questions || [],
+        });
+      }
+      break;
+    }
+
     case 'notification':
       if (window.hana?.showNotification) {
         // agentId 标识触发通知的助手，主进程据此读取该 agent 头像作为通知 icon。

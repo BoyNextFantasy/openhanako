@@ -149,6 +149,17 @@ export interface SessionConfirmationBlock {
   payload?: Record<string, unknown>;
 }
 
+export interface PendingQuestionBlock {
+  id: string;
+  sessionPath: string;
+  questions: Array<{
+    question: string;
+    header: string;
+    options: Array<{ label: string; description: string }>;
+    multiple?: boolean;
+  }>;
+}
+
 export interface SettingsUpdateChange {
   key: string;
   label: string;

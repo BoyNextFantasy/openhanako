@@ -3211,6 +3211,10 @@
     "oauthTimeout": "OAuth timed out: no browser callback received. Please check whether port 1455 is blocked by a firewall or already in use. Windows users should also verify that localhost is not resolving to IPv6.",
     "oauthConnectFailed": "Cannot connect to OAuth server{detail}. Please configure the global outbound proxy in Settings > Security, or check the HTTPS_PROXY environment variable."
   },
+  "question": {
+    "answered": "User has answered your questions: {answers}. You can now continue with the user's answers in mind.",
+    "unanswered": "Unanswered"
+  },
   "deferred": {
     "typeLabel": {
       "subagent": "Sub-assistant",

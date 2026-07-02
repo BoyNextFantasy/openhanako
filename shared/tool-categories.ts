@@ -35,6 +35,7 @@ export const STANDARD_TOOL_NAMES = [
   "subagent_reply",
   "subagent_close",
   "channel",
+  "question",
   "record_experience",
   "recall_experience",
   "check_pending_tasks",

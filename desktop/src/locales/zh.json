@@ -3097,6 +3097,10 @@
     "oauthTimeout": "OAuth 超时：未收到浏览器回调。请检查端口 1455 是否被防火墙拦截或已被占用，Windows 用户也请确认 localhost 未被解析到 IPv6",
     "oauthConnectFailed": "无法连接 OAuth 服务器{detail}。请在设置的安全页配置全局出站代理，或检查 HTTPS_PROXY 环境变量"
   },
+  "question": {
+    "answered": "用户已回答了你的问题: {answers}。现在可以继续了。",
+    "unanswered": "未回答"
+  },
   "deferred": {
     "typeLabel": {
       "subagent": "子助手",

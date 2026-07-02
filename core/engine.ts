@@ -2151,6 +2151,7 @@ export class HanaEngine {
             approvalPolicy,
             agentId,
             ...executionScope,
+            emitEvent: (event, sp) => this._emitEvent(event, sp || sessionPath),
           };
           return tool.execute(toolCallId, params, signalOrRuntimeCtx, onUpdate, mergedCtx);
         },
@@ -2174,6 +2175,7 @@ export class HanaEngine {
           approvalPolicy,
           agentId,
           ...executionScope,
+          emitEvent: (event, sp) => this._emitEvent(event, sp || sessionPath),
         };
         return t.execute(toolCallId, params, signalOrRuntimeCtx, onUpdate, mergedCtx);
       },

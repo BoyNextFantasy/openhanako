@@ -40,6 +40,7 @@ import { createTerminalTool } from "../lib/tools/terminal-tool.ts";
 import { createWorkflowTool } from "../lib/tools/workflow-tool.ts";
 import { createCardGuideTool } from "../lib/tools/card-guide-tool.ts";
 import { createShowCardTool } from "../lib/tools/show-card-tool.ts";
+import { createQuestionTool } from "../lib/tools/question-tool.ts";
 import { runCompatChecks } from "../lib/compat/index.ts";
 import { getPlatformPromptNote } from "./platform-prompt.ts";
 import { assertAgentConfigPatchYuan, getAgentConfigRepairState } from "./yuan-registry.ts";
@@ -137,6 +138,7 @@ export class Agent {
   declare _webSearchTool: any;
   declare _cardGuideTool: any;
   declare _showCardTool: any;
+  declare _questionTool: any;
   declare _workflowTool: any;
   declare agentDir: any;
   declare agentName: any;
@@ -632,6 +634,9 @@ export class Agent {
     this._cardGuideTool = createCardGuideTool();
     this._showCardTool = createShowCardTool();
 
+    // 15. Question 工具（结构化提问）
+    this._questionTool = createQuestionTool();
+
     // 12. 组装 system prompt（按 master 构建，与 per-session 开关解耦）
     log(`  [agent] 9. buildSystemPrompt...`);
     this._systemPrompt = this.buildSystemPrompt({ forceMemoryEnabled: this._memoryMasterEnabled });
@@ -844,6 +849,7 @@ export class Agent {
       this._terminalTool,
       this._cardGuideTool,
       this._showCardTool,
+      this._questionTool,
     ].filter(Boolean);
   }
   get tools() {

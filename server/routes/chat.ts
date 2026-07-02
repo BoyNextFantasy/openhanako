@@ -43,6 +43,7 @@ import {
   buildTurnInputPresentationEvent,
 } from "../../lib/turn-input-presentation.ts";
 import { buildAutomationSuggestionBlock } from "../suggestion-blocks.ts";
+import { questionService } from "../../lib/question/question-service.ts";
 import { isAllowedChatImageMime, isChatImageBase64WithinLimit } from "../../shared/image-mime.ts";
 import { isAllowedChatVideoMime, isChatVideoBase64WithinLimit } from "../../shared/video-mime.ts";
 import { isAllowedChatAudioMime, isChatAudioBase64WithinLimit } from "../../shared/audio-mime.ts";
@@ -1293,6 +1294,13 @@ export function createChatRoute(engine: any, hub: any, { upgradeWebSocket }: any
       broadcast({ type: "plan_mode", enabled: event.enabled, mode: event.mode, sessionPath });
     } else if (event.type === "notification") {
       broadcast(toNotificationWsMessage(event, sessionPath));
+    } else if (event.type === "question") {
+      broadcast({
+        type: "question",
+        id: event.id,
+        sessionPath: event.sessionPath || sessionPath,
+        questions: event.questions,
+      });
     } else if (event.type === "channel_new_message") {
       broadcast({
         type: "channel_new_message",
@@ -1634,6 +1642,32 @@ export function createChatRoute(engine: any, hub: any, { upgradeWebSocket }: any
                 if (!errMsg.includes("Already compacted") && !errMsg.includes("Nothing to compact")) {
                   wsSend(ws, { type: "error", message: t("error.compactFailed", { msg: errMsg }), sessionPath: compactPath });
                 }
+              }
+              return;
+            }
+
+            if (msg.type === "question_reply") {
+              const sp = requireSessionPath(msg, ws); if (!sp) return;
+              if (isDeletedAgentSessionPath(sp)) {
+                rejectDeletedAgentSession(ws, sp);
+                return;
+              }
+              const ok = questionService.reply(msg.id, msg.answers);
+              if (!ok) {
+                wsSend(ws, { type: "error", message: `question_reply failed: id=${msg.id}`, sessionPath: sp });
+              }
+              return;
+            }
+
+            if (msg.type === "question_reject") {
+              const sp = requireSessionPath(msg, ws); if (!sp) return;
+              if (isDeletedAgentSessionPath(sp)) {
+                rejectDeletedAgentSession(ws, sp);
+                return;
+              }
+              const ok = questionService.reject(msg.id);
+              if (!ok) {
+                wsSend(ws, { type: "error", message: `question_reject failed: id=${msg.id}`, sessionPath: sp });
               }
               return;
             }

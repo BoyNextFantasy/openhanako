@@ -29,6 +29,7 @@ const INFORMATION_TOOLS = new Set([
   "current_status",
   "search_memory",
   "recall_experience",
+  "question",
 ]);
 
 const SIDE_EFFECT_TOOLS = new Set([
