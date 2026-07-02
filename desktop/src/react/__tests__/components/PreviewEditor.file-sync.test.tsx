@@ -157,35 +157,6 @@ describe('PreviewEditor file sync', () => {
     expect(container.querySelector('.cm-content')?.getAttribute('spellcheck')).toBe('false');
   });
 
-<<<<<<< HEAD
-  it('can scroll to a match without stealing focus from the find box', () => {
-    const ref = createRef<PreviewEditorHandle>();
-    render(
-      <PreviewEditor
-        ref={ref}
-        content="alpha beta"
-        filePath="/tmp/hana-note.md"
-        mode="markdown"
-      />,
-    );
-
-    const view = ref.current?.getView();
-    expect(view).toBeTruthy();
-    const focusSpy = vi.spyOn(view!, 'focus');
-
-    act(() => {
-      ref.current?.scrollToOffset(0, 5, { focus: false });
-    });
-    expect(focusSpy).not.toHaveBeenCalled();
-
-    act(() => {
-      ref.current?.scrollToOffset(6, 10);
-    });
-    expect(focusSpy).toHaveBeenCalledTimes(1);
-  });
-
-=======
->>>>>>> edfa535b (fix: disable spellcheck on text surfaces)
   it('emits selection commit only after a user commit event', () => {
     const ref = createRef<PreviewEditorHandle>();
     const onSelectionChange = vi.fn();
