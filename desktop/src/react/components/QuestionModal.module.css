@@ -107,6 +107,61 @@
   color: var(--text-light);
 }
 
+.customOption {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  width: 100%;
+  padding: var(--space-10) var(--space-14);
+  border-radius: var(--radius-card);
+  border: 1px solid var(--overlay-medium);
+  background: var(--bg);
+  cursor: default;
+  box-sizing: border-box;
+  transition:
+    border-color var(--duration-fast) var(--ease-out),
+    background var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out);
+}
+
+.customOption:hover {
+  border-color: var(--text-muted);
+}
+
+.customOptionSelected {
+  border-color: var(--accent);
+  background: var(--accent-light);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.customLabel {
+  flex-shrink: 0;
+  font-size: var(--fs-ui);
+  color: var(--text-muted);
+  user-select: none;
+}
+
+.customLabelSelected {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.customInput {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: var(--fs-ui);
+  color: var(--text);
+  outline: none;
+  padding: 0;
+}
+
+.customInput::placeholder {
+  color: var(--text-muted);
+}
+
 .actions {
   display: flex;
   justify-content: flex-end;

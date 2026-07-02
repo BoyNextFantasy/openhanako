@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useStore } from '../stores';
 import { getWebSocket } from '../services/websocket';
 import { sessionScopedValue } from '../stores/session-slice';
@@ -39,6 +39,10 @@ function QuestionOverlay({ block, sessionPath, onResolve, onDismiss }: QuestionO
   const [answers, setAnswers] = useState<string[][]>(() =>
     block.questions.map(() => [] as string[]),
   );
+  const [customTexts, setCustomTexts] = useState<string[]>(() =>
+    block.questions.map(() => ''),
+  );
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -49,6 +53,11 @@ function QuestionOverlay({ block, sessionPath, onResolve, onDismiss }: QuestionO
   }, [onDismiss]);
 
   const handleToggleOption = (qIdx: number, label: string, multiple?: boolean) => {
+    setCustomTexts((prev) => {
+      const next = [...prev];
+      next[qIdx] = '';
+      return next;
+    });
     setAnswers((prev) => {
       const next = prev.map((a) => [...a]);
       if (multiple) {
@@ -61,6 +70,20 @@ function QuestionOverlay({ block, sessionPath, onResolve, onDismiss }: QuestionO
       } else {
         next[qIdx] = [label];
       }
+      return next;
+    });
+  };
+
+  const handleCustomInput = (qIdx: number, value: string) => {
+    const trimmed = value.trim();
+    setCustomTexts((prev) => {
+      const next = [...prev];
+      next[qIdx] = value;
+      return next;
+    });
+    setAnswers((prev) => {
+      const next = prev.map((a) => [...a]);
+      next[qIdx] = trimmed ? [trimmed] : [];
       return next;
     });
   };
@@ -103,6 +126,23 @@ function QuestionOverlay({ block, sessionPath, onResolve, onDismiss }: QuestionO
                     </button>
                   );
                 })}
+                <div
+                  className={`${s.customOption}${customTexts[qIdx] ? ` ${s.customOptionSelected}` : ''}`}
+                  onClick={() => inputRefs.current[qIdx]?.focus()}
+                >
+                  <span className={`${s.customLabel}${customTexts[qIdx] ? ` ${s.customLabelSelected}` : ''}`}>
+                    Custom
+                  </span>
+                  <input
+                    ref={(el) => { inputRefs.current[qIdx] = el; }}
+                    className={s.customInput}
+                    type="text"
+                    value={customTexts[qIdx]}
+                    onChange={(e) => handleCustomInput(qIdx, e.target.value)}
+                    placeholder="Type your answer..."
+                    maxLength={200}
+                  />
+                </div>
               </div>
             </div>
           ))}
