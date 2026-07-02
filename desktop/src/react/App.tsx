@@ -24,7 +24,6 @@ import { LeavesOverlay } from './components/LeavesOverlay';
 import { SelectionQuoteActionSurface } from './components/selection/SelectionQuoteActionSurface';
 import { MediaViewer } from './components/shared/MediaViewer/MediaViewer';
 import { SettingsModalShell } from './components/SettingsModalShell';
-import { QuestionModal } from './components/QuestionModal';
 import { initTheme, initDragPrevention } from './bootstrap';
 import { initApp } from './app-init';
 import { openSettingsModal } from './stores/settings-modal-actions';
@@ -143,9 +142,6 @@ function App() {
 
       {/* In-window settings overlay */}
       <SettingsModalShell />
-
-      {/* Question tool modal */}
-      <QuestionModal />
 
       {/* Input context menu (cut/copy/paste) */}
       <InputContextMenu />
