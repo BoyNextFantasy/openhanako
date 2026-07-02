@@ -810,6 +810,10 @@ describe('initApp bridge indicator', () => {
     Object.assign(mockState, {
       currentSessionPath: '/session/a.jsonl',
       chatSessions: {},
+      sessions: [],
+      streamingSessions: [],
+      // 真实 slice 对无 active entry 的移除是 no-op 且 applied=true（identitiesMatch 对 undefined 返回 true）
+      removeStreamingSession: vi.fn(() => true),
     });
     (settingsHandler as unknown as (type: string, data: any) => void)('models-changed', {});
 
