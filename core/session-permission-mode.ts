@@ -30,6 +30,7 @@ const INFORMATION_TOOLS = new Set([
   "search_memory",
   "recall_experience",
   "question",
+  "task",
 ]);
 
 const SIDE_EFFECT_TOOLS = new Set([
