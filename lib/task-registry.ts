@@ -16,6 +16,18 @@ const log = createModuleLogger("task-registry");
 const ACTIVE_STATUSES = new Set(["pending", "running", "paused", "blocked", "recovering"]);
 const FINAL_STATUSES = new Set(["completed", "failed", "canceled", "aborted"]);
 const KNOWN_STATUSES = new Set([...ACTIVE_STATUSES, ...FINAL_STATUSES]);
+
+// LLM task statuses (open → in_progress → blocked → open → done | abandoned)
+const LLM_TASK_STATUSES = Object.freeze({
+  OPEN: "open",
+  IN_PROGRESS: "in_progress",
+  BLOCKED: "blocked",
+  DONE: "done",
+  ABANDONED: "abandoned",
+});
+const LLM_ACTIVE_STATUSES = new Set(["open", "in_progress", "blocked"]);
+const LLM_TERMINAL_STATUSES = new Set(["done", "abandoned"]);
+const LLM_VALID_STATUSES = new Set([...LLM_ACTIVE_STATUSES, ...LLM_TERMINAL_STATUSES]);
 const MAX_TIMER_DELAY = 2_147_483_647;
 
 function textOrNull(value) {
@@ -295,6 +307,139 @@ export class TaskRegistry {
   remove(taskId) {
     this._tasks.delete(taskId);
     this._persist();
+  }
+
+  // ── LLM 可见任务方法（5 状态生命周期：open → in_progress → blocked → done | abandoned）──
+
+  _nextLLMTaskId(parentTaskId = null) {
+    const prefix = parentTaskId ? `${parentTaskId}.` : "T";
+    const siblings = [...this._tasks.values()]
+      .filter((t) => t._llmTask)
+      .map((t) => t.taskId)
+      .filter((id) => (parentTaskId ? id.startsWith(prefix) : /^T\d+$/.test(id)))
+      .map((id) => {
+        const tail = id.slice(prefix.length);
+        return /^\d+$/.test(tail) ? Number(tail) : 0;
+      });
+    const next = siblings.length > 0 ? Math.max(...siblings) + 1 : 1;
+    return `${prefix}${next}`;
+  }
+
+  _detectParentCycle(taskId, parentTaskId) {
+    if (!parentTaskId) return false;
+    const visited = new Set();
+    let cursor = parentTaskId;
+    while (cursor) {
+      if (cursor === taskId || visited.has(cursor)) return true;
+      visited.add(cursor);
+      const parent = this._tasks.get(cursor);
+      cursor = parent?._llmParentTaskId || null;
+    }
+    return false;
+  }
+
+  createLLMTask(summary, { parentTaskId = null, owner = null }: any = {}) {
+    const id = this._nextLLMTaskId(parentTaskId);
+    const now = Date.now();
+    if (this._detectParentCycle(id, parentTaskId)) {
+      throw new Error(`TaskRegistry: cycle detected — cannot set parent_task_id "${parentTaskId}" on "${id}"`);
+    }
+    const task = {
+      taskId: id,
+      _llmTask: true,
+      _llmParentTaskId: parentTaskId || null,
+      _llmSummary: assertText(summary, "summary"),
+      _llmOwner: owner || null,
+      _llmLastEventKind: "created",
+      _llmLastEventSummary: null,
+      status: LLM_TASK_STATUSES.OPEN,
+      type: "llm-task",
+      createdAt: now,
+      updatedAt: now,
+      endedAt: null,
+    };
+    this._tasks.set(id, task);
+    this._persist();
+    return clone(task);
+  }
+
+  _requireLLMTask(taskId) {
+    const task = this._tasks.get(taskId);
+    if (!task || !task._llmTask) throw new Error(`TaskRegistry: LLM task "${taskId}" not found`);
+    return task;
+  }
+
+  _transitionLLMTask(taskId, newStatus, eventKind, eventSummary = null) {
+    const task = this._requireLLMTask(taskId);
+    const now = Date.now();
+    const next = { ...task, status: newStatus, updatedAt: now, _llmLastEventKind: eventKind, _llmLastEventSummary: eventSummary || null };
+    if (LLM_TERMINAL_STATUSES.has(newStatus)) next.endedAt = now;
+    this._tasks.set(taskId, next);
+    this._persist();
+    return clone(next);
+  }
+
+  blockLLMTask(taskId, { eventSummary = null }: any = {}) {
+    const task = this._requireLLMTask(taskId);
+    if (LLM_TERMINAL_STATUSES.has(task.status)) throw new Error(`TaskRegistry: cannot block terminal task "${taskId}"`);
+    return this._transitionLLMTask(taskId, LLM_TASK_STATUSES.BLOCKED, "blocked", eventSummary);
+  }
+
+  unblockLLMTask(taskId, { eventSummary = null }: any = {}) {
+    const task = this._requireLLMTask(taskId);
+    if (task.status !== LLM_TASK_STATUSES.BLOCKED) throw new Error(`TaskRegistry: can only unblock a blocked task, "${taskId}" is "${task.status}"`);
+    return this._transitionLLMTask(taskId, LLM_TASK_STATUSES.OPEN, "unblocked", eventSummary);
+  }
+
+  doneLLMTask(taskId, { eventSummary = null }: any = {}) {
+    return this._transitionLLMTask(taskId, LLM_TASK_STATUSES.DONE, "done", eventSummary);
+  }
+
+  abandonLLMTask(taskId, { eventSummary = null }: any = {}) {
+    return this._transitionLLMTask(taskId, LLM_TASK_STATUSES.ABANDONED, "abandoned", eventSummary);
+  }
+
+  startLLMTask(taskId, { owner = null, eventSummary = null }: any = {}) {
+    const task = this._requireLLMTask(taskId);
+    if (LLM_TERMINAL_STATUSES.has(task.status)) throw new Error(`TaskRegistry: cannot start terminal task "${taskId}"`);
+    const effectiveOwner = owner || task._llmOwner;
+    if (task.status === LLM_TASK_STATUSES.IN_PROGRESS && effectiveOwner === task._llmOwner) return clone(task);
+    const now = Date.now();
+    const next = { ...task, status: LLM_TASK_STATUSES.IN_PROGRESS, updatedAt: now, _llmOwner: effectiveOwner, _llmLastEventKind: "started", _llmLastEventSummary: eventSummary || null };
+    this._tasks.set(taskId, next);
+    this._persist();
+    return clone(next);
+  }
+
+  renameLLMTask(taskId, newSummary) {
+    const task = this._requireLLMTask(taskId);
+    const now = Date.now();
+    const next = { ...task, _llmSummary: assertText(newSummary, "summary"), updatedAt: now };
+    this._tasks.set(taskId, next);
+    this._persist();
+    return clone(next);
+  }
+
+  getLLMTask(taskId) {
+    const task = this._tasks.get(taskId);
+    return task?._llmTask ? clone(task) : null;
+  }
+
+  listLLMTasks(filter: any = {}) {
+    const now = Date.now();
+    return [...this._tasks.values()]
+      .filter((task) => {
+        if (!task._llmTask) return false;
+        if (filter.status && task.status !== filter.status) return false;
+        if (!filter.includeTerminal && LLM_TERMINAL_STATUSES.has(task.status)) return false;
+        if (filter.parentTaskId !== undefined) {
+          if (filter.parentTaskId === null) { if (task._llmParentTaskId) return false; }
+          else if (task._llmParentTaskId !== filter.parentTaskId) return false;
+        }
+        return true;
+      })
+      .sort((a, b) => a.createdAt - b.createdAt)
+      .map(clone);
   }
 
   query(taskId) {

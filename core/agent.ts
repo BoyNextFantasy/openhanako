@@ -35,6 +35,7 @@ import {
 } from "../lib/tools/subagent-tool.ts";
 import { createCheckDeferredTool } from "../lib/tools/check-deferred-tool.ts";
 import { createStopTaskTool } from "../lib/tools/stop-task-tool.ts";
+import { createTaskTool } from "../lib/tools/task-tool.ts";
 import { createCurrentStatusTool } from "../lib/tools/current-status-tool.ts";
 import { createWorkflowTool } from "../lib/tools/workflow-tool.ts";
 import { createCardGuideTool } from "../lib/tools/card-guide-tool.ts";
@@ -129,6 +130,7 @@ export class Agent {
   declare _subagentTool: any;
   declare _summaryManager: any;
   declare _systemPrompt: any;
+  declare _taskTool: any;
   declare _todoTool: any;
   declare _updateSettingsTool: any;
   declare _utilityModel: any;
@@ -496,6 +498,9 @@ export class Agent {
     this._stopTaskTool = createStopTaskTool({
       getTaskRegistry: () => this._cb?.getTaskRegistry?.(),
     });
+    this._taskTool = createTaskTool({
+      getTaskRegistry: () => this._cb?.getTaskRegistry?.(),
+    });
 
     this._checkDeferredTool = createCheckDeferredTool({
       getDeferredStore: () => this._cb?.getDeferredResults?.(),
@@ -829,6 +834,7 @@ export class Agent {
       this._installSkillTool,
       this._notifyTool,
       this._stopTaskTool,
+      this._taskTool,
       this._updateSettingsTool,
       this._sessionFoldersTool,
       this._subagentTool,
