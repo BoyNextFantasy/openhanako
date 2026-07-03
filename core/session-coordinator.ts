@@ -1400,6 +1400,7 @@ export class SessionCoordinator {
         forceExperienceEnabled: frozenExperienceEnabled,
         cwdOverride: effectiveCwd,
         targetModel: promptPatchModel,
+        forPlan: initialPermissionMode === SESSION_PERMISSION_MODES.PLAN,
       });
     const memoryReflectionSnapshot = (!restore && typeof agent.buildMemoryReflectionSnapshot === "function")
       ? agent.buildMemoryReflectionSnapshot({ forceMemoryEnabled: frozenMemoryEnabled })
@@ -3195,8 +3196,11 @@ export class SessionCoordinator {
     return this.setPermissionMode(mode);
   }
 
-  /** Backward-compatible route for the old Plan Mode API. */
+  /** Backward-compatible route for the old Plan Mode API. Now also supports explicit PLAN mode. */
   setPlanMode(enabled: any) {
+    if (enabled === "plan" || enabled === SESSION_PERMISSION_MODES.PLAN) {
+      return this.setPermissionMode(SESSION_PERMISSION_MODES.PLAN);
+    }
     return this.setPermissionMode(enabled ? SESSION_PERMISSION_MODES.READ_ONLY : SESSION_PERMISSION_MODES.OPERATE);
   }
 
@@ -3207,11 +3211,13 @@ export class SessionCoordinator {
     this._d.emitEvent({ type: "permission_mode", mode: normalized, readOnly }, sessionPath);
     this._d.emitEvent({ type: "access_mode", mode: accessMode, permissionMode: normalized, readOnly }, sessionPath);
     this._d.emitEvent({ type: "plan_mode", enabled: readOnly, mode: normalized }, sessionPath);
-    const label = normalized === SESSION_PERMISSION_MODES.READ_ONLY
-      ? "只读"
-      : (normalized === SESSION_PERMISSION_MODES.ASK
-        ? "先问"
-        : (normalized === SESSION_PERMISSION_MODES.AUTO ? "自动审核" : "操作"));
+    const label = normalized === SESSION_PERMISSION_MODES.PLAN
+      ? "Plan模式"
+      : (normalized === SESSION_PERMISSION_MODES.READ_ONLY
+        ? "只读"
+        : (normalized === SESSION_PERMISSION_MODES.ASK
+          ? "先问"
+          : (normalized === SESSION_PERMISSION_MODES.AUTO ? "自动审核" : "操作")));
     this._d.emitDevLog(`Permission Mode: ${label}`, "info");
   }
 

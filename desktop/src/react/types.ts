@@ -40,7 +40,7 @@ export interface DesktopNotificationOptions {
 
 // ── 核心数据结构 ──
 
-export type SessionPermissionMode = 'auto' | 'operate' | 'ask' | 'read_only';
+export type SessionPermissionMode = 'auto' | 'operate' | 'ask' | 'read_only' | 'plan';
 
 /**
  * #1624：服务端在 session restore 时算好的"工具能力有更新"提示数据

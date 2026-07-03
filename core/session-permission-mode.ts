@@ -3,6 +3,7 @@ export const SESSION_PERMISSION_MODES = Object.freeze({
   OPERATE: "operate",
   ASK: "ask",
   READ_ONLY: "read_only",
+  PLAN: "plan",
 });
 
 export const SESSION_APPROVAL_POLICIES = Object.freeze({
@@ -134,6 +135,7 @@ export function normalizeSessionPermissionMode(raw) {
   if (raw?.permissionMode === SESSION_PERMISSION_MODES.OPERATE) return SESSION_PERMISSION_MODES.OPERATE;
   if (raw?.permissionMode === SESSION_PERMISSION_MODES.ASK) return SESSION_PERMISSION_MODES.ASK;
   if (raw?.permissionMode === SESSION_PERMISSION_MODES.READ_ONLY) return SESSION_PERMISSION_MODES.READ_ONLY;
+  if (raw?.permissionMode === SESSION_PERMISSION_MODES.PLAN) return SESSION_PERMISSION_MODES.PLAN;
   if (raw?.accessMode === "operate") return SESSION_PERMISSION_MODES.OPERATE;
   if (raw?.accessMode === "read_only") return SESSION_PERMISSION_MODES.READ_ONLY;
   if (raw?.planMode === true) return SESSION_PERMISSION_MODES.READ_ONLY;
@@ -175,7 +177,8 @@ export function legacyAccessModeFromPermissionMode(mode) {
 }
 
 export function isReadOnlyPermissionMode(mode) {
-  return normalizeSessionPermissionMode(mode) === SESSION_PERMISSION_MODES.READ_ONLY;
+  const normalized = normalizeSessionPermissionMode(mode);
+  return normalized === SESSION_PERMISSION_MODES.READ_ONLY || normalized === SESSION_PERMISSION_MODES.PLAN;
 }
 
 // 拦截分层（#1614）：deny 必须标明是哪一层拦的 + 怎么解锁，让模型/用户能自助走出去。
@@ -261,7 +264,7 @@ function classifyDeclaredToolPermission(mode, toolName, context) {
   if (!hasDeclaredPermissionBoundary(permission)) return null;
   if (isDeclaredReadOnly(permission)) return { action: "allow" };
   if (mode === SESSION_PERMISSION_MODES.OPERATE) return { action: "allow" };
-  if (mode === SESSION_PERMISSION_MODES.READ_ONLY) return blockedByReadOnly(toolName, context);
+  if (isReadOnlyPermissionMode(mode)) return blockedByReadOnly(toolName, context);
   if (mode === SESSION_PERMISSION_MODES.AUTO) {
     return isDeclaredAutoAllow(permission) ? { action: "allow" } : review(toolName);
   }
@@ -270,7 +273,7 @@ function classifyDeclaredToolPermission(mode, toolName, context) {
 
 function classifyBrowserAction(mode, action, context) {
   if (BROWSER_READ_ACTIONS.has(action)) return { action: "allow" };
-  if (mode === SESSION_PERMISSION_MODES.READ_ONLY) return blockedByReadOnly("browser", context);
+  if (isReadOnlyPermissionMode(mode)) return blockedByReadOnly("browser", context);
   if (mode === SESSION_PERMISSION_MODES.AUTO) return review("browser");
   if (mode === SESSION_PERMISSION_MODES.ASK) return prompt("browser");
   return { action: "allow" };
@@ -278,14 +281,14 @@ function classifyBrowserAction(mode, action, context) {
 
 function classifyTerminalAction(mode, action, context) {
   if (TERMINAL_READ_ACTIONS.has(action)) return { action: "allow" };
-  if (mode === SESSION_PERMISSION_MODES.READ_ONLY) return blockedByReadOnly("terminal", context);
+  if (isReadOnlyPermissionMode(mode)) return blockedByReadOnly("terminal", context);
   if (mode === SESSION_PERMISSION_MODES.AUTO) return review("terminal");
   if (mode === SESSION_PERMISSION_MODES.ASK) return prompt("terminal");
   return { action: "allow" };
 }
 
 function classifyExecCommandAction(mode, params, context) {
-  if (mode === SESSION_PERMISSION_MODES.READ_ONLY) return blockedByReadOnly("exec_command", context);
+  if (isReadOnlyPermissionMode(mode)) return blockedByReadOnly("exec_command", context);
   if (params?.tty === true) {
     if (mode === SESSION_PERMISSION_MODES.AUTO) return review("exec_command");
     if (mode === SESSION_PERMISSION_MODES.ASK) return prompt("exec_command");
@@ -295,7 +298,7 @@ function classifyExecCommandAction(mode, params, context) {
 }
 
 function classifyWriteStdinAction(mode, context) {
-  if (mode === SESSION_PERMISSION_MODES.READ_ONLY) return blockedByReadOnly("write_stdin", context);
+  if (isReadOnlyPermissionMode(mode)) return blockedByReadOnly("write_stdin", context);
   if (mode === SESSION_PERMISSION_MODES.AUTO) return review("write_stdin");
   if (mode === SESSION_PERMISSION_MODES.ASK) return prompt("write_stdin");
   return { action: "allow" };
@@ -303,13 +306,13 @@ function classifyWriteStdinAction(mode, context) {
 
 function classifySessionFoldersAction(mode, action, context) {
   if (action === "list") return { action: "allow" };
-  if (mode === SESSION_PERMISSION_MODES.READ_ONLY) return blockedByReadOnly("session_folders", context);
+  if (isReadOnlyPermissionMode(mode)) return blockedByReadOnly("session_folders", context);
   return { action: "allow" };
 }
 
 function classifyFileAction(mode, action, context) {
   if (FILE_READ_ACTIONS.has(action)) return { action: "allow" };
-  if (mode === SESSION_PERMISSION_MODES.READ_ONLY) return blockedByReadOnly("file", context);
+  if (isReadOnlyPermissionMode(mode)) return blockedByReadOnly("file", context);
   if (mode === SESSION_PERMISSION_MODES.ASK) return prompt("file");
   return { action: "allow" };
 }
@@ -337,11 +340,12 @@ export function classifySessionPermission({ mode, toolName, params, context }: {
   if (name === "session_folders") return classifySessionFoldersAction(normalized, params?.action, context);
   if (name === "file") return classifyFileAction(normalized, params?.action, context);
   if (name === "computer") {
-    if (normalized === SESSION_PERMISSION_MODES.READ_ONLY) return blockedByReadOnly(name, context);
+    if (isReadOnlyPermissionMode(normalized)) return blockedByReadOnly(name, context);
     return { action: "allow" };
   }
   if (normalized === SESSION_PERMISSION_MODES.OPERATE) return { action: "allow" };
   if (normalized === SESSION_PERMISSION_MODES.READ_ONLY) return blockedByReadOnly(name, context);
+  if (normalized === SESSION_PERMISSION_MODES.PLAN) return blockedByReadOnly(name, context);
   if (normalized === SESSION_PERMISSION_MODES.AUTO) {
     if (AUTO_REVIEW_TOOLS.has(name)) return review(name);
     if (SIDE_EFFECT_TOOLS.has(name)) return { action: "allow" };

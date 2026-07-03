@@ -124,4 +124,4 @@ iter/<迭代名>    — 每轮迭代的独立工作分支，从 develop 分出
 | `tests/README.md` | 官方测试分层策略 |
 
 ## 当前迭代目标
-`iter/task-tree` — Task 树：TaskRegistry 增加 parent_task_id + LLM 可见 task 工具
+`iter/plan-workflow` — Plan 模式：独立 phase 字段 + 工具拦截 + plan prompt + plan_confirm

@@ -2,7 +2,7 @@ import type { Session, SessionCapabilityDrift, SessionPermissionMode, SessionStr
 import type { SessionConfirmationBlock, PendingQuestionBlock } from './chat-types';
 import type { ThinkingLevel } from './model-slice';
 
-const SESSION_PERMISSION_MODES = new Set(['auto', 'operate', 'ask', 'read_only']);
+const SESSION_PERMISSION_MODES = new Set(['auto', 'operate', 'ask', 'read_only', 'plan']);
 
 function normalizeSessionPermissionMode(mode: unknown): SessionPermissionMode {
   return typeof mode === 'string' && SESSION_PERMISSION_MODES.has(mode)

@@ -158,7 +158,7 @@ function isPendingNewSessionDraftView(): boolean {
     && !state.pendingSessionSwitchPath;
 }
 
-const SESSION_PERMISSION_MODES = new Set(['auto', 'operate', 'ask', 'read_only']);
+const SESSION_PERMISSION_MODES = new Set(['auto', 'operate', 'ask', 'read_only', 'plan']);
 
 function normalizeSessionPermissionMode(mode: unknown): SessionPermissionMode {
   return typeof mode === 'string' && SESSION_PERMISSION_MODES.has(mode)

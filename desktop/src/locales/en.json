@@ -355,6 +355,7 @@
     "operateMode": "Full access",
     "askMode": "Ask before acting",
     "readOnlyMode": "Read-only mode",
+    "planMode": "Plan mode",
     "accessModeLocked": "Access mode cannot be changed right now",
     "deskContext": "With desk context",
     "pastedImage": "Pasted image",
