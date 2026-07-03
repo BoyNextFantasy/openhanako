@@ -4,14 +4,15 @@ import { useI18n } from '../../hooks/use-i18n';
 import { useStore } from '../../stores';
 import styles from './InputArea.module.css';
 
-export type PermissionMode = 'auto' | 'operate' | 'ask' | 'read_only';
+export type PermissionMode = 'auto' | 'operate' | 'ask' | 'read_only' | 'plan';
 
-const PERMISSION_MODES: PermissionMode[] = ['auto', 'operate', 'ask', 'read_only'];
+const PERMISSION_MODES: PermissionMode[] = ['auto', 'operate', 'ask', 'read_only', 'plan'];
 
 function permissionModeLabelKey(mode: PermissionMode) {
   if (mode === 'auto') return 'input.autoMode';
   if (mode === 'read_only') return 'input.readOnlyMode';
   if (mode === 'ask') return 'input.askMode';
+  if (mode === 'plan') return 'input.planMode';
   return 'input.operateMode';
 }
 
@@ -36,6 +37,15 @@ export function PermissionModeIcon({ mode }: { mode: PermissionMode }) {
         <circle cx="12" cy="12" r="9" />
         <path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 1.7-2.5 2-2.5 4" />
         <path d="M12 17h.01" />
+      </svg>
+    );
+  }
+  if (mode === 'plan') {
+    return (
+      <svg data-permission-mode={mode} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="4" y="4" width="16" height="16" rx="2" />
+        <line x1="8" y1="10" x2="16" y2="10" />
+        <line x1="8" y1="14" x2="12" y2="14" />
       </svg>
     );
   }

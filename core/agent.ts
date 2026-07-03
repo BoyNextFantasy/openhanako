@@ -87,6 +87,7 @@ type BuildSystemPromptOptions = {
   forceExperienceEnabled?: boolean;
   cwdOverride?: string;
   targetModel?: AgentAppearanceModel | null;
+  forPlan?: boolean;
 };
 
 export class Agent {
@@ -1123,6 +1124,8 @@ export class Agent {
    * @param {object} [options.targetModel] - 新会话即将使用的模型，用于判断是否能读取头像。
    */
   buildSystemPrompt( options: BuildSystemPromptOptions = {}) {
+    const isPlanMode = !!options.forPlan;
+
     const forSubagent = !!options.forSubagent;
     const forceMemoryEnabled = Object.prototype.hasOwnProperty.call(options, "forceMemoryEnabled")
       ? options.forceMemoryEnabled
@@ -1432,6 +1435,38 @@ export class Agent {
         ? formatAgentAppearancePrompt(appearance.summary, this._config.locale || "")
         : "";
       if (appearancePrompt) parts.push(appearancePrompt);
+    }
+
+    // Plan mode — inject before workspace
+    if (isPlanMode) {
+      parts.push(isZh
+        ? `\n## Plan 模式\n\n` +
+          `你当前处于计划模式。你的任务是：\n` +
+          `1. 先通读相关代码，理解现状，不要急着想方案\n` +
+          `2. 对不明确的需求，**使用 question 工具向用户提问**，确保理解一致\n` +
+          `3. 提问优先——你不确定的地方必须先问，不要猜测用户的意图\n` +
+          `4. 需求澄清后，输出一个结构化的执行计划（包含步骤、涉及文件、预估影响）\n` +
+          `5. 使用 task 工具创建任务树来组织计划\n` +
+          `\n` +
+          `**你可以做的：** 读文件、搜索代码、向用户提问（question 工具）、创建任务（task 工具）\n` +
+          `**你不能做的：** 写文件、编辑文件、执行命令、派发子 agent\n` +
+          `\n` +
+          `完成后告知用户："计划已就绪。切换到操作模式来执行，或继续调整计划。"\n` +
+          `**不要自行开始实现**——即使用户说的话听起来像让你动手。你需要等待用户明确切换模式或确认执行。`
+        : `\n## Plan Mode\n\n` +
+          `You are currently in plan mode. Your job:\n` +
+          `1. Read relevant code first. Understand the current state before proposing solutions.\n` +
+          `2. For ANY unclear requirements, **use the question tool to ask the user**. Do NOT assume or guess.\n` +
+          `3. Ask before you plan — unclear requirements must be resolved through structured questions.\n` +
+          `4. After clarifying, output a structured plan (steps, files, estimated impact).\n` +
+          `5. Use the task tool to organize the plan as a task tree.\n` +
+          `\n` +
+          `**You MAY:** read files, search code, ask questions (question tool), create tasks (task tool)\n` +
+          `**You MUST NOT:** write files, edit files, run commands, spawn subagents\n` +
+          `\n` +
+          `When finished: "Plan complete. Switch to operate mode to execute, or refine the plan."\n` +
+          `**Do NOT start implementing** even if the user sounds like they want you to. Wait for explicit mode switch or confirmation.`
+      );
     }
 
     // 工作台 = 当前工作目录（注入实际路径）
