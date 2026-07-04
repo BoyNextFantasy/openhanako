@@ -15,7 +15,10 @@
 }
 
 .panel {
+  display: flex;
+  flex-direction: column;
   max-width: var(--chat-input-column-width);
+  max-height: 70vh;
   margin: 0 auto var(--space-12);
   background: var(--bg-card);
   border: 1px solid var(--border);
@@ -24,6 +27,13 @@
   padding: var(--space-16) var(--space-20);
   animation: hana-fade-up var(--duration-slow) var(--ease-out);
   color: var(--text);
+  overflow: hidden;
+}
+
+.questionsScroll {
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
 }
 
 .questionGroup + .questionGroup {

@@ -101,51 +101,53 @@ function QuestionOverlay({ block, sessionPath, onResolve, onDismiss }: QuestionO
       <div className={s.backdrop} onClick={onDismiss} />
       <div className={s.wrapper}>
         <div className={s.panel}>
-          {block.questions.map((q, qIdx) => (
-            <div key={qIdx} className={qIdx > 0 ? s.questionGroup : undefined}>
-              {q.header && <div className={s.header}>{q.header}</div>}
-              <div className={s.questionText}>{q.question}</div>
-              <div className={s.options}>
-                {q.options.map((opt) => {
-                  const selected = answers[qIdx]?.includes(opt.label);
-                  return (
-                    <button
-                      key={opt.label}
-                      type="button"
-                      onClick={() => handleToggleOption(qIdx, opt.label, q.multiple)}
-                      className={`${s.optionBtn}${selected ? ` ${s.optionBtnSelected}` : ''}`}
-                    >
-                      <div className={`${s.optionLabel}${selected ? ` ${s.optionLabelSelected}` : ''}`}>
-                        {opt.label}
-                      </div>
-                      {opt.description && (
-                        <div className={`${s.optionDesc}${selected ? ` ${s.optionDescSelected}` : ''}`}>
-                          {opt.description}
+          <div className={s.questionsScroll}>
+            {block.questions.map((q, qIdx) => (
+              <div key={qIdx} className={qIdx > 0 ? s.questionGroup : undefined}>
+                {q.header && <div className={s.header}>{q.header}</div>}
+                <div className={s.questionText}>{q.question}</div>
+                <div className={s.options}>
+                  {q.options.map((opt) => {
+                    const selected = answers[qIdx]?.includes(opt.label);
+                    return (
+                      <button
+                        key={opt.label}
+                        type="button"
+                        onClick={() => handleToggleOption(qIdx, opt.label, q.multiple)}
+                        className={`${s.optionBtn}${selected ? ` ${s.optionBtnSelected}` : ''}`}
+                      >
+                        <div className={`${s.optionLabel}${selected ? ` ${s.optionLabelSelected}` : ''}`}>
+                          {opt.label}
                         </div>
-                      )}
-                    </button>
-                  );
-                })}
-                <div
-                  className={`${s.customOption}${customTexts[qIdx] ? ` ${s.customOptionSelected}` : ''}`}
-                  onClick={() => inputRefs.current[qIdx]?.focus()}
-                >
-                  <span className={`${s.customLabel}${customTexts[qIdx] ? ` ${s.customLabelSelected}` : ''}`}>
-                    Custom
-                  </span>
-                  <input
-                    ref={(el) => { inputRefs.current[qIdx] = el; }}
-                    className={s.customInput}
-                    type="text"
-                    value={customTexts[qIdx]}
-                    onChange={(e) => handleCustomInput(qIdx, e.target.value)}
-                    placeholder="Type your answer..."
-                    maxLength={200}
-                  />
+                        {opt.description && (
+                          <div className={`${s.optionDesc}${selected ? ` ${s.optionDescSelected}` : ''}`}>
+                            {opt.description}
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                  <div
+                    className={`${s.customOption}${customTexts[qIdx] ? ` ${s.customOptionSelected}` : ''}`}
+                    onClick={() => inputRefs.current[qIdx]?.focus()}
+                  >
+                    <span className={`${s.customLabel}${customTexts[qIdx] ? ` ${s.customLabelSelected}` : ''}`}>
+                      Custom
+                    </span>
+                    <input
+                      ref={(el) => { inputRefs.current[qIdx] = el; }}
+                      className={s.customInput}
+                      type="text"
+                      value={customTexts[qIdx]}
+                      onChange={(e) => handleCustomInput(qIdx, e.target.value)}
+                      placeholder="Type your answer..."
+                      maxLength={200}
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
           <div className={s.actions}>
             <button type="button" onClick={onDismiss} className={s.dismissBtn}>
               Dismiss
