@@ -1,0 +1,14 @@
+# 项目品牌化 — 初始化 Satori
+
+- **日期**：2026-06-29
+- **分支**：`iter/brand-satori`
+- **目标**：将 HanaAgent 重新品牌为 Satori，建立 AI 协作规范基础设施
+- **改动**：
+  - 创建 `AGENTS.md`、`CLAUDE.md` — AI 入口 + 协作规范
+  - 创建 `docs/迭代记录.md`、`docs/迭代计划.md` — 迭代管理
+  - `package.json` — name → `satori-cli`, productName → `Satori`, appId → `com.satori.app`
+  - 环境变量 `HANA_HOME` → `SATORI_HOME`（全库替换）
+  - 文档品牌更新（`doc/启动指南.md` 等）
+- **验证**：`npm test` — 23 failures（22 预存 + 1 已修品牌），6941/6974 passed
+- **推送**：已推送 ✅（`origin/iter/brand-satori`）
+- **合并**：未合并
