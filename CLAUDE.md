@@ -46,4 +46,4 @@ Satori —— 基于 Pi SDK 的 AI 编程助手 CLI，定位对标 Claude Code /
 ## 出问题了
 
 - 启动问题：`doc/启动指南.md` FAQ
-- 杀不掉旧进程：`Get-Process node,electron | Stop-Process -Force`，然后 `npm run build:renderer && npm start`
+- **杀进程前必须先问用户！** `Get-Process node,electron | Stop-Process` 会杀掉 Agent 自身进程。永远不要自行执行，提示用户手动操作。
