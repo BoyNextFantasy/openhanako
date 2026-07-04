@@ -21,7 +21,15 @@ Satori —— 基于 Pi SDK 的 AI 编程助手 CLI，定位对标 Claude Code /
 - 加工具：改 `core/agent.ts` + `shared/tool-categories.ts` + `core/session-permission-mode.ts`
 - 加模式：改 `core/session-coordinator.ts` + `core/session-permission-mode.ts`
 - 改记忆：改 `core/session-compactor.ts` + `lib/memory/fact-store.ts`
-- 详细规范：读 `CLAUDE.md` 里的协作铁律
+
+### 改代码的铁律
+
+1. **先读后改** — 理解现有逻辑再动手；先读 `tests/` 下对应测试文件
+2. **不降级** — 用最大努力解决，不主动降低方案
+3. **奥卡姆剃刀** — 最简方案
+4. **精准改动** — 不改无关文件，不引入无关变化
+5. **全面搜索** — 删/改模块时跨仓库 grep 所有引用
+6. **跑验证才算完成** — 不凭感觉说"应该没问题"
 
 ## 怎么测
 

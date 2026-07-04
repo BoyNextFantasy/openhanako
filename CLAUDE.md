@@ -1,45 +1,49 @@
-# Satori — AI 编程助手
+# AGENTS.md — 项目地图
 
-基于 HanaAgent/Hanako 改造的 CLI 编程助手。技术栈：Node 24 + TypeScript + Pi SDK + SQLite。
+## 我是谁
 
-## 当前迭代
+Satori —— 基于 Pi SDK 的 AI 编程助手 CLI，定位对标 Claude Code / OpenAI Codex CLI。
 
-见 `AGENTS.md` 地图 → `doc/迭代计划.md`
+## 我在哪
 
-## 协作铁律
+- 代码：`core/`（引擎）、`lib/tools/`（工具）、`cli/`（入口）、`desktop/`（Electron UI）
+- 当前分支：看 CLAUDE.md 顶部
+- 技术栈：Node 24 + TypeScript + Pi SDK + SQLite
 
-### 每次会话开始前
-1. 确认当前在正确分支（非 main；develop 和 iter/* 都可以）
-2. 读 `AGENTS.md` — 了解项目地图
-3. 读 `doc/迭代计划.md` — 了解当前待办
-4. 读最近的迭代文件（`doc/iterations/`）— 知道上次做了什么
+## 我要做什么
 
-### 每次改代码时
-1. **先读后改** — 理解现有逻辑再动手；读 `tests/` 下对应的测试文件，了解测试模式
-2. **不改的目录不做任何修改**（除非迭代计划指定）
-3. **精准改动，不引入无关变化**
-4. **全面搜索** — 删除/修改模块时，跨仓库 grep 所有引用（含 Desktop、测试文件），不遗漏调用点
+**当前活跃迭代**：见 `doc/迭代计划.md`
 
-### 每次改完后
-1. **先跑类型检查**：`npm run typecheck`（0 errors）
-2. **再跑测试**：`npx vitest run tests/xxx.test.ts` → `npm test`（不引入新失败）
-3. **核实启动**：`npm start` 确认服务能启动（14700 端口）
-4. **更新文档**：`doc/迭代计划.md` + `doc/iterations/<name>.md`
-5. **等待用户决定提交**，不主动 commit / push
+**上一次做了什么**：最近的迭代在 `doc/iterations/` — 按日期文件名排序，读最新的几个
 
-### 铁律
-- **不降级** — 用最大努力解决用户要求
-- **奥卡姆剃刀** — 修改代码以最简单方案为目标
-- **不相信"应该没问题"** — 跑验证命令拿到实际输出才算完成
+## 怎么改代码
 
-## 品牌命名
-- 项目名：Satori | npm 包：`satori-cli` | 环境变量：`SATORI_HOME` | CLI：`satori`
-- 包内保留 `hanako` / `HANA` 的代码引用不改（底层沿用原实现）
+- 加工具：改 `core/agent.ts` + `shared/tool-categories.ts` + `core/session-permission-mode.ts`
+- 加模式：改 `core/session-coordinator.ts` + `core/session-permission-mode.ts`
+- 改记忆：改 `core/session-compactor.ts` + `lib/memory/fact-store.ts`
 
-## Git 工作流
-```
-main       — 只同步上游，永不直接改
-develop    — 所有迭代合集，永远可运行
-iter/<名>  — 单次迭代工作分支，从 develop 分出
-```
-详见 `doc/git-工作流.md`
+### 改代码的铁律
+
+1. **先读后改** — 理解现有逻辑再动手；先读 `tests/` 下对应测试文件
+2. **不降级** — 用最大努力解决，不主动降低方案
+3. **奥卡姆剃刀** — 最简方案
+4. **精准改动** — 不改无关文件，不引入无关变化
+5. **全面搜索** — 删/改模块时跨仓库 grep 所有引用
+6. **跑验证才算完成** — 不凭感觉说"应该没问题"
+
+## 怎么测
+
+- 单文件测试：`npx vitest run tests/xxx.test.ts`
+- 全量测试：`npm test`
+- 类型检查：`npm run typecheck`（含 3 个 tsconfig）
+- 测试指南：`doc/测试指南.md`
+
+## 怎么提交
+
+- 迭代分支：`git checkout develop` → `git checkout -b iter/<name>` → 开发 → 验证 → 提交 → 合回 develop
+- Git 流程：`doc/git-工作流.md`
+
+## 出问题了
+
+- 启动问题：`doc/启动指南.md` FAQ
+- 杀不掉旧进程：`Get-Process node,electron | Stop-Process -Force`，然后 `npm run build:renderer && npm start`
