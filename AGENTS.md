@@ -16,20 +16,31 @@ Satori —— 基于 Pi SDK 的 AI 编程助手 CLI，定位对标 Claude Code /
 
 **上一次做了什么**：最近的迭代在 `doc/iterations/` — 按日期文件名排序，读最新的几个
 
-## 怎么改代码
+## 协作铁律
 
-- 加工具：改 `core/agent.ts` + `shared/tool-categories.ts` + `core/session-permission-mode.ts`
-- 加模式：改 `core/session-coordinator.ts` + `core/session-permission-mode.ts`
-- 改记忆：改 `core/session-compactor.ts` + `lib/memory/fact-store.ts`
-
-### 改代码的铁律
-
+### 动手之前
 1. **先读后改** — 理解现有逻辑再动手；先读 `tests/` 下对应测试文件
-2. **不降级** — 用最大努力解决，不主动降低方案
-3. **奥卡姆剃刀** — 最简方案
-4. **精准改动** — 不改无关文件，不引入无关变化
-5. **全面搜索** — 删/改模块时跨仓库 grep 所有引用
-6. **跑验证才算完成** — 不凭感觉说"应该没问题"
+2. **先用脑子** — 复杂需求（多文件改动、架构决策、不确定方案）别直接写代码。你有两个工具：
+   - `compose:brainstorm` — 结构化需求澄清 + 方案对比，防止理解偏差
+   - `grill-with-docs` — 对方案做追问式审查，同时产出 ADR 和词汇表
+   - **动手前先问用户：要不要用 brainstorm/grill 协调好方案再写代码？**
+3. **不降级** — 用最大努力解决，不主动降低方案
+
+### 改动时
+4. **奥卡姆剃刀** — 最简方案
+5. **精准改动** — 不改无关文件，不引入无关变化
+6. **全面搜索** — 删/改模块时跨仓库 grep 所有引用（含 Desktop、测试文件）
+
+### 改完之后
+7. **跑验证才算完成** — `npm run typecheck`（0 errors）→ `npx vitest run tests/xxx.test.ts` → `npm test`（不引入新失败）→ `npm start`（确认服务启动）
+8. **不凭感觉说"应该没问题"**
+
+## Git 纪律
+
+- **任何 git 提交、合并之前必须先问用户并得到确认。** 不准自行 commit / merge / push。
+- 加新文件时只 stage 特定文件（`git add <文件>`），不准用 `git add -A` 或 `git add .`
+- 迭代分支：`git checkout develop` → `git checkout -b iter/<name>` → 开发 → 验证 → 等用户确认 → 合回 develop
+- 详细流程：`doc/git-工作流.md`
 
 ## 怎么测
 
@@ -37,11 +48,6 @@ Satori —— 基于 Pi SDK 的 AI 编程助手 CLI，定位对标 Claude Code /
 - 全量测试：`npm test`
 - 类型检查：`npm run typecheck`（含 3 个 tsconfig）
 - 测试指南：`doc/测试指南.md`
-
-## 怎么提交
-
-- 迭代分支：`git checkout develop` → `git checkout -b iter/<name>` → 开发 → 验证 → 提交 → 合回 develop
-- Git 流程：`doc/git-工作流.md`
 
 ## 出问题了
 
