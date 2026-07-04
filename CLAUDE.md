@@ -7,7 +7,7 @@ Satori —— 基于 Pi SDK 的 AI 编程助手 CLI，定位对标 Claude Code /
 ## 我在哪
 
 - 代码：`core/`（引擎）、`lib/tools/`（工具）、`cli/`（入口）、`desktop/`（Electron UI）
-- 当前分支：看 CLAUDE.md 顶部
+- 当前分支：`git branch --show-current`（在 develop 或 iter/* 下工作）
 - 技术栈：Node 24 + TypeScript + Pi SDK + SQLite
 
 ## 我要做什么
