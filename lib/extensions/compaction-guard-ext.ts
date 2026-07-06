@@ -130,6 +130,9 @@ export function createCompactionGuardExtension(opts: Record<string, any> = {}) {
   const buildSessionCacheSnapshot = typeof opts.buildSessionCacheSnapshot === "function"
     ? opts.buildSessionCacheSnapshot
     : null;
+  const onPostCompact = typeof opts.onPostCompact === "function"
+    ? opts.onPostCompact
+    : null;
 
   function readCompactionMode(event: any, ctx: any) {
     try {
@@ -386,5 +389,17 @@ export function createCompactionGuardExtension(opts: Record<string, any> = {}) {
         return { cancel: true };
       }
     });
+
+    // P0: Post-compaction context re-injection via session_compact event
+    // Fires after EVERY compaction (Pi SDK native AND our bypass paths).
+    if (onPostCompact) {
+      pi.on("session_compact", (event: any, ctx: any) => {
+        try {
+          onPostCompact({ event, ctx });
+        } catch (err) {
+          log.warn(`[L3] session_compact re-injection failed: ${err?.message || err}`);
+        }
+      });
+    }
   };
 }

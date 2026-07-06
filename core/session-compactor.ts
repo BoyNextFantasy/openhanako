@@ -374,6 +374,7 @@ export async function appendCompactionResultToSession(session, result, { fromExt
     fromExtension,
   );
   replaceSessionMessages(session);
+
   await emitSessionCompactEvent(session, compactionEntryId, fromExtension);
   return result;
 }
@@ -564,6 +565,17 @@ export async function runCachePreservingCompactionForSession(session: any, {
   if (!compactionSettings) throw new Error("runCachePreservingCompactionForSession: missing compaction settings");
 
   const branchEntries = session.sessionManager.getBranch();
+
+  // P1b: Anti-thrashing guard — prevent infinite compaction loops
+  const MAX_COMPACTION_PER_CYCLE = 3;
+  if (!session._compactionAttempts) session._compactionAttempts = 0;
+  if (session._compactionAttempts >= MAX_COMPACTION_PER_CYCLE) {
+    throw new Error(
+      "Compaction loop detected: context refills immediately after compaction. " +
+      "The session may contain content too large to compress."
+    );
+  }
+
   if (emitLifecycle) {
     emitCompactionProgress(session, { type: "compaction_start", reason: lifecycleReason });
   }
@@ -640,6 +652,23 @@ export async function runCachePreservingCompactionForSession(session: any, {
         willRetry: false,
       });
     }
+
+    // P1b: Post-compaction overflow check
+    try {
+      const usage = session.getContextUsage?.();
+      if (usage && typeof usage.tokens === "number" && typeof usage.contextWindow === "number"
+          && usage.contextWindow > 0) {
+        const fillRatio = usage.tokens / usage.contextWindow;
+        if (fillRatio > 0.85) {
+          session._compactionAttempts = (session._compactionAttempts || 0) + 1;
+        } else {
+          session._compactionAttempts = 0;
+        }
+      }
+    } catch (_e) {
+      // Non-critical
+    }
+
     return saved;
   } catch (error) {
     if (emitLifecycle) {

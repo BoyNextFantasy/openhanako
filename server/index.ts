@@ -102,6 +102,7 @@ import { ActivityHub } from "../lib/activity-hub.ts";
 import { WorkflowActivityStore } from "../lib/workflow-activity-store.ts";
 import { createDeferredResultExtension } from "../lib/extensions/deferred-result-ext.ts";
 import { createCompactionGuardExtension } from "../lib/extensions/compaction-guard-ext.ts";
+import { createToolOutputPruneExtension } from "../lib/extensions/tool-output-prune-ext.ts";
 import { getResolvedCompactionMode } from "../shared/compaction-mode.ts";
 import { Hub } from "../hub/index.ts";
 import { startCLI } from "./cli.ts";
@@ -335,9 +336,29 @@ engine.setDeferredResultStore(deferredResultStore);
 registerDeferredResultBusHandlers(hub.eventBus, deferredResultStore);
 
 await engine.registerExtensionFactory(createDeferredResultExtension(deferredResultStore));
+await engine.registerExtensionFactory(createToolOutputPruneExtension());
 await engine.registerExtensionFactory(createCompactionGuardExtension({
   usageLedger: engine.usageLedger,
   getCompactionMode: () => getResolvedCompactionMode(engine.preferences),
+  onPostCompact: ({ ctx }: any) => {
+    // P0: Re-inject persistent context after every compaction
+    try {
+      const sessionPath = ctx?.sessionManager?.getSessionFile?.();
+      if (!sessionPath) return;
+      const session = engine.getSessionByPath?.(sessionPath);
+      const agent = session?.agent;
+      if (agent?.buildSystemPrompt) {
+        const newPrompt = agent.buildSystemPrompt({
+          forceMemoryEnabled: agent._memoryMasterEnabled,
+        });
+        if (newPrompt && agent.state) {
+          agent.state.systemPrompt = newPrompt;
+        }
+      }
+    } catch {
+      // best-effort
+    }
+  },
   buildSessionCacheSnapshot: (sessionPath, options) => engine.buildSessionCacheSnapshot(sessionPath, options),
   buildUsageContext: ({ ctx }) => {
     const sessionPath = ctx?.sessionManager?.getSessionFile?.() || null;
