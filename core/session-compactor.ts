@@ -546,6 +546,23 @@ function replaceSessionMessages(session) {
   }
 }
 
+function updateCompactionAttemptsAfterCompaction(session) {
+  try {
+    const usage = session.getContextUsage?.();
+    if (usage && typeof usage.tokens === "number" && typeof usage.contextWindow === "number"
+        && usage.contextWindow > 0) {
+      const fillRatio = usage.tokens / usage.contextWindow;
+      if (fillRatio > 0.85) {
+        session._compactionAttempts = (session._compactionAttempts || 0) + 1;
+      } else {
+        session._compactionAttempts = 0;
+      }
+    }
+  } catch (_e) {
+    // Non-critical
+  }
+}
+
 export async function runCachePreservingCompactionForSession(session: any, {
   settings,
   model = session?.model,
@@ -614,6 +631,7 @@ export async function runCachePreservingCompactionForSession(session: any, {
           willRetry: false,
         });
       }
+      updateCompactionAttemptsAfterCompaction(session);
       return result;
     }
 
@@ -654,20 +672,7 @@ export async function runCachePreservingCompactionForSession(session: any, {
     }
 
     // P1b: Post-compaction overflow check
-    try {
-      const usage = session.getContextUsage?.();
-      if (usage && typeof usage.tokens === "number" && typeof usage.contextWindow === "number"
-          && usage.contextWindow > 0) {
-        const fillRatio = usage.tokens / usage.contextWindow;
-        if (fillRatio > 0.85) {
-          session._compactionAttempts = (session._compactionAttempts || 0) + 1;
-        } else {
-          session._compactionAttempts = 0;
-        }
-      }
-    } catch (_e) {
-      // Non-critical
-    }
+    updateCompactionAttemptsAfterCompaction(session);
 
     return saved;
   } catch (error) {

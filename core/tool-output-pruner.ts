@@ -49,6 +49,8 @@ export function pruneToolOutputs(
     }
   }
 
+  if (userTurnsLeft > 0) return messages;
+
   // Phase 2: prune tool outputs before the cutoff
   let tokensAccumulated = 0;
   let tokensPruned = 0;

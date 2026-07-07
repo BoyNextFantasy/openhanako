@@ -170,27 +170,27 @@ export function createTaskTool(deps) {
       }
 
       if (op.action === "start") {
-        const t = registry.startLLMTask(op.id);
+        const t = registry.startLLMTask(op.id, { eventSummary: op.event_summary });
         return { content: [{ type: "text", text: `start → ${t.status} (${t._llmSummary})` }] };
       }
 
       if (op.action === "block") {
-        const t = registry.blockLLMTask(op.id);
+        const t = registry.blockLLMTask(op.id, { eventSummary: op.event_summary });
         return { content: [{ type: "text", text: `block → ${t.status}` }] };
       }
 
       if (op.action === "unblock") {
-        const t = registry.unblockLLMTask(op.id);
+        const t = registry.unblockLLMTask(op.id, { eventSummary: op.event_summary });
         return { content: [{ type: "text", text: `unblock → ${t.status}` }] };
       }
 
       if (op.action === "done") {
-        const t = registry.doneLLMTask(op.id);
+        const t = registry.doneLLMTask(op.id, { eventSummary: op.event_summary });
         return { content: [{ type: "text", text: `done → ${t.status} (${t._llmSummary})` }] };
       }
 
       if (op.action === "abandon") {
-        const t = registry.abandonLLMTask(op.id);
+        const t = registry.abandonLLMTask(op.id, { eventSummary: op.event_summary });
         return { content: [{ type: "text", text: `abandon → ${t.status}` }] };
       }
 

@@ -45,6 +45,19 @@ describe("pruneToolOutputs", () => {
     expect(result[1].content[0].text).toBe("[工具输出已省略]");
   });
 
+  it("protects the current turn when fewer than protectedTurns user turns exist", () => {
+    const largeText = "x".repeat(70_000 * 4);
+    const msgs = [
+      makeUser("read this large file"),
+      makeToolResult(largeText),
+    ];
+
+    const result = pruneToolOutputs(msgs);
+
+    expect(result[1].content[0].text.length).toBe(largeText.length);
+    expect(result[1].content[0].text).not.toBe("[工具输出已省略]");
+  });
+
   it("protects tool results under token budget", () => {
     const smallText = "small output";
     const msgs: any[] = [];

@@ -835,6 +835,38 @@ describe('initApp bridge indicator', () => {
     }));
   });
 
+  it('syncs plan permission mode from websocket permission_mode events', async () => {
+    const dispatchEvent = vi.fn();
+    (globalThis as Record<string, unknown>).window = {
+      addEventListener: vi.fn(),
+      dispatchEvent,
+    };
+    Object.assign(mockState, {
+      currentSessionPath: '/session/a.jsonl',
+      currentSessionId: null,
+      sessionLocatorsById: {},
+      sessions: [],
+      sessionPermissionMode: 'ask',
+      setSessionPermissionMode: vi.fn((mode: string) => {
+        mockState.sessionPermissionMode = mode;
+      }),
+    });
+
+    const { handleServerMessage } = await import('../services/ws-message-handler');
+    handleServerMessage({
+      type: 'permission_mode',
+      sessionPath: '/session/a.jsonl',
+      mode: 'plan',
+    });
+
+    expect(mockState.setSessionPermissionMode).toHaveBeenCalledWith('plan');
+    expect(mockState.sessionPermissionMode).toBe('plan');
+    expect(dispatchEvent).toHaveBeenCalledWith(expect.objectContaining({
+      type: 'hana-plan-mode',
+      detail: expect.objectContaining({ mode: 'plan' }),
+    }));
+  });
+
   it('opens the in-window settings modal when main process requests settings', async () => {
     let openSettingsHandler: ((tab?: string) => void) | null = null;
     (globalThis as Record<string, unknown>).window = {
