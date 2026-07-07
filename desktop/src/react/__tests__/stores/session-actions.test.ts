@@ -625,6 +625,19 @@ function mockPermissionDefault(mode = 'ask') {
       expect(mockState.pendingNewSessionPermissionMode).toBe('read_only');
     });
 
+    it('treats the runtime plan permission default as an enabled plan-mode event', async () => {
+      mockFetch.mockResolvedValueOnce(jsonResponse({
+        permissionMode: 'plan',
+      }));
+
+      await createNewSession();
+
+      const permissionEvent = dispatchedEvents.filter(e => e.type === 'hana-plan-mode').at(-1);
+      expect(permissionEvent?.detail).toEqual({ enabled: true, mode: 'plan' });
+      expect(mockState.sessionPermissionMode).toBe('plan');
+      expect(mockState.pendingNewSessionPermissionMode).toBe('plan');
+    });
+
     it('initializes pending new-session thinking from the server default', async () => {
       (mockState as Record<string, unknown>).thinkingLevel = 'high';
       mockFetch.mockImplementation(async (url: string) => {

@@ -37,9 +37,13 @@ declare function t(key: string, vars?: Record<string, string>): any;
 let requestContextUsage: (sessionPath: string) => void = () => {};
 
 function syncSessionPermissionMode(mode: unknown) {
-  if (mode === 'auto' || mode === 'operate' || mode === 'ask' || mode === 'read_only') {
+  if (mode === 'auto' || mode === 'operate' || mode === 'ask' || mode === 'read_only' || mode === 'plan') {
     useStore.getState().setSessionPermissionMode?.(mode);
   }
+}
+
+function isPlanModeEnabled(mode: unknown): boolean {
+  return mode === 'read_only' || mode === 'plan';
 }
 
 function nonEmptyString(value: unknown): string | null {
@@ -771,7 +775,7 @@ export function handleServerMessage(msg: any): void {
       if (isFocusedSessionMessage(msg)) {
         syncSessionPermissionMode(msg.mode);
         window.dispatchEvent(new CustomEvent('hana-plan-mode', {
-          detail: { enabled: msg.mode === 'read_only', mode: msg.mode },
+          detail: { enabled: isPlanModeEnabled(msg.mode), mode: msg.mode },
         }));
       }
       break;
@@ -783,7 +787,7 @@ export function handleServerMessage(msg: any): void {
         syncSessionPermissionMode(mode);
         window.dispatchEvent(new CustomEvent('hana-plan-mode', {
           detail: {
-            enabled: msg.readOnly === true,
+            enabled: msg.readOnly === true || isPlanModeEnabled(mode),
             mode,
           },
         }));

@@ -289,14 +289,14 @@ function syncMobilePermissionMode(session: Pick<Session, 'permissionMode'> | nul
   if (!isSessionPermissionMode(mode)) return;
   window.dispatchEvent(new CustomEvent('hana-plan-mode', {
     detail: {
-      enabled: mode === 'read_only',
+      enabled: mode === 'read_only' || mode === 'plan',
       mode,
     },
   }));
 }
 
 function isSessionPermissionMode(value: unknown): value is SessionPermissionMode {
-  return value === 'auto' || value === 'operate' || value === 'ask' || value === 'read_only';
+  return value === 'auto' || value === 'operate' || value === 'ask' || value === 'read_only' || value === 'plan';
 }
 
 function configureMobileMessageHandlers(): void {

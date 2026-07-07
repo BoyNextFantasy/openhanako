@@ -170,7 +170,7 @@ function emitSessionPermissionMode(mode: unknown): SessionPermissionMode {
   const normalized = normalizeSessionPermissionMode(mode);
   useStore.getState().setSessionPermissionMode?.(normalized);
   window.dispatchEvent(new CustomEvent('hana-plan-mode', {
-    detail: { enabled: normalized === 'read_only', mode: normalized },
+    detail: { enabled: normalized === 'read_only' || normalized === 'plan', mode: normalized },
   }));
   return normalized;
 }

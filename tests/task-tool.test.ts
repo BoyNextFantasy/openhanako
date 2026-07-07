@@ -290,6 +290,35 @@ describe("task tool", () => {
     expect(unblockResult.content[0].text).toContain("open");
   });
 
+  it("persists lifecycle event_summary provided through the task tool", async () => {
+    const r = createRegistry();
+    const tool = makeTaskTool(r);
+
+    const expectLastEvent = async (id, expected) => {
+      const result = await tool.execute(`get-${id}`, { operation: { action: "get", id } });
+      expect(result.content[0].text).toContain(`"last_event": "${expected}"`);
+    };
+
+    await tool.execute("create-start", { operation: { action: "create", summary: "Start details" } });
+    await tool.execute("start", { operation: { action: "start", id: "T1", event_summary: "beginning work" } });
+    await expectLastEvent("T1", "started: beginning work");
+
+    await tool.execute("create-block", { operation: { action: "create", summary: "Block details" } });
+    await tool.execute("block", { operation: { action: "block", id: "T2", event_summary: "waiting on dependency" } });
+    await expectLastEvent("T2", "blocked: waiting on dependency");
+
+    await tool.execute("unblock", { operation: { action: "unblock", id: "T2", event_summary: "dependency resolved" } });
+    await expectLastEvent("T2", "unblocked: dependency resolved");
+
+    await tool.execute("create-done", { operation: { action: "create", summary: "Done details" } });
+    await tool.execute("done", { operation: { action: "done", id: "T3", event_summary: "all tests pass" } });
+    await expectLastEvent("T3", "done: all tests pass");
+
+    await tool.execute("create-abandon", { operation: { action: "create", summary: "Abandon details" } });
+    await tool.execute("abandon", { operation: { action: "abandon", id: "T4", event_summary: "out of scope" } });
+    await expectLastEvent("T4", "abandoned: out of scope");
+  });
+
   it("done operation", async () => {
     const r = createRegistry();
     const tool = makeTaskTool(r);

@@ -415,6 +415,49 @@ describe("session-compactor", () => {
     expect(result.details.reason).toBe("cache-preserving-compaction-hard-truncate");
   });
 
+  it("counts hard-truncate compactions that still leave the context near full", async () => {
+    const preparation = {
+      firstKeptEntryId: "entry-keep",
+      tokensBefore: 9000,
+      settings: { reserveTokens: 2000, keepRecentTokens: 100 },
+    };
+    const branch = [
+      { type: "message", id: "entry-old", message: { role: "user", content: "old " + "x".repeat(2000) } },
+      { type: "message", id: "entry-keep", message: { role: "assistant", content: [{ type: "text", text: "keep" }] } },
+    ];
+    prepareCompactionMock.mockReturnValue(preparation);
+
+    const session = {
+      _compactionAttempts: 0,
+      model: { id: "tiny", reasoning: false, contextWindow: 1000 },
+      getContextUsage: vi.fn(() => ({ tokens: 900, contextWindow: 1000 })),
+      settingsManager: {
+        getCompactionSettings: vi.fn(() => ({ enabled: true, reserveTokens: 2000, keepRecentTokens: 100 })),
+      },
+      sessionManager: {
+        getBranch: vi.fn(() => branch),
+        appendCompaction: vi.fn(),
+        buildSessionContext: vi.fn(() => ({ messages: [{ role: "compactionSummary", summary: "truncated" }] })),
+      },
+      agent: {
+        state: {
+          systemPrompt: "system " + "x".repeat(2000),
+          messages: [{ role: "user", content: [{ type: "text", text: "x".repeat(6000) }] }],
+          tools: [],
+          thinkingLevel: "off",
+        },
+        streamFn: vi.fn(),
+        convertToLlm: vi.fn(async (messages) => messages),
+        replaceMessages: vi.fn(),
+      },
+    };
+
+    await runCachePreservingCompactionForSession(session as any);
+
+    expect(session.getContextUsage).toHaveBeenCalled();
+    expect(session._compactionAttempts).toBe(1);
+  });
+
   it("hard truncates direct session compaction when model context window is unknown", async () => {
     const preparation = {
       firstKeptEntryId: "entry-keep",
