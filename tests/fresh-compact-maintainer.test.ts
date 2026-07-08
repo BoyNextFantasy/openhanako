@@ -75,7 +75,6 @@ describe("FreshCompactMaintainer", () => {
       .toBeLessThan(bridgeSessionManager.freshCompactSession.mock.invocationCallOrder[0]);
     expect(result).toMatchObject({
       bridgeCompacted: 1,
-      phoneCompacted: 0,
       failed: 0,
       staleRemaining: 0,
     });

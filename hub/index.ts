@@ -36,6 +36,7 @@ export class Hub {
   declare _engine: any;
   declare _eventBus: any;
   declare _guestHandler: any;
+  declare _phoneAbortHandlers: any;
   declare _scheduler: any;
   declare _sessionHandlerCleanups: any;
   /**
@@ -46,6 +47,7 @@ export class Hub {
     this._engine = engine;
     this._eventBus = new EventBus();
     this._guestHandler = new GuestHandler({ hub: this });
+    this._phoneAbortHandlers = new Set();
     this._scheduler = new Scheduler({ hub: this });
 
     // 注入 Hub 回调到 Engine（单向：Hub → Engine，不再双向引用）
@@ -55,6 +57,8 @@ export class Hub {
       eventBus: this._eventBus,
       pauseForAgentSwitch: () => this.pauseForAgentSwitch(),
       resumeAfterAgentSwitch: () => this.resumeAfterAgentSwitch(),
+      registerAgentPhoneAbortHandler: (handler, filter) =>
+        this.registerAgentPhoneAbortHandler(handler, filter),
     });
 
     // 注入 EventBus（替代旧的 proxy hack）
@@ -76,6 +80,36 @@ export class Hub {
   /** @returns {import('../lib/bridge/bridge-manager.ts').BridgeManager|null} */
   get bridgeManager() { return this._bridgeManager || null; }
   set bridgeManager(bm) { this._bridgeManager = bm; }
+
+  registerAgentPhoneAbortHandler(handler, filter: any = {}) {
+    if (typeof handler !== "function") return () => {};
+    const entry = { handler, filter: filter || {} };
+    this._phoneAbortHandlers.add(entry);
+    return () => {
+      this._phoneAbortHandlers.delete(entry);
+    };
+  }
+
+  abortAgentPhoneSessions(reason = "aborted", filter: any = {}) {
+    let aborted = 0;
+    for (const entry of [...this._phoneAbortHandlers]) {
+      if (!phoneAbortFilterMatches(entry.filter, filter)) continue;
+      try {
+        entry.handler(reason);
+        aborted += 1;
+      } catch (err) {
+        log.warn(`phone abort handler failed: ${err?.message || err}`);
+      }
+    }
+    return aborted;
+  }
+
+  async toggleChannels(enabled) {
+    if (enabled === false) {
+      this.abortAgentPhoneSessions("channels-disabled");
+    }
+    return { ok: true, enabled: !!enabled };
+  }
 
   // ──────────── 订阅 ────────────
 
@@ -770,6 +804,15 @@ export class Hub {
 
 function textOrNull(value) {
   return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function phoneAbortFilterMatches(registered: any = {}, requested: any = {}) {
+  for (const key of ["agentId", "conversationId", "conversationType"]) {
+    if (requested?.[key] && registered?.[key] && requested[key] !== registered[key]) {
+      return false;
+    }
+  }
+  return true;
 }
 
 function resolvePluginSessionTarget(engine, payload: any = {}, operation = "session", options: any = {}) {
