@@ -1,0 +1,18 @@
+{
+  "suite": "terminal-bench-lite",
+  "benchmark": "terminal-bench",
+  "source": {
+    "repo": "https://github.com/laude-institute/terminal-bench",
+    "note": "Keep Terminal-Bench installed externally. Use its own task runner or verifier command as verifyCommand so Satori does not reimplement the judge."
+  },
+  "tasks": [
+    {
+      "id": "terminal-bench-example",
+      "workspace": "{benchmarkRoot}/tasks/example",
+      "promptFile": "{benchmarkRoot}/tasks/example/instruction.md",
+      "verifyCommand": "terminal-bench-owned verifier command for this task",
+      "timeoutMs": 900000,
+      "tags": ["public-benchmark", "terminal", "harness"]
+    }
+  ]
+}

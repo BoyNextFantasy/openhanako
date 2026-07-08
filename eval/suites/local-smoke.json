@@ -1,0 +1,23 @@
+{
+  "suite": "local-smoke",
+  "benchmark": "local-fixture",
+  "source": {
+    "purpose": "Proves the Satori eval runner, verifier, metrics, and report pipeline without invoking a model.",
+    "publicBenchmarkAdapters": [
+      "https://github.com/Aider-AI/polyglot-benchmark",
+      "https://github.com/laude-institute/terminal-bench"
+    ]
+  },
+  "tasks": [
+    {
+      "id": "js-sum-001",
+      "workspace": "../fixtures/js-sum/workspace",
+      "taskDir": "../fixtures/js-sum",
+      "promptFile": "../fixtures/js-sum/prompt.md",
+      "verifyCommand": "node --test sum.test.js",
+      "oracleCommand": "node {taskDir}/solution.mjs {workspace}",
+      "timeoutMs": 120000,
+      "tags": ["javascript", "node-test", "smoke"]
+    }
+  ]
+}

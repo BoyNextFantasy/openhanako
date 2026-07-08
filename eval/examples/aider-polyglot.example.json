@@ -1,0 +1,18 @@
+{
+  "suite": "aider-polyglot-lite",
+  "benchmark": "aider-polyglot",
+  "source": {
+    "repo": "https://github.com/Aider-AI/polyglot-benchmark",
+    "note": "Clone the public benchmark outside this repository, then materialize selected tasks into workspace directories and point this manifest at them."
+  },
+  "tasks": [
+    {
+      "id": "polyglot-js-example",
+      "workspace": "{benchmarkRoot}/materialized/js-example/workspace",
+      "promptFile": "{benchmarkRoot}/materialized/js-example/prompt.md",
+      "verifyCommand": "npm test",
+      "timeoutMs": 600000,
+      "tags": ["public-benchmark", "coding", "javascript"]
+    }
+  ]
+}
