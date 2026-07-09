@@ -339,6 +339,10 @@ export class TaskRegistry {
   }
 
   createLLMTask(summary, { parentTaskId = null, owner = null }: any = {}) {
+    if (parentTaskId) {
+      const parent = this._tasks.get(parentTaskId);
+      if (!parent || !parent._llmTask) throw new Error(`TaskRegistry: parent LLM task "${parentTaskId}" not found`);
+    }
     const id = this._nextLLMTaskId(parentTaskId);
     const now = Date.now();
     if (this._detectParentCycle(id, parentTaskId)) {
@@ -371,6 +375,7 @@ export class TaskRegistry {
 
   _transitionLLMTask(taskId, newStatus, eventKind, eventSummary = null) {
     const task = this._requireLLMTask(taskId);
+    if (LLM_TERMINAL_STATUSES.has(task.status)) throw new Error(`TaskRegistry: cannot transition terminal task "${taskId}"`);
     const now = Date.now();
     const next = { ...task, status: newStatus, updatedAt: now, _llmLastEventKind: eventKind, _llmLastEventSummary: eventSummary || null };
     if (LLM_TERMINAL_STATUSES.has(newStatus)) next.endedAt = now;

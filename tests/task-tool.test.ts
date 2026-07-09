@@ -35,6 +35,12 @@ describe("TaskRegistry LLM tasks", () => {
     expect(t1_1._llmParentTaskId).toBe("T1");
   });
 
+  it("rejects subtasks with missing parent IDs", () => {
+    const r = createRegistry();
+    expect(() => r.createLLMTask("Orphan child", { parentTaskId: "T999" }))
+      .toThrow('parent LLM task "T999" not found');
+  });
+
   it("creates top-level tasks with sequential IDs", () => {
     const r = createRegistry();
     const t1 = r.createLLMTask("First");
@@ -114,6 +120,30 @@ describe("TaskRegistry LLM tasks", () => {
     const t = r.createLLMTask("Done already");
     r.doneLLMTask(t.taskId);
     expect(() => r.blockLLMTask(t.taskId)).toThrow("terminal");
+  });
+
+  it("cannot re-transition a terminal task", () => {
+    const r = createRegistry();
+    const done = r.createLLMTask("Done already");
+    r.doneLLMTask(done.taskId);
+    expect(() => r.doneLLMTask(done.taskId)).toThrow("terminal");
+    expect(() => r.abandonLLMTask(done.taskId)).toThrow("terminal");
+
+    const abandoned = r.createLLMTask("Abandoned already");
+    r.abandonLLMTask(abandoned.taskId);
+    expect(() => r.doneLLMTask(abandoned.taskId)).toThrow("terminal");
+    expect(() => r.abandonLLMTask(abandoned.taskId)).toThrow("terminal");
+  });
+
+  it("can rename a terminal task without changing execution state", () => {
+    const r = createRegistry();
+    const t = r.createLLMTask("Old terminal name");
+    r.doneLLMTask(t.taskId);
+
+    const renamed = r.renameLLMTask(t.taskId, "New terminal name");
+
+    expect(renamed.status).toBe("done");
+    expect(renamed._llmSummary).toBe("New terminal name");
   });
 
   it("cannot unblock a non-blocked task", () => {
