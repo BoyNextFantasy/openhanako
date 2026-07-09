@@ -31,7 +31,18 @@ const INFORMATION_TOOLS = new Set([
   "search_memory",
   "recall_experience",
   "question",
-  "task",
+]);
+
+const TASK_READ_ACTIONS = new Set([
+  "list",
+  "get",
+]);
+
+const TASK_PLAN_ACTIONS = new Set([
+  "create",
+  "list",
+  "get",
+  "rename",
 ]);
 
 const SIDE_EFFECT_TOOLS = new Set([
@@ -287,7 +298,26 @@ function classifyTerminalAction(mode, action, context) {
   return { action: "allow" };
 }
 
+function normalizeCommandText(cmd) {
+  return typeof cmd === "string" ? cmd.trim().replace(/\s+/g, " ") : "";
+}
+
+function isPlanReadOnlyCheck(params) {
+  if (params?.tty === true) return false;
+  const cmd = normalizeCommandText(params?.cmd);
+  if (!cmd) return false;
+  if (/[|&;<>()`]/.test(cmd) || cmd.includes(">")) return false;
+  if (/^git status(?:\s|$)/.test(cmd)) return true;
+  if (/^git diff --check(?:\s|$)/.test(cmd)) return true;
+  if (/^git diff --stat(?:\s|$)/.test(cmd)) return true;
+  if (/^git branch --show-current$/.test(cmd)) return true;
+  if (cmd === "npm run typecheck") return true;
+  if (/^npx vitest run tests\/[A-Za-z0-9._/-]+\.test\.(?:ts|tsx|js|mjs)$/.test(cmd)) return true;
+  return false;
+}
+
 function classifyExecCommandAction(mode, params, context) {
+  if (normalizeSessionPermissionMode(mode) === SESSION_PERMISSION_MODES.PLAN && isPlanReadOnlyCheck(params)) return { action: "allow" };
   if (isReadOnlyPermissionMode(mode)) return blockedByReadOnly("exec_command", context);
   if (params?.tty === true) {
     if (mode === SESSION_PERMISSION_MODES.AUTO) return review("exec_command");
@@ -317,6 +347,22 @@ function classifyFileAction(mode, action, context) {
   return { action: "allow" };
 }
 
+function classifyTaskAction(mode, params, context) {
+  const action = params?.operation?.action;
+  if (TASK_READ_ACTIONS.has(action)) return { action: "allow" };
+  if (mode === SESSION_PERMISSION_MODES.PLAN && TASK_PLAN_ACTIONS.has(action)) return { action: "allow" };
+  if (mode === SESSION_PERMISSION_MODES.PLAN) {
+    return blocked("task", {
+      layer: context?.isSubagent ? "subagent_access" : context?.surface === "conversation" ? "conversation" : "session",
+      message: "task execution-state changes are blocked in plan mode. "
+        + "Plan mode may create, list, get, or rename tasks, but start/done/block/unblock/abandon require operate mode.",
+    });
+  }
+  if (mode === SESSION_PERMISSION_MODES.READ_ONLY) return blockedByReadOnly("task", context);
+  if (mode === SESSION_PERMISSION_MODES.ASK) return prompt("task");
+  return { action: "allow" };
+}
+
 export function classifySessionPermission({ mode, toolName, params, context }: { mode?: any; toolName?: any; params?: any; context?: any } = {}) {
   let normalized = normalizeSessionPermissionMode(mode);
   const name = typeof toolName === "string" ? toolName : "";
@@ -339,6 +385,7 @@ export function classifySessionPermission({ mode, toolName, params, context }: {
   if (name === "terminal") return classifyTerminalAction(normalized, params?.action, context);
   if (name === "session_folders") return classifySessionFoldersAction(normalized, params?.action, context);
   if (name === "file") return classifyFileAction(normalized, params?.action, context);
+  if (name === "task") return classifyTaskAction(normalized, params, context);
   if (name === "computer") {
     if (isReadOnlyPermissionMode(normalized)) return blockedByReadOnly(name, context);
     return { action: "allow" };

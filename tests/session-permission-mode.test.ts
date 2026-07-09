@@ -48,6 +48,79 @@ describe("session permission modes", () => {
     });
   });
 
+  it("allows only conservative read-only checks through exec_command in plan mode", () => {
+    expect(classifySessionPermission({ mode: "plan", toolName: "exec_command", params: { cmd: "git status --short" } }))
+      .toEqual({ action: "allow" });
+    expect(classifySessionPermission({ mode: "plan", toolName: "exec_command", params: { cmd: "git diff --check" } }))
+      .toEqual({ action: "allow" });
+    expect(classifySessionPermission({ mode: "plan", toolName: "exec_command", params: { cmd: "npm run typecheck" } }))
+      .toEqual({ action: "allow" });
+
+    expect(classifySessionPermission({ mode: "plan", toolName: "write" })).toMatchObject({
+      action: "deny",
+      code: "ACTION_BLOCKED_BY_READ_ONLY",
+    });
+    expect(classifySessionPermission({ mode: "plan", toolName: "exec_command", params: { cmd: "git add core/agent.ts" } }))
+      .toMatchObject({ action: "deny", code: "ACTION_BLOCKED_BY_READ_ONLY" });
+    expect(classifySessionPermission({ mode: "plan", toolName: "exec_command", params: { cmd: "npm install" } }))
+      .toMatchObject({ action: "deny", code: "ACTION_BLOCKED_BY_READ_ONLY" });
+  });
+
+  it("classifies task actions by mutability across permission modes", () => {
+    for (const action of ["create", "list", "get", "rename"]) {
+      expect(
+        classifySessionPermission({ mode: "plan", toolName: "task", params: { operation: { action } } }),
+        `plan should allow task ${action}`,
+      ).toEqual({ action: "allow" });
+    }
+
+    for (const action of ["start", "done", "abandon", "block", "unblock"]) {
+      expect(
+        classifySessionPermission({ mode: "plan", toolName: "task", params: { operation: { action } } }),
+        `plan should deny task ${action}`,
+      ).toMatchObject({ action: "deny", code: "ACTION_BLOCKED_BY_READ_ONLY" });
+    }
+
+    for (const action of ["list", "get"]) {
+      expect(
+        classifySessionPermission({ mode: "read_only", toolName: "task", params: { operation: { action } } }),
+        `read_only should allow task ${action}`,
+      ).toEqual({ action: "allow" });
+    }
+
+    for (const action of ["create", "rename", "start", "done"]) {
+      expect(
+        classifySessionPermission({ mode: "read_only", toolName: "task", params: { operation: { action } } }),
+        `read_only should deny task ${action}`,
+      ).toMatchObject({ action: "deny", code: "ACTION_BLOCKED_BY_READ_ONLY" });
+    }
+
+    expect(classifySessionPermission({ mode: "ask", toolName: "task", params: { operation: { action: "list" } } }))
+      .toEqual({ action: "allow" });
+    expect(classifySessionPermission({ mode: "ask", toolName: "task", params: { operation: { action: "create" } } }))
+      .toMatchObject({ action: "prompt", kind: "tool_action_approval" });
+    expect(classifySessionPermission({ mode: "ask", toolName: "task", params: { operation: { action: "done" } } }))
+      .toMatchObject({ action: "prompt", kind: "tool_action_approval" });
+
+    expect(classifySessionPermission({ mode: "operate", toolName: "task", params: { operation: { action: "done" } } }))
+      .toEqual({ action: "allow" });
+    expect(classifySessionPermission({ mode: "auto", toolName: "task", params: { operation: { action: "done" } } }))
+      .toEqual({ action: "allow" });
+  });
+
+  it("denies unknown task actions in read-only style modes", () => {
+    const planResult = classifySessionPermission({ mode: "plan", toolName: "task", params: { operation: { action: "surprise" } } }) as any;
+    expect(planResult).toMatchObject({ action: "deny", code: "ACTION_BLOCKED_BY_READ_ONLY" });
+    expect(planResult.message).toMatch(/plan mode|operate mode/i);
+
+    expect(classifySessionPermission({ mode: "read_only", toolName: "task", params: { operation: { action: "surprise" } } }))
+      .toMatchObject({ action: "deny", code: "ACTION_BLOCKED_BY_READ_ONLY" });
+    expect(classifySessionPermission({ mode: "ask", toolName: "task", params: { operation: { action: "surprise" } } }))
+      .toMatchObject({ action: "prompt", kind: "tool_action_approval" });
+    expect(classifySessionPermission({ mode: "operate", toolName: "task", params: { operation: { action: "surprise" } } }))
+      .toEqual({ action: "allow" });
+  });
+
   it("treats browser information gathering separately from page actions", () => {
     expect(classifySessionPermission({ mode: "read_only", toolName: "browser", params: { action: "screenshot" } })).toEqual({ action: "allow" });
     expect(classifySessionPermission({ mode: "read_only", toolName: "browser", params: { action: "click" } })).toMatchObject({

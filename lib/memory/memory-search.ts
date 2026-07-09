@@ -14,6 +14,26 @@ import { createModuleLogger } from "../debug-log.ts";
 
 const log = createModuleLogger("memory-search");
 
+function normalizeAllowedSessionIds(conversationScope) {
+  if (!conversationScope || typeof conversationScope !== "object") return null;
+  const raw = [
+    conversationScope.sessionId,
+    conversationScope.session_id,
+    ...(Array.isArray(conversationScope.sessionIds) ? conversationScope.sessionIds : []),
+    ...(Array.isArray(conversationScope.session_ids) ? conversationScope.session_ids : []),
+  ];
+  const ids = raw
+    .filter((value) => typeof value === "string" && value.trim())
+    .map((value) => value.trim());
+  return ids.length > 0 ? new Set(ids) : null;
+}
+
+function factVisibleInScope(fact, allowedSessionIds) {
+  if (!allowedSessionIds) return true;
+  if (!fact?.session_id) return true;
+  return allowedSessionIds.has(fact.session_id);
+}
+
 /**
  * 创建 search_memory 工具定义
  * @param {import('./fact-store.ts').FactStore} factStore
@@ -22,6 +42,7 @@ const log = createModuleLogger("memory-search");
  * @returns {import('../pi-sdk/index.ts').ToolDefinition}
  */
 export function createMemorySearchTool(factStore, opts: any = {}) {
+  const allowedSessionIds = normalizeAllowedSessionIds(opts.conversationScope);
   return {
     name: "search_memory",
     label: t("error.memorySearchLabel"),
@@ -58,7 +79,7 @@ export function createMemorySearchTool(factStore, opts: any = {}) {
         let results = [];
         const seenIds = new Set();
 
-        const visibleInScope = () => true;
+        const visibleInScope = (fact) => factVisibleInScope(fact, allowedSessionIds);
 
         // 策略 1：标签匹配（优先）
         if (params.tags && params.tags.length > 0) {

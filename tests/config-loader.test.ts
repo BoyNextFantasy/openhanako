@@ -1,18 +1,12 @@
-/**
- * config-loader.js 单元测试
- *
- * 测试：加载、保存（�?deep merge）、atomic write、缓存清�?
- */
-
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import fs from "fs";
 import os from "os";
 import path from "path";
 import YAML from "js-yaml";
 import {
+  clearConfigCache,
   loadConfig,
   saveConfig,
-  clearConfigCache,
 } from "../lib/memory/config-loader.ts";
 
 const tmpDir = path.join(os.tmpdir(), "hana-test-config-" + Date.now());
@@ -41,21 +35,21 @@ afterEach(() => {
 });
 
 describe("loadConfig", () => {
-  it("加载基础配置", () => {
+  it("loads basic api config", () => {
     writeYaml({ api: { provider: "openai", api_key: "sk-test", base_url: "https://api.openai.com/v1" } });
     const cfg = loadConfig(configPath);
     expect(cfg.api.provider).toBe("openai");
     expect(cfg.api.api_key).toBe("sk-test");
   });
 
-  it("缓存生效：第二次读取返回同一对象", () => {
+  it("returns the same object while cached", () => {
     writeYaml({ api: { provider: "openai", api_key: "sk-test", base_url: "https://api.openai.com/v1" } });
     const a = loadConfig(configPath);
     const b = loadConfig(configPath);
     expect(a).toBe(b);
   });
 
-  it("clearConfigCache 后重新读�?, () => {
+  it("reloads config after clearConfigCache", () => {
     writeYaml({ api: { provider: "openai", api_key: "sk-1", base_url: "https://api.openai.com/v1" } });
     const a = loadConfig(configPath);
     clearConfigCache();
@@ -65,19 +59,19 @@ describe("loadConfig", () => {
     expect(b.api.api_key).toBe("sk-2");
   });
 
-  it("embedding_api 未配置时保持为空", () => {
+  it("keeps embedding_api null when not configured", () => {
     writeYaml({ api: { provider: "openai", api_key: "sk-test", base_url: "https://api.openai.com/v1" } });
     const cfg = loadConfig(configPath);
     expect(cfg.embedding_api).toBeNull();
   });
 
-  it("provider 缺失时不再注入默认供应商", () => {
+  it("does not inject a default provider when provider is missing", () => {
     writeYaml({ api: { api_key: "sk-test", base_url: "https://api.openai.com/v1" } });
     const cfg = loadConfig(configPath);
     expect(cfg.api.provider).toBe("");
   });
 
-  it("只返�?config.yaml 原始值，不从 added-models.yaml 解析", () => {
+  it("returns raw config.yaml values without resolving added-models.yaml", () => {
     fs.writeFileSync(
       path.join(hanakoHome, "added-models.yaml"),
       YAML.dump({
@@ -93,17 +87,18 @@ describe("loadConfig", () => {
     );
     writeYaml({ api: { provider: "openai" } });
     const cfg = loadConfig(configPath);
-    // config-loader 不再�?added-models.yaml 补全，只返回 config.yaml 中的原始�?
     expect(cfg.api.api).toBe("");
     expect(cfg.api.api_key).toBe("");
     expect(cfg.api.provider).toBe("openai");
   });
-
 });
 
 describe("saveConfig", () => {
-  it("deep merge 保留已有字段", () => {
-    writeYaml({ api: { provider: "openai", api_key: "sk-1", base_url: "https://api.openai.com/v1" }, user: { name: "Alice" } });
+  it("deep merges object fields", () => {
+    writeYaml({
+      api: { provider: "openai", api_key: "sk-1", base_url: "https://api.openai.com/v1" },
+      user: { name: "Alice" },
+    });
     saveConfig(configPath, { user: { age: 18 } });
     const result = readYaml();
     expect(result.user.name).toBe("Alice");
@@ -111,7 +106,7 @@ describe("saveConfig", () => {
     expect(result.api.provider).toBe("openai");
   });
 
-  it("null 值删除对�?key", () => {
+  it("deletes keys when partial value is null", () => {
     writeYaml({ api: { provider: "openai" }, debug: true });
     saveConfig(configPath, { debug: null });
     const result = readYaml();
@@ -119,14 +114,14 @@ describe("saveConfig", () => {
     expect(result.api.provider).toBe("openai");
   });
 
-  it("数组直接覆盖（不合并�?, () => {
+  it("overwrites arrays instead of merging them", () => {
     writeYaml({ tags: ["a", "b"] });
     saveConfig(configPath, { tags: ["c"] });
     const result = readYaml();
     expect(result.tags).toEqual(["c"]);
   });
 
-  it("atomic write：不会留�?.tmp 文件", () => {
+  it("does not leave a tmp file after atomic write", () => {
     writeYaml({ api: { provider: "openai" } });
     saveConfig(configPath, { user: { name: "Test" } });
     const files = fs.readdirSync(tmpDir);
@@ -134,7 +129,7 @@ describe("saveConfig", () => {
     expect(files).toContain("config.yaml");
   });
 
-  it("保存后缓存被清除（下�?loadConfig 读到新值）", () => {
+  it("clears cache after save so loadConfig reads the new value", () => {
     writeYaml({ api: { provider: "openai", api_key: "sk-1", base_url: "https://api.openai.com/v1" } });
     loadConfig(configPath);
     saveConfig(configPath, { api: { api_key: "sk-2" } });
