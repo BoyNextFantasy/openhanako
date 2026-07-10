@@ -223,4 +223,33 @@ describe("memory routes", () => {
     expect(memoryMd).toContain("## 今天\n\ntoday part");
     expect(engine.updateConfig).toHaveBeenCalledWith({}, { agentId: "hana" });
   });
+
+  it("removes old editable facts from compiled memory when saving an empty facts section", async () => {
+    const agent = makeAgent(tmpDir);
+    const memoryDir = path.dirname(agent.memoryMdPath);
+    fs.writeFileSync(path.join(memoryDir, "editable-facts.md"), "- old fact\n", "utf-8");
+    fs.writeFileSync(path.join(memoryDir, "today.md"), "today part", "utf-8");
+    fs.writeFileSync(path.join(memoryDir, "week.md"), "", "utf-8");
+    fs.writeFileSync(path.join(memoryDir, "longterm.md"), "", "utf-8");
+    const engine = makeEngine(agent, tmpDir);
+    engine.preferences.getExperimentValue = vi.fn((id) => (
+      id === "memory.editable_facts" ? true : undefined
+    ));
+    const app = mountConfigRoute(engine);
+
+    const res = await app.request("/api/memories/compiled/facts?agentId=hana", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ facts: "" }),
+    });
+    const data = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(data.ok).toBe(true);
+    expect(fs.readFileSync(path.join(memoryDir, "editable-facts.md"), "utf-8")).toBe("");
+    const memoryMd = fs.readFileSync(agent.memoryMdPath, "utf-8");
+    expect(memoryMd).not.toContain("old fact");
+    expect(memoryMd).toContain("today part");
+    expect(engine.updateConfig).toHaveBeenCalledWith({}, { agentId: "hana" });
+  });
 });

@@ -2,9 +2,11 @@ import { memo, useCallback, useMemo } from 'react';
 import type { ChatListItem, ChatMessage } from '../../stores/chat-types';
 import { UserMessage } from './UserMessage';
 import { AssistantMessage } from './AssistantMessage';
+import { MemoryReviewCard } from './MemoryReviewCard';
 import { ProcessFoldBlock } from './ProcessFoldBlock';
 import { InterludeBlock } from './InterludeBlock';
 import { buildTranscriptRenderItems, type TranscriptRenderItem } from './process-fold';
+import { isMemoryReviewRequest } from './memory-review-utils';
 import { useStore } from '../../stores';
 import { selectIsStreamingSession } from '../../stores/session-selectors';
 
@@ -265,16 +267,21 @@ const TranscriptItemView = memo(function TranscriptItemView({
 
   if (msg.role === 'user') {
     return (
-      <UserMessage
-        message={msg}
-        showAvatar={showAvatar}
-        sessionPath={sessionPath}
-        readOnly={readOnly}
-        hideIdentity={hideUserIdentity}
-        userIdentity={userIdentity}
-        isLatestUserMessage={isLatestUserMessage}
-        messageRef={messageRef}
-      />
+      <>
+        <UserMessage
+          message={msg}
+          showAvatar={showAvatar}
+          sessionPath={sessionPath}
+          readOnly={readOnly}
+          hideIdentity={hideUserIdentity}
+          userIdentity={userIdentity}
+          isLatestUserMessage={isLatestUserMessage}
+          messageRef={messageRef}
+        />
+        {!readOnly && isMemoryReviewRequest(msg.text) && (
+          <MemoryReviewCard agentId={agentId} />
+        )}
+      </>
     );
   }
 
