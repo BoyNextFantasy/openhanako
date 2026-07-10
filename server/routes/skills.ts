@@ -282,6 +282,14 @@ export function createSkillsRoute(engine) {
     try {
       const agentId = c.req.query("agentId");
       const runtime = c.req.query("runtime") === "1";
+      const sessionPath = c.req.query("sessionPath") || null;
+      const workflowMode = runtime
+        ? (
+          sessionPath && typeof engine.getEffectiveSessionWorkflowMode === "function"
+            ? engine.getEffectiveSessionWorkflowMode(sessionPath)
+            : (engine.effectiveWorkflowMode || "normal")
+        )
+        : null;
       // 必须显式指定 agentId — 不允许从全局焦点指针推导，避免前后端 agent 错位
       // 后用户在 desk 上 toggle skill 时把错位 agent 的列表写入当前 agent (#397)
       if (!agentId) {
@@ -291,7 +299,7 @@ export function createSkillsRoute(engine) {
         return c.json({ error: "agent not found" }, 404);
       }
       return c.json({
-        skills: runtime ? engine.getRuntimeSkills(agentId) : engine.getAllSkills(agentId),
+        skills: runtime ? engine.getRuntimeSkills(agentId, { workflowMode }) : engine.getAllSkills(agentId),
       });
     } catch (err) {
       return c.json({ error: err.message }, 500);

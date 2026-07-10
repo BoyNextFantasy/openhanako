@@ -88,6 +88,7 @@ type BuildSystemPromptOptions = {
   cwdOverride?: string;
   targetModel?: AgentAppearanceModel | null;
   forPlan?: boolean;
+  forCompose?: boolean;
 };
 
 export class Agent {
@@ -1125,6 +1126,7 @@ export class Agent {
    */
   buildSystemPrompt( options: BuildSystemPromptOptions = {}) {
     const isPlanMode = !!options.forPlan;
+    const isComposeMode = !!options.forCompose && !isPlanMode;
 
     const forSubagent = !!options.forSubagent;
     const forceMemoryEnabled = Object.prototype.hasOwnProperty.call(options, "forceMemoryEnabled")
@@ -1470,6 +1472,19 @@ export class Agent {
     }
 
     // 工作台 = 当前工作目录（注入实际路径）
+    if (isComposeMode) {
+      parts.push(isZh
+        ? `\n## Compose 工作流\n\n` +
+          `你当前处于 Compose 工作流模式。Compose 不是权限模式，不会绕过当前 permission mode；所有文件修改、命令执行和外部动作仍然受当前权限边界控制。\n\n` +
+          `先判断用户任务是否需要结构化工作流。简单问答和很小的改动直接完成；多步骤开发、调研、排障、重构、测试补齐或高风险改动，优先使用 compose:brainstorm、compose:plan、compose:tdd、compose:review、compose:verify 等技能组织过程。\n\n` +
+          `多步骤开发应留下任务树、测试计划和验收记录。执行前讲清目标和边界；实现中保持小步验证；完成前用复审和验证确认没有遗漏。\n`
+        : `\n## Compose workflow\n\n` +
+          `You are currently in Compose workflow mode. Compose is not a permission mode and does not bypass the current permission mode; file edits, command execution, and external actions are still controlled by the active permission boundary.\n\n` +
+          `First decide whether the user's task benefits from a structured workflow. Answer simple questions and tiny edits directly. For multi-step development, research, debugging, refactors, test work, or risky changes, prefer compose:brainstorm, compose:plan, compose:tdd, compose:review, and compose:verify to organize the process.\n\n` +
+          `For multi-step development, leave a task tree, test plan, and acceptance record. State goals and boundaries before execution, verify in small steps while implementing, and use review plus verification before completion.\n`
+      );
+    }
+
     const cwdPath = cwdOverride !== null ? cwdOverride : (this._cb?.getCwd?.() || "");
     parts.push(isZh
       ? `\n## 工作台\n\n` +

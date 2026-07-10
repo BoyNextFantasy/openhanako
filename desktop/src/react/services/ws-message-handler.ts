@@ -42,6 +42,12 @@ function syncSessionPermissionMode(mode: unknown) {
   }
 }
 
+function syncSessionWorkflowMode(mode: unknown) {
+  if (mode === 'normal' || mode === 'compose') {
+    useStore.getState().setSessionWorkflowMode?.(mode);
+  }
+}
+
 function isPlanModeEnabled(mode: unknown): boolean {
   return mode === 'read_only' || mode === 'plan';
 }
@@ -776,6 +782,16 @@ export function handleServerMessage(msg: any): void {
         syncSessionPermissionMode(msg.mode);
         window.dispatchEvent(new CustomEvent('hana-plan-mode', {
           detail: { enabled: isPlanModeEnabled(msg.mode), mode: msg.mode },
+        }));
+      }
+      break;
+    }
+
+    case 'workflow_mode': {
+      if (isFocusedSessionMessage(msg)) {
+        syncSessionWorkflowMode(msg.effectiveMode || msg.mode);
+        window.dispatchEvent(new CustomEvent('hana-workflow-mode', {
+          detail: { mode: msg.mode || 'normal', effectiveMode: msg.effectiveMode || msg.mode || 'normal' },
         }));
       }
       break;

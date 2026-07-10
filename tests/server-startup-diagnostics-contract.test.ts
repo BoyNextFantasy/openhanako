@@ -130,7 +130,8 @@ describe("server startup diagnostics contract", () => {
     expect(mainSource).toContain("HANA_CREATE_STARTUP_SESSION");
     expect(mainSource).toContain('"0"');
     expect(serverSource).toContain('process.env.HANA_CREATE_STARTUP_SESSION !== "0"');
-    expect(serverSource).toContain("③ 跳过启动期 session 创建");
+    expect(serverSource).toContain("if (shouldCreateStartupSession && engine.currentModel)");
+    expect(serverSource).toContain("await engine.createSession()");
   });
 
   it("keeps waiting after the first server-info deadline while startup output is still progressing", () => {
@@ -174,6 +175,17 @@ describe("server startup diagnostics contract", () => {
     expect(mainSource).toContain("terminate: isDesktopOwnedServerInfo(existingInfo)");
     expect(serverSource).toContain("configuredPort: serverRuntimeState.configuredPort");
     expect(serverSource).toContain("network: createServerRuntimeNetworkSummary()");
+  });
+
+  it("does not reuse a dev server whose source snapshot is stale", () => {
+    const mainSource = fs.readFileSync(path.join(root, "desktop", "main.cjs"), "utf-8");
+    const serverSource = fs.readFileSync(path.join(root, "server", "index.ts"), "utf-8");
+
+    expect(mainSource).toContain("computeDevServerSourceRevision");
+    expect(mainSource).toContain("HANA_SERVER_SOURCE_REVISION");
+    expect(mainSource).toContain("server source revision mismatch");
+    expect(mainSource).toContain("terminate: isDesktopOwnedServerInfo(existingInfo)");
+    expect(serverSource).toContain("sourceRevision: process.env.HANA_SERVER_SOURCE_REVISION || null");
   });
 
   it("does not terminate standalone servers that desktop only attached to", () => {

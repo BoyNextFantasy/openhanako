@@ -52,6 +52,7 @@ describe("skills route", () => {
       agentsDir: tempRoot,
       getAllSkills,
       getRuntimeSkills,
+      effectiveWorkflowMode: "normal",
     };
 
     app.route("/api", createSkillsRoute(engine));
@@ -72,7 +73,31 @@ describe("skills route", () => {
         { name: "workspace-skill", enabled: true, managedBy: "workspace" },
       ],
     });
-    expect(getRuntimeSkills).toHaveBeenCalledWith(agentId);
+    expect(getRuntimeSkills).toHaveBeenCalledWith(agentId, { workflowMode: "normal" });
+  });
+
+  it("derives runtime compose visibility from the server effective workflow mode instead of trusting the query", async () => {
+    const agentId = "hana";
+    const agentDir = path.join(tempRoot, agentId);
+    fs.mkdirSync(agentDir, { recursive: true });
+    fs.writeFileSync(path.join(agentDir, "config.yaml"), "agent:\n  name: Hana\n", "utf-8");
+
+    const { createSkillsRoute } = await import("../server/routes/skills.ts");
+    const app = new Hono();
+    const getRuntimeSkills = vi.fn(() => []);
+    const engine = {
+      agentsDir: tempRoot,
+      getAllSkills: vi.fn(() => []),
+      getRuntimeSkills,
+      effectiveWorkflowMode: "normal",
+    };
+
+    app.route("/api", createSkillsRoute(engine));
+
+    const res = await app.request(`/api/skills?agentId=${agentId}&runtime=1&workflowMode=compose`);
+
+    expect(res.status).toBe(200);
+    expect(getRuntimeSkills).toHaveBeenCalledWith(agentId, { workflowMode: "normal" });
   });
 
   it("emits skills-changed after updating an agent's enabled skills", async () => {

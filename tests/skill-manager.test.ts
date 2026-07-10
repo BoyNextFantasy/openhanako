@@ -109,6 +109,18 @@ describe("SkillManager.getRuntimeSkillInfos", () => {
     const result = sm.getRuntimeSkillInfos(makeAgent("agent-a"));
     expect(result.map(s => s.name)).toContain("ws-skill");
   });
+
+  it("hides compose skills unless workflow mode is compose", () => {
+    sm._allSkills = [
+      makeSkill("global-skill"),
+      makeSkill("compose:brainstorm", { _composeOnly: true }),
+    ];
+
+    expect(sm.getRuntimeSkillInfos(makeAgent("agent-a", ["global-skill"])).map(s => s.name))
+      .toEqual(["global-skill"]);
+    expect(sm.getRuntimeSkillInfos(makeAgent("agent-a", ["global-skill"]), { workflowMode: "compose" }).map(s => s.name))
+      .toEqual(["global-skill", "compose:brainstorm"]);
+  });
 });
 
 describe("SkillManager.syncAgentSkills", () => {
@@ -180,6 +192,18 @@ describe("SkillManager.getSkillsForAgent", () => {
     const names = result.skills.map(s => s.name);
     expect(names).toContain("global-skill");
     expect(names).toContain("plugin-x");
+  });
+
+  it("exposes compose skills to the model only in compose workflow mode", () => {
+    sm._allSkills = [
+      makeSkill("global-skill"),
+      makeSkill("compose:plan", { _composeOnly: true }),
+    ];
+    const agentA = makeAgent("agent-a", ["global-skill"]);
+
+    expect(sm.getSkillsForAgent(agentA).skills.map(s => s.name)).toEqual(["global-skill"]);
+    expect(sm.getSkillsForAgent(agentA, { workflowMode: "compose" }).skills.map(s => s.name))
+      .toEqual(["global-skill", "compose:plan"]);
   });
 });
 

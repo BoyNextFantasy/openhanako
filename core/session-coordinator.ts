@@ -30,6 +30,12 @@ import {
   legacyAccessModeFromPermissionMode,
   normalizeSessionPermissionMode,
 } from "./session-permission-mode.ts";
+import {
+  DEFAULT_SESSION_WORKFLOW_MODE,
+  SESSION_WORKFLOW_MODES,
+  effectiveSessionWorkflowMode,
+  normalizeSessionWorkflowMode,
+} from "./session-workflow-mode.ts";
 import { findModel } from "../shared/model-ref.ts";
 import { computeToolSnapshot, DEFAULT_DISABLED_TOOL_NAMES, uniqueToolNames } from "../shared/tool-categories.ts";
 import {
@@ -676,6 +682,7 @@ export class SessionCoordinator {
   declare _metaCache: Map<string, any>;
   declare _sessionListProjectionCache: SessionListProjectionCache;
   declare _pendingPermissionMode: any;
+  declare _pendingWorkflowMode: any;
   declare _runtimePermissionModeDefault: any;
   declare _metaWriteQueue: Promise<any>;
   declare _prePromptAbortControllers: Map<string, AbortController>;
@@ -718,6 +725,7 @@ export class SessionCoordinator {
     this._metaCache = new Map();   // metaPath → { data, ts }
     this._sessionListProjectionCache = deps.sessionListProjectionCache || new SessionListProjectionCache();
     this._pendingPermissionMode = null;
+    this._pendingWorkflowMode = null;
     this._runtimePermissionModeDefault = null;
     this._metaWriteQueue = Promise.resolve();
     this._prePromptAbortControllers = new Map();
@@ -1202,6 +1210,7 @@ export class SessionCoordinator {
     authorizedFolders = [],
     visibleInSessionList = false,
     thinkingLevel = null,
+    workflowMode = null,
     workspaceMountId = null,
     workspaceLabel = null,
     ownerPluginId = null,
@@ -1379,16 +1388,37 @@ export class SessionCoordinator {
       ? normalizeSessionPermissionMode(restoredPermissionMode)
       : normalizeSessionPermissionMode(this._pendingPermissionMode || this._getDefaultPermissionMode());
     this._pendingPermissionMode = null;
+    let restoredWorkflowMode = null;
+    if (restore && sessionPathForMeta) {
+      try {
+        const metaPath = path.join(agent.sessionDir, "session-meta.json");
+        const meta = await this._readMetaCached(metaPath);
+        const metaEntry = meta[path.basename(sessionPathForMeta)];
+        restoredWorkflowMode = normalizeSessionWorkflowMode(metaEntry);
+      } catch (err) {
+        if (err.code !== "ENOENT") {
+          log.warn(`session workflow mode restore failed: ${err.message}`);
+        }
+      }
+    }
+    let initialWorkflowMode = restore
+      ? normalizeSessionWorkflowMode(restoredWorkflowMode)
+      : normalizeSessionWorkflowMode(workflowMode ?? this._pendingWorkflowMode ?? DEFAULT_SESSION_WORKFLOW_MODE);
+    this._pendingWorkflowMode = null;
+    let initialEffectiveWorkflowMode = effectiveSessionWorkflowMode(initialWorkflowMode, initialPermissionMode);
     let initialAccessMode = legacyAccessModeFromPermissionMode(initialPermissionMode);
     let initialPlanMode = isReadOnlyPermissionMode(initialPermissionMode);
     const sessionEntry = {
       permissionMode: initialPermissionMode,
+      workflowMode: initialWorkflowMode,
+      effectiveWorkflowMode: initialEffectiveWorkflowMode,
       accessMode: initialAccessMode,
       planMode: initialPlanMode,
       thinkingLevel: initialThinkingLevel,
       experiments: frozenExperimentFlags,
       visibleInSessionList: visibleInSessionList === true && !restore,
       sessionId: null as string | null,
+      promptSnapshot: null as any,
     }; // pre-populated for resourceLoader proxy
     const pluginSessionMeta = normalizePluginSessionMeta({ ownerPluginId, sessionKind, sessionVisibility });
 
@@ -1401,6 +1431,7 @@ export class SessionCoordinator {
         cwdOverride: effectiveCwd,
         targetModel: promptPatchModel,
         forPlan: initialPermissionMode === SESSION_PERMISSION_MODES.PLAN,
+        forCompose: initialEffectiveWorkflowMode === SESSION_WORKFLOW_MODES.COMPOSE,
       });
     const memoryReflectionSnapshot = (!restore && typeof agent.buildMemoryReflectionSnapshot === "function")
       ? agent.buildMemoryReflectionSnapshot({ forceMemoryEnabled: frozenMemoryEnabled })
@@ -1419,7 +1450,7 @@ export class SessionCoordinator {
     const rawSkillsResultSnapshot = restoredPromptSnapshot?.skillsResult
       ?? (
         skills?.getSkillsForAgent
-          ? freezeSkillsResult(skills.getSkillsForAgent(agent))
+          ? freezeSkillsResult(skills.getSkillsForAgent(agent, { workflowMode: initialEffectiveWorkflowMode }))
           : freezeSkillsResult(baseResourceLoader.getSkills?.())
       );
     const skillsResultSnapshot = restoredPromptSnapshot?.skillsResult
@@ -1434,6 +1465,7 @@ export class SessionCoordinator {
       skillsResult: skillsResultSnapshot,
       agentsFilesResult: agentsFilesResultSnapshot,
     };
+    sessionEntry.promptSnapshot = promptSnapshotForPersist;
 
     const sessionPathRef = { current: sessionPathForMeta };
     const targetModelRef = { current: promptPatchModel || effectiveModel || null };
@@ -1475,7 +1507,7 @@ export class SessionCoordinator {
     // Wrap resourceLoader: per-session prompt snapshot + plan mode injection + vision auxiliary extension
     const resourceLoaderProps = {
       getSystemPrompt: {
-        value: () => systemPromptSnapshot,
+        value: () => normalizeSessionPromptSnapshot(sessionEntry.promptSnapshot)?.systemPrompt || systemPromptSnapshot,
       },
       getExtensions: {
         value: () => {
@@ -1487,13 +1519,22 @@ export class SessionCoordinator {
         },
       },
       getAppendSystemPrompt: {
-        value: () => [...appendSystemPromptSnapshot],
+        value: () => [
+          ...(
+            normalizeSessionPromptSnapshot(sessionEntry.promptSnapshot)?.appendSystemPrompt
+            || appendSystemPromptSnapshot
+          ),
+        ],
       },
       getSkills: {
-        value: () => resolveSessionSkillsForRuntime(skillsResultSnapshot),
+        value: () => resolveSessionSkillsForRuntime(
+          normalizeSessionPromptSnapshot(sessionEntry.promptSnapshot)?.skillsResult || skillsResultSnapshot,
+        ),
       },
       getAgentsFiles: {
-        value: () => freezeAgentsFilesResult(agentsFilesResultSnapshot),
+        value: () => freezeAgentsFilesResult(
+          normalizeSessionPromptSnapshot(sessionEntry.promptSnapshot)?.agentsFilesResult || agentsFilesResultSnapshot,
+        ),
       },
     };
     const resourceLoader = Object.create(baseResourceLoader, resourceLoaderProps);
@@ -1561,7 +1602,9 @@ export class SessionCoordinator {
         initialPermissionMode = restoredPermissionMode;
         initialAccessMode = legacyAccessModeFromPermissionMode(initialPermissionMode);
         initialPlanMode = isReadOnlyPermissionMode(initialPermissionMode);
+        initialEffectiveWorkflowMode = effectiveSessionWorkflowMode(initialWorkflowMode, initialPermissionMode);
         sessionEntry.permissionMode = initialPermissionMode;
+        sessionEntry.effectiveWorkflowMode = initialEffectiveWorkflowMode;
         sessionEntry.accessMode = initialAccessMode;
         sessionEntry.planMode = initialPlanMode;
       }
@@ -1575,7 +1618,9 @@ export class SessionCoordinator {
           initialPermissionMode = normalizeSessionPermissionMode(metaEntry);
           initialAccessMode = legacyAccessModeFromPermissionMode(initialPermissionMode);
           initialPlanMode = isReadOnlyPermissionMode(initialPermissionMode);
+          initialEffectiveWorkflowMode = effectiveSessionWorkflowMode(initialWorkflowMode, initialPermissionMode);
           sessionEntry.permissionMode = initialPermissionMode;
+          sessionEntry.effectiveWorkflowMode = initialEffectiveWorkflowMode;
           sessionEntry.accessMode = initialAccessMode;
           sessionEntry.planMode = initialPlanMode;
         }
@@ -1740,6 +1785,8 @@ export class SessionCoordinator {
       workspaceLabel: workspaceMount?.label || null,
       authorizedFolders: folderScope.authorizedFolders,
       permissionMode: initialPermissionMode,
+      workflowMode: initialWorkflowMode,
+      effectiveWorkflowMode: initialEffectiveWorkflowMode,
       accessMode: initialAccessMode,
       planMode: initialPlanMode,
       thinkingLevel: initialThinkingLevel,
@@ -1827,6 +1874,8 @@ export class SessionCoordinator {
         workspaceFolders: workspaceScope.workspaceFolders,
         authorizedFolders: folderScope.authorizedFolders,
         permissionMode: initialPermissionMode,
+        workflowMode: initialWorkflowMode,
+        effectiveWorkflowMode: initialEffectiveWorkflowMode,
         accessMode: initialAccessMode,
         planMode: initialPlanMode,
         thinkingLevel: initialThinkingLevel,
@@ -1853,6 +1902,10 @@ export class SessionCoordinator {
       if (!restoredPromptSnapshot) metaPatch.promptSnapshot = promptSnapshotToWrite;
       if (restoredThinkingLevel !== initialThinkingLevel) {
         metaPatch.thinkingLevel = initialThinkingLevel;
+      }
+      if (normalizeSessionWorkflowMode(restoredWorkflowMode) !== initialWorkflowMode) {
+        metaPatch.workflowMode = initialWorkflowMode;
+        metaPatch.effectiveWorkflowMode = initialEffectiveWorkflowMode;
       }
       if (shouldPersistRestoredToolNames && snapshotToolNames !== null) {
         metaPatch.toolNames = snapshotToolNames;
@@ -1914,6 +1967,7 @@ export class SessionCoordinator {
     authorizedFolders = [],
     visibleInSessionList = true,
     permissionMode = null,
+    workflowMode = null,
     thinkingLevel = null,
     workspaceMountId = null,
     workspaceLabel = null,
@@ -1938,6 +1992,7 @@ export class SessionCoordinator {
         workspaceFolders,
         authorizedFolders,
         visibleInSessionList,
+        workflowMode,
         thinkingLevel,
         workspaceMountId,
         workspaceLabel,
@@ -3053,6 +3108,17 @@ export class SessionCoordinator {
     return normalizeSessionPermissionMode(entry || { permissionMode: this._getDefaultPermissionMode() });
   }
 
+  getWorkflowMode(sessionPath = this.currentSessionPath) {
+    if (!sessionPath) return normalizeSessionWorkflowMode(this._pendingWorkflowMode || DEFAULT_SESSION_WORKFLOW_MODE);
+    const entry = this._sessionFolderEntry(sessionPath);
+    if (entry) return normalizeSessionWorkflowMode(entry);
+    return normalizeSessionWorkflowMode(this._readSessionMetaEntrySync(sessionPath));
+  }
+
+  getEffectiveWorkflowMode(sessionPath = this.currentSessionPath) {
+    return effectiveSessionWorkflowMode(this.getWorkflowMode(sessionPath), this.getPermissionMode(sessionPath));
+  }
+
   getSessionThinkingLevel(sessionPath = this.currentSessionPath) {
     const fallback = this.getDefaultThinkingLevel();
     if (!sessionPath) return fallback;
@@ -3109,15 +3175,33 @@ export class SessionCoordinator {
     return { ok: true, mode: nextMode, enabled: isReadOnlyPermissionMode(nextMode) };
   }
 
+  setPendingWorkflowMode(mode: any) {
+    const nextMode = normalizeSessionWorkflowMode(mode);
+    this._pendingWorkflowMode = nextMode;
+    const effectiveMode = effectiveSessionWorkflowMode(nextMode, this.getPermissionMode(null));
+    this._emitWorkflowModeChanged(nextMode, effectiveMode, null);
+    return { ok: true, mode: nextMode, effectiveMode };
+  }
+
   _applyPermissionModeToEntry(sessionPath: any, entry: any, nextMode: any) {
     entry.permissionMode = nextMode;
     entry.accessMode = legacyAccessModeFromPermissionMode(nextMode);
     entry.planMode = isReadOnlyPermissionMode(nextMode);
-    this.writeSessionMeta(sessionPath, {
+    entry.effectiveWorkflowMode = effectiveSessionWorkflowMode(entry.workflowMode, nextMode);
+    const refreshedPrompt = this._refreshRuntimeWorkflowPrompt(sessionPath, entry);
+    const metaPatch: any = {
       permissionMode: entry.permissionMode,
+      effectiveWorkflowMode: entry.effectiveWorkflowMode,
       accessMode: entry.accessMode,
       planMode: entry.planMode,
-    });
+    };
+    if (refreshedPrompt && entry.promptSnapshot) {
+      metaPatch.promptSnapshot = entry.promptSnapshot;
+    } else {
+      entry.promptSnapshot = null;
+      metaPatch.promptSnapshot = null;
+    }
+    this.writeSessionMeta(sessionPath, metaPatch);
     const manifest = this._resolveSessionManifestForPath(sessionPath);
     if (manifest) {
       this._sessionManifestStore.setPermissionModeSnapshot(manifest.sessionId, {
@@ -3126,7 +3210,82 @@ export class SessionCoordinator {
       });
     }
     this._emitPermissionModeChanged(nextMode, sessionPath);
+    this._emitWorkflowModeChanged(entry.workflowMode, entry.effectiveWorkflowMode, sessionPath);
     return { ok: true, mode: nextMode, enabled: entry.planMode };
+  }
+
+  _applyWorkflowModeToEntry(sessionPath: any, entry: any, nextMode: any) {
+    const workflowMode = normalizeSessionWorkflowMode(nextMode);
+    const effectiveMode = effectiveSessionWorkflowMode(workflowMode, entry?.permissionMode);
+    entry.workflowMode = workflowMode;
+    entry.effectiveWorkflowMode = effectiveMode;
+    const refreshedPrompt = this._refreshRuntimeWorkflowPrompt(sessionPath, entry);
+    const metaPatch: any = {
+      workflowMode,
+      effectiveWorkflowMode: effectiveMode,
+    };
+    if (refreshedPrompt && entry.promptSnapshot) {
+      metaPatch.promptSnapshot = entry.promptSnapshot;
+    } else {
+      entry.promptSnapshot = null;
+      metaPatch.promptSnapshot = null;
+    }
+    this.writeSessionMeta(sessionPath, metaPatch);
+    this._emitWorkflowModeChanged(workflowMode, effectiveMode, sessionPath);
+    return { ok: true, mode: workflowMode, effectiveMode };
+  }
+
+  _buildWorkflowPromptSnapshotPatch(sessionPath: any, entry: any, systemPrompt: string) {
+    const current = normalizeSessionPromptSnapshot(this._readSessionMetaEntrySync(sessionPath)?.promptSnapshot);
+    const agent = this._d.getAgentById?.(entry?.agentId) || this._d.getAgent?.();
+    const skills = this._d.getSkills?.();
+    const skillsResult = skills?.getSkillsForAgent && agent
+      ? freezeSkillsResult(skills.getSkillsForAgent(agent, { workflowMode: entry.effectiveWorkflowMode }))
+      : (current?.skillsResult || freezeSkillsResult(null));
+    return {
+      version: SESSION_PROMPT_SNAPSHOT_VERSION,
+      systemPrompt,
+      appendSystemPrompt: normalizeStringArray(current?.appendSystemPrompt),
+      skillsResult,
+      agentsFilesResult: current?.agentsFilesResult || freezeAgentsFilesResult(null),
+      finalSystemPrompt: systemPrompt,
+    };
+  }
+
+  setCurrentSessionWorkflowMode(mode: any) {
+    const sp = this.currentSessionPath;
+    if (!sp) {
+      return {
+        ok: false,
+        error: "current session workflow mode requires an active session",
+        mode: normalizeSessionWorkflowMode(this._pendingWorkflowMode),
+        effectiveMode: effectiveSessionWorkflowMode(this._pendingWorkflowMode, this.getPermissionMode(null)),
+      };
+    }
+    return this.setSessionWorkflowMode(sp, mode);
+  }
+
+  setSessionWorkflowMode(sessionPath: any, mode: any) {
+    if (!sessionPath) {
+      return {
+        ok: false,
+        error: "session workflow mode requires sessionPath",
+        mode: DEFAULT_SESSION_WORKFLOW_MODE,
+        effectiveMode: DEFAULT_SESSION_WORKFLOW_MODE,
+      };
+    }
+    const entry = this._getSessionEntryByPath(sessionPath);
+    if (!entry) {
+      const meta = this._getRuntimeValueForPath(this._hibernatedSessionMeta, sessionPath);
+      if (meta) return this._applyWorkflowModeToEntry(sessionPath, meta, mode);
+      return {
+        ok: false,
+        error: "session not found",
+        mode: this.getWorkflowMode(sessionPath),
+        effectiveMode: this.getEffectiveWorkflowMode(sessionPath),
+      };
+    }
+    return this._applyWorkflowModeToEntry(sessionPath, entry, mode);
   }
 
   setCurrentSessionPermissionMode(mode: any) {
@@ -3219,6 +3378,31 @@ export class SessionCoordinator {
           ? "先问"
           : (normalized === SESSION_PERMISSION_MODES.AUTO ? "自动审核" : "操作")));
     this._d.emitDevLog(`Permission Mode: ${label}`, "info");
+  }
+
+  _emitWorkflowModeChanged(mode: any, effectiveMode: any, sessionPath: any) {
+    const normalized = normalizeSessionWorkflowMode(mode);
+    const effective = normalizeSessionWorkflowMode(effectiveMode);
+    this._d.emitEvent({ type: "workflow_mode", mode: normalized, effectiveMode: effective }, sessionPath);
+    this._d.emitDevLog(`Workflow Mode: ${effective === SESSION_WORKFLOW_MODES.COMPOSE ? "Compose" : "Normal"}`, "info");
+  }
+
+  _refreshRuntimeWorkflowPrompt(sessionPath: any, entry: any) {
+    if (!entry?.session) return null;
+    const agent = this._d.getAgentById?.(entry.agentId) || this._d.getAgent?.();
+    if (!agent?.buildSystemPrompt) return null;
+    const prompt = agent.buildSystemPrompt({
+      forceMemoryEnabled: entry.memoryEnabled !== false,
+      forceExperienceEnabled: entry.experienceEnabled === true,
+      cwdOverride: entry.cwd || entry.session?.sessionManager?.getCwd?.() || "",
+      targetModel: entry.session?.model || null,
+      forPlan: entry.permissionMode === SESSION_PERMISSION_MODES.PLAN,
+      forCompose: entry.effectiveWorkflowMode === SESSION_WORKFLOW_MODES.COMPOSE,
+    });
+    entry.promptSnapshot = this._buildWorkflowPromptSnapshotPatch(sessionPath, entry, prompt);
+    this._applyFinalPromptSnapshot(entry.session, prompt);
+    this._renewCachePrefixContract(sessionPath, entry, "workflow_mode");
+    return prompt;
   }
 
   _emitSessionMetadataUpdated(sessionPath: any, metadata: any) {
@@ -3383,6 +3567,8 @@ export class SessionCoordinator {
       workspaceFolders: Array.isArray(entry.workspaceFolders) ? [...entry.workspaceFolders] : [],
       authorizedFolders: Array.isArray(entry.authorizedFolders) ? [...entry.authorizedFolders] : [],
       permissionMode: entry.permissionMode,
+      workflowMode: entry.workflowMode,
+      effectiveWorkflowMode: entry.effectiveWorkflowMode,
       accessMode: entry.accessMode,
       planMode: entry.planMode,
       thinkingLevel: entry.thinkingLevel,
@@ -3934,6 +4120,8 @@ export class SessionCoordinator {
           } else if (manifest?.permissionModeSnapshot?.mode) {
             s.permissionMode = normalizeSessionPermissionMode(manifest.permissionModeSnapshot.mode);
           }
+          s.workflowMode = normalizeSessionWorkflowMode(runtimeEntry || metaEntry);
+          s.effectiveWorkflowMode = effectiveSessionWorkflowMode(s.workflowMode, s.permissionMode || this._getDefaultPermissionMode());
           s.pinnedAt = typeof manifest?.pinnedAt === "string"
             ? manifest.pinnedAt
             : (typeof metaEntry?.pinnedAt === "string" ? metaEntry.pinnedAt : null);

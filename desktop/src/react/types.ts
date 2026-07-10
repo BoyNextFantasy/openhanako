@@ -41,6 +41,7 @@ export interface DesktopNotificationOptions {
 // ── 核心数据结构 ──
 
 export type SessionPermissionMode = 'auto' | 'operate' | 'ask' | 'read_only' | 'plan';
+export type SessionWorkflowMode = 'normal' | 'compose';
 
 /**
  * #1624：服务端在 session restore 时算好的"工具能力有更新"提示数据
@@ -77,6 +78,8 @@ export interface Session {
   workspaceLabel?: string | null;
   projectId?: string | null;
   permissionMode?: SessionPermissionMode | null;
+  workflowMode?: SessionWorkflowMode | null;
+  effectiveWorkflowMode?: SessionWorkflowMode | null;
   pinnedAt?: string | null;
   hasSummary?: boolean;
   agentDeleted?: boolean;

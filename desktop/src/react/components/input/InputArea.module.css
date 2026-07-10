@@ -177,6 +177,21 @@
     background: rgba(var(--accent-rgb), 0.06);
 }
 
+.compose-mode-btn {
+    color: var(--text-muted);
+}
+
+.compose-mode-active {
+    color: var(--permission-auto);
+    border-color: var(--permission-auto-border);
+    background: var(--permission-auto-bg);
+}
+
+.compose-mode-btn:disabled {
+    opacity: 0.48;
+    cursor: not-allowed;
+}
+
 .plan-mode-label {
     letter-spacing: 0.02em;
     overflow: hidden;

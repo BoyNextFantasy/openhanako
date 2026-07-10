@@ -174,6 +174,73 @@ function readQuickChatPreferences() {
   return normalizeQuickChatPreferences(prefs?.quick_chat);
 }
 
+const DEV_SERVER_SOURCE_DIRS = Object.freeze(["server", "core", "lib", "shared"]);
+const DEV_SERVER_SOURCE_FILES = Object.freeze([
+  "package.json",
+  "package-lock.json",
+  "vite.config.server.js",
+]);
+const DEV_SERVER_SOURCE_EXTENSIONS = new Set([
+  ".cjs",
+  ".js",
+  ".json",
+  ".md",
+  ".mjs",
+  ".ts",
+  ".yaml",
+  ".yml",
+]);
+const DEV_SERVER_SOURCE_SKIP_DIRS = new Set([
+  ".cache",
+  ".git",
+  "dist",
+  "dist-renderer",
+  "dist-server",
+  "dist-server-bundle",
+  "node_modules",
+]);
+
+function updateSourceRevisionForPath(hash, rootDir, absolutePath) {
+  let stat;
+  try {
+    stat = fs.statSync(absolutePath);
+  } catch {
+    return;
+  }
+  const relativePath = path.relative(rootDir, absolutePath).replace(/\\/g, "/");
+  if (stat.isDirectory()) {
+    if (DEV_SERVER_SOURCE_SKIP_DIRS.has(path.basename(absolutePath))) return;
+    let entries = [];
+    try {
+      entries = fs.readdirSync(absolutePath).sort((a, b) => a.localeCompare(b));
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      updateSourceRevisionForPath(hash, rootDir, path.join(absolutePath, entry));
+    }
+    return;
+  }
+  if (!stat.isFile()) return;
+  if (!DEV_SERVER_SOURCE_EXTENSIONS.has(path.extname(absolutePath))) return;
+  hash.update(`${relativePath}:${stat.size}:${Math.trunc(stat.mtimeMs)}\n`);
+}
+
+function computeDevServerSourceRevision() {
+  if (app.isPackaged) return null;
+  const rootDir = path.join(__dirname, "..");
+  const hash = crypto.createHash("sha256");
+  for (const rel of DEV_SERVER_SOURCE_DIRS) {
+    updateSourceRevisionForPath(hash, rootDir, path.join(rootDir, rel));
+  }
+  for (const rel of DEV_SERVER_SOURCE_FILES) {
+    updateSourceRevisionForPath(hash, rootDir, path.join(rootDir, rel));
+  }
+  return hash.digest("hex");
+}
+
+const devServerSourceRevision = computeDevServerSourceRevision();
+
 async function applyDesktopNetworkProxy(config, { reason = "runtime" } = {}) {
   const normalized = normalizeNetworkProxyConfig(config);
   const ses = session.defaultSession;
@@ -946,6 +1013,17 @@ async function verifyReusableServerInfo(existingInfo) {
     return { reusable: false, trusted: false, terminate: false, reason: "identity missing studioId" };
   }
 
+  if (devServerSourceRevision && existingInfo.sourceRevision !== devServerSourceRevision) {
+    return {
+      reusable: false,
+      trusted: true,
+      terminate: isDesktopOwnedServerInfo(existingInfo),
+      reason: "server source revision mismatch",
+      health,
+      identity,
+    };
+  }
+
   const healthVersion = health?.version;
   const identityVersion = identity?.version;
   const serverInfoVersion = existingInfo.version;
@@ -1103,6 +1181,7 @@ async function _spawnServerOnce(serverInfoPath) {
     HANA_DESKTOP_EXEC_PATH: process.execPath,
     HANA_DESKTOP_APP_PATH: app.getAppPath(),
     HANA_DESKTOP_IS_PACKAGED: app.isPackaged ? "1" : "0",
+    HANA_SERVER_SOURCE_REVISION: devServerSourceRevision || "",
   };
   serverEnv = await serverEnvironmentForNetworkProxy(serverEnv);
 

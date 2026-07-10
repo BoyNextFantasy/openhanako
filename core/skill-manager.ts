@@ -10,6 +10,10 @@ import chokidar from "chokidar";
 import { parseSkillMetadata } from "../lib/skills/skill-metadata.ts";
 import { sourceIdentityForSkill } from "../lib/skills/skill-file-identity.ts";
 import { createModuleLogger } from "../lib/debug-log.ts";
+import {
+  SESSION_WORKFLOW_MODES,
+  normalizeSessionWorkflowMode,
+} from "./session-workflow-mode.ts";
 
 const log = createModuleLogger("skill-manager");
 
@@ -48,6 +52,35 @@ function createSkillWatchIgnore(rootDir) {
 // `<root>/<skill-name>/references/...`，3 层足够覆盖；更深的目录树（典型是
 // 误打入的 node_modules 或源码 vendor 目录）不该被监控。
 const SKILL_WATCH_DEPTH = 3;
+const COMPOSE_SKILL_NAMES = [
+  "compose:brainstorm",
+  "compose:plan",
+  "compose:tdd",
+  "compose:review",
+  "compose:execute",
+  "compose:verify",
+];
+
+function isComposeSkill(skill) {
+  return skill?._composeOnly === true || (typeof skill?.name === "string" && skill.name.startsWith("compose:"));
+}
+
+function makeComposeSkill(name) {
+  const slug = name.replace("compose:", "");
+  const baseDir = path.join(process.cwd(), "lib", "compose-skills", slug);
+  return {
+    name,
+    description: `Satori Compose workflow helper for ${slug}.`,
+    filePath: path.join(baseDir, "SKILL.md"),
+    baseDir,
+    source: "builtin",
+    defaultEnabled: true,
+    _hidden: false,
+    _readonly: true,
+    _composeOnly: true,
+    sourceIdentity: `builtin:${name}`,
+  };
+}
 
 // 内部测试用：暴露 ignore/depth 工厂，方便 unit test 验证规则行为。
 export const __test = { createSkillWatchIgnore, HEAVY_DIR_NAMES, SKILL_WATCH_DEPTH };
@@ -119,10 +152,12 @@ export class SkillManager {
   /**
    * 按消费场景过滤 _allSkills：普通列表隐藏 plugin / workspace，运行时列表包含它们。
    */
-  _skillsVisibleToAgent(agent, { includePlugin = false, includeWorkspace = false } = {}) {
+  _skillsVisibleToAgent(agent, { includePlugin = false, includeWorkspace = false, workflowMode = SESSION_WORKFLOW_MODES.NORMAL } = {}) {
+    const includeCompose = normalizeSessionWorkflowMode(workflowMode) === SESSION_WORKFLOW_MODES.COMPOSE;
     return this._allSkills.filter(s => {
       if (!includePlugin && s._pluginSkill) return false;
       if (!includeWorkspace && s._workspaceSkill) return false;
+      if (!includeCompose && isComposeSkill(s)) return false;
       return true;
     });
   }
@@ -155,9 +190,9 @@ export class SkillManager {
   }
 
   /** 返回运行时 skill 列表（含 workspace skill），供 desk / slash 等 session 视图使用 */
-  getRuntimeSkillInfos(agent) {
+  getRuntimeSkillInfos(agent, options: any = {}) {
     const enabled = new Set(agent?.config?.skills?.enabled || []);
-    return this._skillsVisibleToAgent(agent, { includeWorkspace: true }).map(s => ({
+    return this._skillsVisibleToAgent(agent, { includeWorkspace: true, workflowMode: options.workflowMode }).map(s => ({
       name: s.name,
       description: s.description,
       filePath: s.filePath,
@@ -174,10 +209,10 @@ export class SkillManager {
   }
 
   /** 按 agent 过滤可用 skills，供 Pi SDK resourceLoader.getSkills() 使用 */
-  getSkillsForAgent(targetAgent) {
+  getSkillsForAgent(targetAgent, options: any = {}) {
     const enabled = new Set(targetAgent?.config?.skills?.enabled || []);
     return {
-      skills: this._skillsVisibleToAgent(targetAgent, { includePlugin: true, includeWorkspace: true })
+      skills: this._skillsVisibleToAgent(targetAgent, { includePlugin: true, includeWorkspace: true, workflowMode: options.workflowMode })
         .filter(s => this._isRuntimeEnabledForAgent(s, enabled)),
       diagnostics: [],
     };
@@ -333,6 +368,12 @@ export class SkillManager {
   _appendExternalSkills() {
     this._allSkills = this._allSkills.filter(s => s.source !== "external");
     const existingNames = new Set(this._allSkills.map(s => s.name));
+    for (const skillName of COMPOSE_SKILL_NAMES) {
+      if (!existingNames.has(skillName)) {
+        this._allSkills.push(makeComposeSkill(skillName));
+        existingNames.add(skillName);
+      }
+    }
     for (const ext of this.scanExternalSkills()) {
       if (!existingNames.has(ext.name)) {
         this._allSkills.push(ext);
@@ -376,6 +417,7 @@ export class SkillManager {
   }
 
   _isRuntimeEnabledForAgent(skill, enabledSet) {
+    if (isComposeSkill(skill)) return true;
     return !!(
       skill?._pluginSkill
       || skill?._workspaceSkill

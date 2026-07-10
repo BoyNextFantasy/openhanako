@@ -1425,6 +1425,14 @@ export class HanaEngine {
   setPendingSessionPermissionMode(mode) { return this._sessionCoord.setPendingPermissionMode(mode); }
   getSessionPermissionModeDefault() { return this._sessionCoord.getPermissionModeDefault(); }
   setSessionPermissionModeDefault(mode) { return this._sessionCoord.setPermissionModeDefault(mode); }
+  get workflowMode() { return this._sessionCoord.getWorkflowMode(); }
+  get effectiveWorkflowMode() { return this._sessionCoord.getEffectiveWorkflowMode(); }
+  getSessionWorkflowMode(sessionPath) { return this._sessionCoord.getWorkflowMode(sessionPath); }
+  getEffectiveSessionWorkflowMode(sessionPath) { return this._sessionCoord.getEffectiveWorkflowMode(sessionPath); }
+  setSessionWorkflowMode(mode) { return this._sessionCoord.setSessionWorkflowMode(this.currentSessionPath, mode); }
+  setSessionWorkflowModeForSession(sessionPath, mode) { return this._sessionCoord.setSessionWorkflowMode(sessionPath, mode); }
+  setCurrentSessionWorkflowMode(mode) { return this._sessionCoord.setCurrentSessionWorkflowMode(mode); }
+  setPendingSessionWorkflowMode(mode) { return this._sessionCoord.setPendingWorkflowMode(mode); }
   get accessMode() { return this._sessionCoord.getAccessMode(); }
   setAccessMode(mode) { return this._sessionCoord.setAccessMode(mode); }
   setPlanMode(enabled) { return this._sessionCoord.setPlanMode(enabled); }
@@ -1537,11 +1545,11 @@ export class HanaEngine {
     if (!ag) throw new Error(`agent not found: ${agentId}`);
     return this._skills.getAllSkills(ag);
   }
-  getRuntimeSkills(agentId) {
+  getRuntimeSkills(agentId, options: any = {}) {
     if (!agentId) throw new Error("getRuntimeSkills requires explicit agentId");
     const ag = this._agentMgr.getAgent(agentId);
     if (!ag) throw new Error(`agent not found: ${agentId}`);
-    return this._skills.getRuntimeSkillInfos(ag);
+    return this._skills.getRuntimeSkillInfos(ag, options);
   }
   _getSkillsForAgent(ag) { return this._skills.getSkillsForAgent(ag); }
   get skillsDir() { return this._skills?.skillsDir; }

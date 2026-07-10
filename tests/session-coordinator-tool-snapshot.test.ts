@@ -75,6 +75,22 @@ function defaultBaselineNames() {
   return allNames().filter((name) => name !== "dm");
 }
 
+function writeSkillFixture(root, name) {
+  const slug = name.replace(/[^a-z0-9_-]+/gi, "-");
+  const baseDir = path.join(root, slug);
+  fs.mkdirSync(baseDir, { recursive: true });
+  const filePath = path.join(baseDir, "SKILL.md");
+  fs.writeFileSync(filePath, `---\nname: ${name}\ndescription: ${name}\n---\n\n# ${name}\n`, "utf-8");
+  return {
+    name,
+    description: `${name} skill`,
+    filePath,
+    baseDir,
+    source: "user",
+    defaultEnabled: true,
+  };
+}
+
 function restoredSnapshot(names, availableNames = allNames()) {
   return repairRestoredToolSnapshot(names, availableNames, { coreToolNames: CORE_TOOL_NAMES });
 }
@@ -227,6 +243,80 @@ describe("session-coordinator tool snapshot (createSession)", () => {
       accessMode: "operate",
       planMode: false,
     });
+  });
+
+  it("refreshes runtime skill snapshots when workflow mode changes", async () => {
+    const skillsRoot = path.join(tmpDir, "skills");
+    const normalSkill = writeSkillFixture(skillsRoot, "global-skill");
+    const composeSkill = writeSkillFixture(skillsRoot, "compose:plan");
+    coord._d.getSkills = () => ({
+      getSkillsForAgent: (_agent, options: any = {}) => ({
+        skills: options.workflowMode === "compose"
+          ? [normalSkill, composeSkill]
+          : [normalSkill],
+        diagnostics: [],
+      }),
+    });
+    currentAgentConfig = { skills: { enabled: ["global-skill"] }, tools: { disabled: [] } };
+
+    const { sessionPath } = await coord.createSession(null, tmpDir, true);
+
+    const initialNames = lastSessionOptions.resourceLoader.getSkills().skills.map((skill) => skill.name);
+    expect(initialNames).toEqual(["global-skill"]);
+
+    const composeResult = coord.setSessionWorkflowMode(sessionPath, "compose");
+    expect(composeResult).toMatchObject({ ok: true, mode: "compose", effectiveMode: "compose" });
+    const composeNames = lastSessionOptions.resourceLoader.getSkills().skills.map((skill) => skill.name);
+    expect(composeNames).toEqual(["global-skill", "compose:plan"]);
+
+    const planResult = coord.setSessionPermissionMode(sessionPath, "plan");
+    expect(planResult).toMatchObject({ ok: true, mode: "plan" });
+    const planNames = lastSessionOptions.resourceLoader.getSkills().skills.map((skill) => skill.name);
+    expect(planNames).toEqual(["global-skill"]);
+  });
+
+  it("clears frozen prompt snapshots when changing workflow on a hibernated session", async () => {
+    const stalePromptSnapshot = {
+      version: 1,
+      systemPrompt: "stale normal prompt",
+      appendSystemPrompt: [],
+      skillsResult: { skills: [], diagnostics: [] },
+      agentsFilesResult: { files: [], diagnostics: [] },
+      finalSystemPrompt: "stale normal prompt",
+    };
+    await fsp.writeFile(
+      path.join(sessionDir, "session-meta.json"),
+      JSON.stringify({
+        [path.basename(fakeSessionPath)]: {
+          permissionMode: "auto",
+          workflowMode: "normal",
+          effectiveWorkflowMode: "normal",
+          promptSnapshot: stalePromptSnapshot,
+        },
+      }, null, 2),
+    );
+    coord._setRuntimeValueForPath(coord._hibernatedSessionMeta, fakeSessionPath, {
+      sessionPath: fakeSessionPath,
+      agentId: "test",
+      permissionMode: "auto",
+      workflowMode: "normal",
+      effectiveWorkflowMode: "normal",
+      accessMode: "operate",
+      planMode: false,
+      promptSnapshot: stalePromptSnapshot,
+    });
+
+    const result = coord.setSessionWorkflowMode(fakeSessionPath, "compose");
+    await coord._metaWriteQueue;
+
+    expect(result).toMatchObject({ ok: true, mode: "compose", effectiveMode: "compose" });
+    const meta = JSON.parse(await fsp.readFile(path.join(sessionDir, "session-meta.json"), "utf-8"));
+    expect(meta[path.basename(fakeSessionPath)]).toMatchObject({
+      workflowMode: "compose",
+      effectiveWorkflowMode: "compose",
+      promptSnapshot: null,
+    });
+    expect(coord._getRuntimeValueForPath(coord._hibernatedSessionMeta, fakeSessionPath).promptSnapshot).toBeNull();
   });
 
   it("projects persisted permission mode for cold sessions in the session list", async () => {

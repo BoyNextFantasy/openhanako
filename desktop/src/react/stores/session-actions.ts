@@ -21,7 +21,7 @@ import { snapshotStreamBuffer, type StreamBufferSnapshot } from './stream-invali
 import { renderMarkdown } from '../utils/markdown';
 import type { ChatMessage, ContentBlock } from './chat-types';
 import { readMessageLiveVersion } from './message-live-version';
-import type { SessionPermissionMode } from '../types';
+import type { SessionPermissionMode, SessionWorkflowMode } from '../types';
 
 // ── 防竞争计数器 ──
 
@@ -159,6 +159,7 @@ function isPendingNewSessionDraftView(): boolean {
 }
 
 const SESSION_PERMISSION_MODES = new Set(['auto', 'operate', 'ask', 'read_only', 'plan']);
+const SESSION_WORKFLOW_MODES = new Set(['normal', 'compose']);
 
 function normalizeSessionPermissionMode(mode: unknown): SessionPermissionMode {
   return typeof mode === 'string' && SESSION_PERMISSION_MODES.has(mode)
@@ -171,6 +172,21 @@ function emitSessionPermissionMode(mode: unknown): SessionPermissionMode {
   useStore.getState().setSessionPermissionMode?.(normalized);
   window.dispatchEvent(new CustomEvent('hana-plan-mode', {
     detail: { enabled: normalized === 'read_only' || normalized === 'plan', mode: normalized },
+  }));
+  return normalized;
+}
+
+function normalizeSessionWorkflowMode(mode: unknown): SessionWorkflowMode {
+  return typeof mode === 'string' && SESSION_WORKFLOW_MODES.has(mode)
+    ? mode as SessionWorkflowMode
+    : 'normal';
+}
+
+function emitSessionWorkflowMode(mode: unknown): SessionWorkflowMode {
+  const normalized = normalizeSessionWorkflowMode(mode);
+  useStore.getState().setSessionWorkflowMode?.(normalized);
+  window.dispatchEvent(new CustomEvent('hana-workflow-mode', {
+    detail: { mode: normalized },
   }));
   return normalized;
 }
@@ -654,6 +670,7 @@ export async function switchSession(path: string): Promise<void> {
     useStore.getState().clearQuotedSelection();
 
     emitSessionPermissionMode(data.permissionMode || data.accessMode);
+    emitSessionWorkflowMode(data.effectiveWorkflowMode || data.workflowMode);
     if (data.thinkingLevel) {
       useStore.getState().setThinkingLevel(data.thinkingLevel);
     }
@@ -839,6 +856,8 @@ export async function createNewSession(options: CreateNewSessionOptions = {}): P
     pendingProjectId,
     pendingNewSessionThinkingLevel: null,
     pendingNewSessionPermissionMode: null,
+    pendingNewSessionWorkflowMode: null,
+    sessionWorkflowMode: 'normal',
     attachedFiles: [],
     deskContextAttached: false,
     docContextAttached: false,
@@ -897,6 +916,7 @@ export async function ensureSession(): Promise<boolean> {
     if (s.pendingNewSessionPermissionMode) {
       body.permissionMode = s.pendingNewSessionPermissionMode;
     }
+    body.workflowMode = s.pendingNewSessionWorkflowMode || s.sessionWorkflowMode || 'normal';
     if (s.selectedAgentId && s.selectedAgentId !== s.currentAgentId) {
       body.agentId = s.selectedAgentId;
     }
@@ -928,6 +948,7 @@ export async function ensureSession(): Promise<boolean> {
       pendingProjectId: null,
       pendingNewSessionThinkingLevel: null,
       pendingNewSessionPermissionMode: null,
+      pendingNewSessionWorkflowMode: null,
       workspaceFolders: Array.isArray(data.workspaceFolders) ? data.workspaceFolders : [],
       selectedAgentId: null,
     };
@@ -976,6 +997,7 @@ export async function ensureSession(): Promise<boolean> {
     });
 
     emitSessionPermissionMode(data.permissionMode || data.accessMode || s.pendingNewSessionPermissionMode);
+    emitSessionWorkflowMode(data.effectiveWorkflowMode || data.workflowMode || s.pendingNewSessionWorkflowMode);
 
     await loadSessions();
 

@@ -29,7 +29,9 @@ const initialStateFactory = (): MockState => ({
   pendingProjectId: null,
   pendingNewSessionThinkingLevel: null,
   pendingNewSessionPermissionMode: null,
+  pendingNewSessionWorkflowMode: null,
   sessionPermissionMode: 'ask',
+  sessionWorkflowMode: 'normal',
   sessions: [] as Array<{ path: string }>,
   chatSessions: {} as Record<string, unknown>,
   sessionRegistryFilesByPath: {} as Record<string, unknown>,
@@ -236,6 +238,13 @@ function installStoreMethods() {
     }
   });
   s.setPendingNewSessionPermissionMode = vi.fn((mode: string | null) => { mockState.pendingNewSessionPermissionMode = mode; });
+  s.setSessionWorkflowMode = vi.fn((mode: string) => {
+    mockState.sessionWorkflowMode = mode;
+    if (mockState.pendingNewSession === true) {
+      mockState.pendingNewSessionWorkflowMode = mode;
+    }
+  });
+  s.setPendingNewSessionWorkflowMode = vi.fn((mode: string | null) => { mockState.pendingNewSessionWorkflowMode = mode; });
   s.setSessionCapabilityDrift = vi.fn((path: string, drift: unknown) => {
     const bySession = mockState.capabilityDriftBySession as Record<string, unknown>;
     if (drift) bySession[path] = drift;
@@ -413,6 +422,8 @@ function mockPermissionDefault(mode = 'ask') {
           memoryEnabled: true,
           permissionMode: 'ask',
           accessMode: 'ask',
+          workflowMode: 'compose',
+          effectiveWorkflowMode: 'compose',
         });
       }
       if (String(url).startsWith('/api/sessions/messages')) {
@@ -434,6 +445,7 @@ function mockPermissionDefault(mode = 'ask') {
     expect(mockState.unreadOutputSessionPaths).toEqual(['/session/other.jsonl']);
     expect(mockState.currentSessionId).toBe('sess_next');
     expect(mockState.sessionLocatorsById).toMatchObject({ sess_next: { path: '/session/next.jsonl' } });
+    expect(mockState.sessionWorkflowMode).toBe('compose');
   });
 
   it('clears unread output marker when switching into a deleted-agent history session', async () => {
@@ -704,6 +716,7 @@ function mockPermissionDefault(mode = 'ask') {
             memoryEnabled: true,
             cwd: '/workspace-a',
             workspaceFolders: ['/reference-a'],
+            workflowMode: 'normal',
             currentSessionPath: null,
           }),
         }),
@@ -738,6 +751,7 @@ function mockPermissionDefault(mode = 'ask') {
           body: JSON.stringify({
             memoryEnabled: true,
             workspaceMountId: 'mount_docs',
+            workflowMode: 'normal',
             currentSessionPath: null,
           }),
         }),
@@ -775,6 +789,7 @@ function mockPermissionDefault(mode = 'ask') {
             memoryEnabled: true,
             cwd: '/workspace-a',
             thinkingLevel: 'high',
+            workflowMode: 'normal',
             currentSessionPath: null,
           }),
         }),
@@ -809,12 +824,97 @@ function mockPermissionDefault(mode = 'ask') {
             memoryEnabled: true,
             cwd: '/workspace-a',
             permissionMode: 'auto',
+            workflowMode: 'normal',
             currentSessionPath: null,
           }),
         }),
       );
       expect(mockState.pendingNewSessionPermissionMode).toBeNull();
       expect(mockState.sessionPermissionMode).toBe('auto');
+    });
+
+    it('resets a new-session workflow draft to normal instead of inheriting the old session display state', async () => {
+      Object.assign(mockState, {
+        sessionWorkflowMode: 'compose',
+        homeFolder: '/workspace-a',
+      });
+      mockPermissionDefault();
+
+      await createNewSession();
+
+      expect(mockState.pendingNewSession).toBe(true);
+      expect(mockState.pendingNewSessionWorkflowMode).toBeNull();
+      expect(mockState.sessionWorkflowMode).toBe('normal');
+    });
+
+    it('carries the pending new-session workflow draft into session creation', async () => {
+      Object.assign(mockState, {
+        pendingNewSession: true,
+        memoryEnabled: true,
+        selectedFolder: '/workspace-a',
+        pendingNewSessionWorkflowMode: 'compose',
+      });
+      mockFetch.mockResolvedValueOnce(jsonResponse({
+        ok: true,
+        path: '/session/new.jsonl',
+        cwd: '/workspace-a',
+        workspaceFolders: [],
+        workflowMode: 'compose',
+        effectiveWorkflowMode: 'compose',
+      }));
+      mockFetch.mockResolvedValueOnce(jsonResponse([]));
+
+      await expect(ensureSession()).resolves.toBe(true);
+
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        1,
+        '/api/sessions/new',
+        expect.objectContaining({
+          body: JSON.stringify({
+            memoryEnabled: true,
+            cwd: '/workspace-a',
+            workflowMode: 'compose',
+            currentSessionPath: null,
+          }),
+        }),
+      );
+      expect(mockState.pendingNewSessionWorkflowMode).toBeNull();
+      expect(mockState.sessionWorkflowMode).toBe('compose');
+    });
+
+    it('sends normal workflow when creating a fresh draft without an explicit compose toggle', async () => {
+      Object.assign(mockState, {
+        pendingNewSession: true,
+        memoryEnabled: true,
+        selectedFolder: '/workspace-a',
+        sessionWorkflowMode: 'normal',
+        pendingNewSessionWorkflowMode: null,
+      });
+      mockFetch.mockResolvedValueOnce(jsonResponse({
+        ok: true,
+        path: '/session/new.jsonl',
+        cwd: '/workspace-a',
+        workspaceFolders: [],
+        workflowMode: 'normal',
+        effectiveWorkflowMode: 'normal',
+      }));
+      mockFetch.mockResolvedValueOnce(jsonResponse([]));
+
+      await expect(ensureSession()).resolves.toBe(true);
+
+      expect(mockFetch).toHaveBeenNthCalledWith(
+        1,
+        '/api/sessions/new',
+        expect.objectContaining({
+          body: JSON.stringify({
+            memoryEnabled: true,
+            cwd: '/workspace-a',
+            workflowMode: 'normal',
+            currentSessionPath: null,
+          }),
+        }),
+      );
+      expect(mockState.sessionWorkflowMode).toBe('normal');
     });
 
     it('carries an explicit project id from the new-session draft into session creation', async () => {
@@ -840,6 +940,7 @@ function mockPermissionDefault(mode = 'ask') {
             cwd: '/workspace/project-hana',
             projectId: 'project-hana',
             permissionMode: 'ask',
+            workflowMode: 'normal',
             currentSessionPath: null,
           }),
         }),

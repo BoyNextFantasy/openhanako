@@ -739,6 +739,23 @@ describe('ws-message-handler permission mode events', () => {
 
     expect(details).toEqual([{ enabled: false, mode: 'ask' }]);
   });
+
+  it('syncs workflow_mode messages for the focused session', () => {
+    const details: unknown[] = [];
+    windowTarget.addEventListener('hana-workflow-mode', (event) => {
+      details.push((event as CustomEvent).detail);
+    });
+
+    handleServerMessage({
+      type: 'workflow_mode',
+      sessionPath: '/session/a.jsonl',
+      mode: 'compose',
+      effectiveMode: 'compose',
+    });
+
+    expect(useStore.getState().sessionWorkflowMode).toBe('compose');
+    expect(details).toEqual([{ mode: 'compose', effectiveMode: 'compose' }]);
+  });
 });
 
 describe('ws-message-handler background chat stream routing', () => {

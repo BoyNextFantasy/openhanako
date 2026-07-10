@@ -1,13 +1,20 @@
-import type { Session, SessionCapabilityDrift, SessionPermissionMode, SessionStream, TodoItem } from '../types';
+import type { Session, SessionCapabilityDrift, SessionPermissionMode, SessionStream, SessionWorkflowMode, TodoItem } from '../types';
 import type { SessionConfirmationBlock, PendingQuestionBlock } from './chat-types';
 import type { ThinkingLevel } from './model-slice';
 
 const SESSION_PERMISSION_MODES = new Set(['auto', 'operate', 'ask', 'read_only', 'plan']);
+const SESSION_WORKFLOW_MODES = new Set(['normal', 'compose']);
 
 function normalizeSessionPermissionMode(mode: unknown): SessionPermissionMode {
   return typeof mode === 'string' && SESSION_PERMISSION_MODES.has(mode)
     ? mode as SessionPermissionMode
     : 'ask';
+}
+
+function normalizeSessionWorkflowMode(mode: unknown): SessionWorkflowMode {
+  return typeof mode === 'string' && SESSION_WORKFLOW_MODES.has(mode)
+    ? mode as SessionWorkflowMode
+    : 'normal';
 }
 
 function normalizeSessionId(value: unknown): string | null {
@@ -142,7 +149,9 @@ export interface SessionSlice {
   pendingProjectId: string | null;
   pendingNewSessionThinkingLevel: ThinkingLevel | null;
   pendingNewSessionPermissionMode: SessionPermissionMode | null;
+  pendingNewSessionWorkflowMode: SessionWorkflowMode | null;
   sessionPermissionMode: SessionPermissionMode;
+  sessionWorkflowMode: SessionWorkflowMode;
   memoryEnabled: boolean;
   /** @deprecated 兼容层 — 读取当前 session 的 todos，新代码用 todosBySession */
   sessionTodos: TodoItem[];
@@ -172,7 +181,9 @@ export interface SessionSlice {
   setPendingProjectId: (projectId: string | null) => void;
   setPendingNewSessionThinkingLevel: (level: ThinkingLevel | null) => void;
   setPendingNewSessionPermissionMode: (mode: SessionPermissionMode | null) => void;
+  setPendingNewSessionWorkflowMode: (mode: SessionWorkflowMode | null) => void;
   setSessionPermissionMode: (mode: SessionPermissionMode) => void;
+  setSessionWorkflowMode: (mode: SessionWorkflowMode) => void;
   setMemoryEnabled: (enabled: boolean) => void;
   setSessionTodos: (todos: TodoItem[]) => void;
   setSessionTodosForPath: (sessionPath: string, todos: TodoItem[]) => void;
@@ -199,7 +210,9 @@ export const createSessionSlice = (
   pendingProjectId: null,
   pendingNewSessionThinkingLevel: null,
   pendingNewSessionPermissionMode: null,
+  pendingNewSessionWorkflowMode: null,
   sessionPermissionMode: 'ask',
+  sessionWorkflowMode: 'normal',
   memoryEnabled: true,
   sessionTodos: [],
   todosBySession: {},
@@ -248,11 +261,26 @@ export const createSessionSlice = (
     const normalized = normalizeSessionPermissionMode(mode);
     set({ pendingNewSessionPermissionMode: normalized, sessionPermissionMode: normalized });
   },
+  setPendingNewSessionWorkflowMode: (mode) => {
+    if (mode === null) {
+      set({ pendingNewSessionWorkflowMode: null });
+      return;
+    }
+    const normalized = normalizeSessionWorkflowMode(mode);
+    set({ pendingNewSessionWorkflowMode: normalized, sessionWorkflowMode: normalized });
+  },
   setSessionPermissionMode: (mode) => {
     const normalized = normalizeSessionPermissionMode(mode);
     set((s) => ({
       sessionPermissionMode: normalized,
       ...(s.pendingNewSession ? { pendingNewSessionPermissionMode: normalized } : {}),
+    }));
+  },
+  setSessionWorkflowMode: (mode) => {
+    const normalized = normalizeSessionWorkflowMode(mode);
+    set((s) => ({
+      sessionWorkflowMode: normalized,
+      ...(s.pendingNewSession ? { pendingNewSessionWorkflowMode: normalized } : {}),
     }));
   },
   setMemoryEnabled: (enabled) => set({ memoryEnabled: enabled }),

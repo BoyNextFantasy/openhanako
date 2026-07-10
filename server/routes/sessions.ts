@@ -821,6 +821,12 @@ export function createSessionsRoute(engine, hub = null) {
           permissionMode: s.permissionMode || (typeof engine.getSessionPermissionMode === "function"
             ? engine.getSessionPermissionMode(s.path)
             : engine.permissionMode || null),
+          workflowMode: s.workflowMode || (typeof engine.getSessionWorkflowMode === "function"
+            ? engine.getSessionWorkflowMode(s.path)
+            : engine.workflowMode || "normal"),
+          effectiveWorkflowMode: s.effectiveWorkflowMode || (typeof engine.getEffectiveSessionWorkflowMode === "function"
+            ? engine.getEffectiveSessionWorkflowMode(s.path)
+            : engine.effectiveWorkflowMode || "normal"),
           pinnedAt: s.pinnedAt || null,
           agentDeleted: s.agentDeleted === true,
           readOnlyReason: s.readOnlyReason || (s.agentDeleted === true ? "agent_deleted" : null),
@@ -1512,7 +1518,7 @@ export function createSessionsRoute(engine, hub = null) {
       });
       if (!auth.allowed) return c.json({ error: "insufficient_scope", reason: auth.reason }, 403);
       const body = await safeJson(c);
-      const { memoryEnabled, agentId, currentSessionPath: oldSessionPath, thinkingLevel } = body;
+      const { memoryEnabled, agentId, currentSessionPath: oldSessionPath, thinkingLevel, workflowMode } = body;
       const workspaceSelection = resolveSessionWorkspaceSelection(engine, requestContext, body);
       const cwd = workspaceSelection.cwd;
       const workspaceFolders = Array.isArray(body.workspaceFolders)
@@ -1542,11 +1548,15 @@ export function createSessionsRoute(engine, hub = null) {
         workspaceFolders: any;
         visibleInSessionList: boolean;
         thinkingLevel?: any;
+        workflowMode?: any;
         workspaceMountId?: string;
         workspaceLabel?: string | null;
       } = { workspaceFolders, visibleInSessionList: true };
       if (thinkingLevel !== undefined && thinkingLevel !== null) {
         createOptions.thinkingLevel = thinkingLevel;
+      }
+      if (workflowMode !== undefined && workflowMode !== null) {
+        createOptions.workflowMode = workflowMode;
       }
       if (workspaceSelection.mount?.mountId) {
         createOptions.workspaceMountId = workspaceSelection.mount.mountId;
@@ -1594,6 +1604,8 @@ export function createSessionsRoute(engine, hub = null) {
         projectId,
         planMode: engine.planMode,
         permissionMode: engine.permissionMode,
+        workflowMode: engine.getSessionWorkflowMode?.(newSessionPath) || engine.workflowMode || "normal",
+        effectiveWorkflowMode: engine.getEffectiveSessionWorkflowMode?.(newSessionPath) || engine.effectiveWorkflowMode || "normal",
         accessMode: engine.accessMode,
         thinkingLevel: normalizeSessionThinkingLevel(engine.getSessionThinkingLevel?.(newSessionPath) || engine.getThinkingLevel?.()),
         memoryModelUnavailableReason: engine.memoryModelUnavailableReason || null,
@@ -1623,7 +1635,7 @@ export function createSessionsRoute(engine, hub = null) {
       }
 
       const body = await safeJson(c);
-      const { memoryEnabled, agentId, permissionMode, thinkingLevel } = body;
+      const { memoryEnabled, agentId, permissionMode, thinkingLevel, workflowMode } = body;
       const workspaceSelection = resolveSessionWorkspaceSelection(engine, requestContext, body);
       const cwd = workspaceSelection.cwd;
       const workspaceFolders = Array.isArray(body.workspaceFolders)
@@ -1638,6 +1650,7 @@ export function createSessionsRoute(engine, hub = null) {
         workspaceFolders: any;
         visibleInSessionList: boolean;
         permissionMode: any;
+        workflowMode?: any;
         thinkingLevel?: any;
         workspaceMountId?: string;
         workspaceLabel?: string | null;
@@ -1649,6 +1662,9 @@ export function createSessionsRoute(engine, hub = null) {
         visibleInSessionList: true,
         permissionMode: permissionMode || null,
       };
+      if (workflowMode !== undefined && workflowMode !== null) {
+        detachedOptions.workflowMode = workflowMode;
+      }
       if (thinkingLevel !== undefined && thinkingLevel !== null) {
         detachedOptions.thinkingLevel = thinkingLevel;
       }
@@ -1677,6 +1693,8 @@ export function createSessionsRoute(engine, hub = null) {
         currentSessionPath: engine.currentSessionPath || null,
         planMode: resolvedPermissionMode === "read_only",
         permissionMode: resolvedPermissionMode,
+        workflowMode: engine.getSessionWorkflowMode?.(newSessionPath) || "normal",
+        effectiveWorkflowMode: engine.getEffectiveSessionWorkflowMode?.(newSessionPath) || "normal",
         accessMode: resolvedPermissionMode === "read_only" ? "read_only" : "operate",
         thinkingLevel: normalizeSessionThinkingLevel(engine.getSessionThinkingLevel?.(newSessionPath) || engine.getThinkingLevel?.()),
         memoryModelUnavailableReason: engine.memoryModelUnavailableReason || null,
@@ -1731,6 +1749,8 @@ export function createSessionsRoute(engine, hub = null) {
         projectId: null,
         planMode: engine.planMode,
         permissionMode: engine.permissionMode,
+        workflowMode: engine.getSessionWorkflowMode?.(newSessionPath) || engine.workflowMode || "normal",
+        effectiveWorkflowMode: engine.getEffectiveSessionWorkflowMode?.(newSessionPath) || engine.effectiveWorkflowMode || "normal",
         accessMode: engine.accessMode,
         thinkingLevel: normalizeSessionThinkingLevel(engine.getSessionThinkingLevel?.(newSessionPath) || engine.getThinkingLevel?.()),
         memoryModelUnavailableReason: engine.memoryModelUnavailableReason || null,

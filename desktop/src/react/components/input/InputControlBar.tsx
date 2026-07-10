@@ -1,5 +1,6 @@
 import { memo, type RefObject } from 'react';
 import { PlanModeButton, type PermissionMode } from './PlanModeButton';
+import { ComposeModeButton } from './ComposeModeButton';
 import { ContextRing } from './ContextRing';
 import { ThinkingLevelButton } from './ThinkingLevelButton';
 import { ModelSelector } from './ModelSelector';
@@ -7,6 +8,7 @@ import { SendButton } from './SendButton';
 import type { ThinkingLevel } from '../../stores/model-slice';
 import type { Model } from '../../types';
 import type { SessionModel } from '../../stores/chat-types';
+import type { SessionWorkflowMode } from '../../types';
 import styles from './InputArea.module.css';
 
 interface Props {
@@ -18,6 +20,8 @@ interface Props {
   permissionMode: PermissionMode;
   onPermissionModeChange: (v: PermissionMode) => void;
   planModeLocked: boolean;
+  workflowMode: SessionWorkflowMode;
+  onWorkflowModeChange: (v: SessionWorkflowMode) => void;
   // 右侧控制
   showThinking: boolean;
   thinkingLevel: ThinkingLevel;
@@ -42,6 +46,7 @@ export const InputControlBar = memo(function InputControlBar(props: Props) {
   const {
     t, onAttach, slashBtnRef, onSlashToggle,
     permissionMode, onPermissionModeChange, planModeLocked,
+    workflowMode, onWorkflowModeChange,
     showThinking, thinkingLevel, onThinkingChange, availableThinkingLevels,
     models, sessionModel, isStreaming, hasInput, canSend,
     showAudioInput, audioRecordingActive, audioRecordingBusy, onAudioToggle,
@@ -72,6 +77,7 @@ export const InputControlBar = memo(function InputControlBar(props: Props) {
           </svg>
         </button>
         <PlanModeButton mode={permissionMode} onChange={onPermissionModeChange} locked={planModeLocked} />
+        <ComposeModeButton mode={workflowMode} permissionMode={permissionMode} onChange={onWorkflowModeChange} />
         <ContextRing />
       </div>
       <div className={styles['input-controls']}>

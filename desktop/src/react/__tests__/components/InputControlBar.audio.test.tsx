@@ -9,6 +9,10 @@ vi.mock('../../components/input/PlanModeButton', () => ({
   PlanModeButton: () => React.createElement('button', { type: 'button' }, 'plan'),
 }));
 
+vi.mock('../../components/input/ComposeModeButton', () => ({
+  ComposeModeButton: () => React.createElement('button', { type: 'button' }, 'compose'),
+}));
+
 vi.mock('../../components/input/ContextRing', () => ({
   ContextRing: () => React.createElement('span', null, 'context'),
 }));
@@ -34,6 +38,8 @@ function renderBar(overrides: Partial<React.ComponentProps<typeof InputControlBa
     permissionMode="ask"
     onPermissionModeChange={vi.fn()}
     planModeLocked={false}
+    workflowMode="normal"
+    onWorkflowModeChange={vi.fn()}
     showThinking={false}
     thinkingLevel="auto"
     onThinkingChange={vi.fn()}

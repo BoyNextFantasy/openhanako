@@ -357,6 +357,8 @@ function InputAreaInner({ surface }: Required<InputAreaProps>) {
   // Local state
   const permissionMode = useStore(s => s.sessionPermissionMode);
   const setPermissionMode = useStore(s => s.setSessionPermissionMode);
+  const workflowMode = useStore(s => s.sessionWorkflowMode);
+  const setWorkflowMode = useStore(s => s.setSessionWorkflowMode);
   const [sending, setSending] = useState(false);
   const [slashMenuOpen, setSlashMenuOpen] = useState(false);
   const [slashSelected, setSlashSelected] = useState(0);
@@ -1869,6 +1871,8 @@ function InputAreaInner({ surface }: Required<InputAreaProps>) {
             permissionMode={permissionMode}
             onPermissionModeChange={setPermissionMode}
             planModeLocked={inputLocked}
+            workflowMode={workflowMode}
+            onWorkflowModeChange={setWorkflowMode}
             showThinking={showThinkingControl}
             thinkingLevel={thinkingLevel}
             onThinkingChange={setThinkingLevel}

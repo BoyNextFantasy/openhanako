@@ -900,6 +900,18 @@ app.get("/api/session-permission-mode", async (c) => {
   });
 });
 
+app.get("/api/session-workflow-mode", async (c) => {
+  const sessionPath = c.req.query("sessionPath") || null;
+  const pendingNewSession = c.req.query("pendingNewSession") === "1";
+  const mode = pendingNewSession
+    ? engine.workflowMode
+    : (sessionPath ? engine.getSessionWorkflowMode?.(sessionPath) : engine.workflowMode);
+  const effectiveMode = pendingNewSession
+    ? engine.effectiveWorkflowMode
+    : (sessionPath ? engine.getEffectiveSessionWorkflowMode?.(sessionPath) : engine.effectiveWorkflowMode);
+  return c.json({ mode, effectiveMode });
+});
+
 app.get("/api/session-thinking-level", async (c) => {
   const sessionPath = c.req.query("sessionPath") || null;
   const pendingNewSession = c.req.query("pendingNewSession") === "1";
@@ -956,6 +968,32 @@ app.post("/api/session-permission-mode", async (c) => {
 });
 
 // 远程关闭（供 desktop 端复�?server 退出时调用，跨平台可靠�?graceful shutdown�?
+app.post("/api/session-workflow-mode", async (c) => {
+  const { mode, pendingNewSession, currentSessionOnly, sessionPath } = await safeJson(c);
+  const targetSessionPath = typeof sessionPath === "string" && sessionPath ? sessionPath : null;
+  const result = currentSessionOnly === true
+    ? engine.setCurrentSessionWorkflowMode(mode)
+    : pendingNewSession === true
+    ? engine.setPendingSessionWorkflowMode(mode)
+    : targetSessionPath
+    ? engine.setSessionWorkflowModeForSession(targetSessionPath, mode)
+    : engine.setPendingSessionWorkflowMode(mode);
+  const explicitSession = currentSessionOnly === true || !!targetSessionPath;
+  if (explicitSession && result?.ok === false) {
+    return c.json({
+      ok: false,
+      error: result.error || "session workflow mode requires an active session",
+      mode: result.mode,
+      effectiveMode: result.effectiveMode,
+    }, 409);
+  }
+  return c.json({
+    ok: result?.ok !== false,
+    mode: result?.mode || engine.workflowMode,
+    effectiveMode: result?.effectiveMode || engine.effectiveWorkflowMode,
+  });
+});
+
 app.post("/api/shutdown", async (c) => {
   log.log("收到 HTTP shutdown 请求，正在清�?..");
   // 异步执行，先返回响应
@@ -1093,6 +1131,7 @@ try {
       network: createServerRuntimeNetworkSummary(),
       token: SERVER_TOKEN,
       version: appVersion,
+      sourceRevision: process.env.HANA_SERVER_SOURCE_REVISION || null,
       ownerKind: process.env.HANA_SERVER_OWNER === "desktop" ? "desktop" : "standalone",
       ownerPid: Number.parseInt(process.env.HANA_SERVER_OWNER_PID || "", 10) || null,
       serverId: runtimeContext.serverId || null,
