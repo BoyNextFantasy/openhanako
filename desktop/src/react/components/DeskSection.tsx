@@ -184,9 +184,9 @@ export function DeskSection({
           </div>
         )}
         {showHeader && <DeskCwdSkillsPanel />}
-        <DeskSearchBox />
-        <div className={s.toolbar}>
-          <div className={s.toolbarActions}>
+        <div className={s.searchRow}>
+          <DeskSearchBox />
+          <div className={s.searchActions}>
             <DeskPreviewIconButton />
             <DeskOpenIconButton />
             <DeskFilterButton filters={typeFilters} onFiltersChange={handleTypeFiltersChange} onShowMenu={handleShowMenu} />

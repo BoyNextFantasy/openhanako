@@ -28,7 +28,11 @@ import { FileMentionMenu } from './input/FileMentionMenu';
 import { InputStatusBars } from './input/InputStatusBars';
 import { InputContextRow } from './input/InputContextRow';
 import { InputControlBar } from './input/InputControlBar';
-import type { PermissionMode } from './input/PlanModeButton';
+import { PlanModeButton, type PermissionMode } from './input/PlanModeButton';
+import { ComposeModeButton } from './input/ComposeModeButton';
+import { ContextRing } from './input/ContextRing';
+import { ThinkingLevelButton } from './input/ThinkingLevelButton';
+import { ModelSelector } from './input/ModelSelector';
 import { SessionConfirmationPrompt } from './input/SessionConfirmationPrompt';
 import { CapabilityDriftNotice } from './input/CapabilityDriftNotice';
 import { serializeEditor } from '../utils/editor-serializer';
@@ -1854,6 +1858,24 @@ function InputAreaInner({ surface }: Required<InputAreaProps>) {
             disabled={inputLocked}
             onChange={handleBrowserFileInputChange}
           />
+          {/* 工具栏上置：模式胶囊在编辑器上方，动作按钮留在底栏 */}
+          <div className={styles['input-toolbar-top']}>
+            <div className={styles['input-toolbar-group']}>
+              <PlanModeButton mode={permissionMode} onChange={setPermissionMode} locked={inputLocked} />
+              <ComposeModeButton mode={workflowMode} permissionMode={permissionMode} onChange={setWorkflowMode} />
+            </div>
+            <div className={styles['input-toolbar-group']}>
+              <ContextRing />
+              {showThinkingControl ? (
+                <div className={styles['model-split-control']}>
+                  <ThinkingLevelButton level={thinkingLevel} onChange={setThinkingLevel} availableLevels={availableThinkingLevels} />
+                  <ModelSelector models={models} sessionModel={sessionModel} isStreaming={isStreaming} />
+                </div>
+              ) : (
+                <ModelSelector models={models} sessionModel={sessionModel} isStreaming={isStreaming} />
+              )}
+            </div>
+          </div>
           <div
             onKeyDown={(event) => {
               if (!event.defaultPrevented) handleEditorKeyDown(event);
@@ -1868,17 +1890,6 @@ function InputAreaInner({ surface }: Required<InputAreaProps>) {
             onAttach={handleAttach}
             slashBtnRef={slashBtnRef}
             onSlashToggle={handleSlashToggle}
-            permissionMode={permissionMode}
-            onPermissionModeChange={setPermissionMode}
-            planModeLocked={inputLocked}
-            workflowMode={workflowMode}
-            onWorkflowModeChange={setWorkflowMode}
-            showThinking={showThinkingControl}
-            thinkingLevel={thinkingLevel}
-            onThinkingChange={setThinkingLevel}
-            availableThinkingLevels={availableThinkingLevels}
-            models={models}
-            sessionModel={sessionModel}
             isStreaming={isStreaming}
             hasInput={hasContent}
             canSend={canSend}

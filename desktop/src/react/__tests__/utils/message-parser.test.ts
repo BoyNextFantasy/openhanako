@@ -254,15 +254,15 @@ describe('extractToolDetail', () => {
 });
 
 describe('moodLabel', () => {
-  it('hanako 返回 MOOD', () => {
-    expect(moodLabel('hanako')).toContain('MOOD');
+  it('hanako 返回 MUSE', () => {
+    expect(moodLabel('hanako')).toContain('MUSE');
   });
 
-  it('butter 返回 PULSE', () => {
-    expect(moodLabel('butter')).toContain('PULSE');
+  it('butter 返回 FLOW', () => {
+    expect(moodLabel('butter')).toContain('FLOW');
   });
 
-  it('未知 yuan 降级为 MOOD', () => {
-    expect(moodLabel('unknown')).toContain('MOOD');
+  it('未知 yuan 降级为 MUSE', () => {
+    expect(moodLabel('unknown')).toContain('MUSE');
   });
 });

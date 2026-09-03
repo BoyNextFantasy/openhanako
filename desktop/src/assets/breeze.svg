@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <!-- Breeze 清风 · 流动弧线 · #6FBF8F -->
+  <path d="M28 48 Q64 32 96 48" fill="none" stroke="#6FBF8F" stroke-width="8" stroke-linecap="round" opacity="0.9"/>
+  <path d="M24 68 Q60 52 92 68 T104 76" fill="none" stroke="#6FBF8F" stroke-width="8" stroke-linecap="round" opacity="0.65"/>
+  <path d="M32 88 Q64 74 88 84" fill="none" stroke="#6FBF8F" stroke-width="8" stroke-linecap="round" opacity="0.4"/>
+  <circle cx="104" cy="48" r="7" fill="#6FBF8F"/>
+</svg>

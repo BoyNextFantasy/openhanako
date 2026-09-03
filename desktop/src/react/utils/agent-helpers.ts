@@ -17,7 +17,7 @@ function tr(key: string, vars?: Record<string, string>): any {
 export function yuanFallbackAvatar(yuan?: string): string {
   const types = tr('yuan.types') || {};
   const entry = types[yuan || 'hanako'];
-  return `assets/${entry?.avatar || 'Hanako.png'}`;
+  return `assets/${entry?.avatar || 'muse.svg'}`;
 }
 
 export function userFallbackAvatar(displayName: string): string {

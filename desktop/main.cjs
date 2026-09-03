@@ -1,9 +1,9 @@
 /**
- * HanaAgent Desktop �?Electron 主进�?
+ * Satori Desktop �?Electron 主进�?
  *
  * 职责�?
  * 1. 创建启动窗口（splash�?
- * 2. spawn() 启动 HanaAgent Server
+ * 2. spawn() 启动 Satori Server
  * 3. 等待 server 就绪 + 主窗口初始化完成
  * 4. 关闭 splash，显示主窗口
  * 5. 优雅关闭
@@ -99,7 +99,7 @@ const {
   renderScreenshotCodeArticle,
 } = require("./src/shared/screenshot-markdown.cjs");
 
-const APP_USER_MODEL_ID = "com.hanako.app"; // Keep in sync with package.json build.appId.
+const APP_USER_MODEL_ID = "com.satori.app"; // Keep in sync with package.json build.appId.
 
 // preload 缺失�?Electron 会静默忽略，renderer 拿不�?window.hana �?
 // onboarding/主窗口白屏且无前端报错。此处硬崩，拒绝以不可用状态启动�?
@@ -107,7 +107,7 @@ const APP_USER_MODEL_ID = "com.hanako.app"; // Keep in sync with package.json bu
   const preloadPath = path.join(__dirname, "preload.bundle.cjs");
   if (!fs.existsSync(preloadPath)) {
     const msg = `Missing preload bundle:\n${preloadPath}\n\nBuild is incomplete. Run 'npm run build:preload' or rebuild the installer.`;
-    try { dialog.showErrorBox("HanaAgent failed to start", msg); } catch {}
+    try { dialog.showErrorBox("Satori failed to start", msg); } catch {}
     console.error("[desktop] " + redactLogText(msg));
     process.exit(1);
   }
@@ -311,7 +311,7 @@ async function serverEnvironmentForNetworkProxy(baseEnv) {
 }
 
 // �?SATORI_HOME 隔离 Electron userData（localStorage / cache / session�?
-// 生产: ~/Library/Application Support/Hanako（历史目录，�?HanaAgent 显示名保留）
+// 生产: ~/Library/Application Support/Hanako（历史目录，�?Satori 显示名保留）
 // 开�? ~/Library/Application Support/Hanako-dev
 const defaultHome = path.join(os.homedir(), ".hanako");
 configureClientSingleInstance(app, {
@@ -680,7 +680,7 @@ function createBrowserWindowWithDiagnostics(label, opts, { windowsMinimalRetry =
       height: opts?.height || 820,
       minWidth: opts?.minWidth,
       minHeight: opts?.minHeight,
-      title: opts?.title || "HanaAgent",
+      title: opts?.title || "Satori",
       show: opts?.show === true,
       ...(opts?.x != null ? { x: opts.x } : {}),
       ...(opts?.y != null ? { y: opts.y } : {}),
@@ -1323,14 +1323,14 @@ function monitorServer() {
       } catch (err) {
         console.error("[desktop] Server 重启失败:", err.message);
         writeCrashLog(`Server 重启失败: ${err.message}`);
-        dialog.showErrorBox("HanaAgent Server", mt("dialog.serverRestartFailed", {
+        dialog.showErrorBox("Satori Server", mt("dialog.serverRestartFailed", {
           version: app?.getVersion?.() || "unknown",
           error: err.message,
         }));
       }
     } else {
       writeCrashLog(`Server 多次崩溃 (${reason})，放弃重启`);
-      dialog.showErrorBox("HanaAgent Server", mt("dialog.serverMultipleCrash", {
+      dialog.showErrorBox("Satori Server", mt("dialog.serverMultipleCrash", {
         version: app?.getVersion?.() || "unknown",
         reason,
       }));
@@ -1350,7 +1350,7 @@ function showPrimaryWindow() {
 /**
  * 创建系统托盘图标
  * - 双击：显示主窗口
- * - 右键菜单：显�?HanaAgent / 设置 / 退�?
+ * - 右键菜单：显�?Satori / 设置 / 退�?
  */
 function resolveTrayAssetCandidates(fileName) {
   const candidates = [];
@@ -1390,10 +1390,10 @@ function createTray() {
     if (process.platform === "darwin") resolved.image.setTemplateImage(true);
   }
   tray = new Tray(resolved.image);
-  tray.setToolTip(isDev ? "HanaAgent (dev)" : "HanaAgent");
+  tray.setToolTip(isDev ? "Satori (dev)" : "Satori");
 
   const buildMenu = () => Menu.buildFromTemplate([
-    { label: mt("tray.show", null, "Show HanaAgent"), click: () => showPrimaryWindow() },
+    { label: mt("tray.show", null, "Show Satori"), click: () => showPrimaryWindow() },
     { label: mt("tray.settings", null, "Settings"), click: () => createSettingsWindow() },
     { type: "separator" },
     { label: mt("tray.quit", null, "Quit"), click: () => { isExitingServer = true; isQuitting = true; app.quit(); } },
@@ -1486,8 +1486,8 @@ function writeCrashLog(errorMessage) {
   const diagnostics = buildServerCrashDiagnostics();
 
   const content = redactMainLogText([
-    `=== HanaAgent Crash Log ===`,
-    `HanaAgent: v${app?.getVersion?.() || "unknown"}`,
+    `=== Satori Crash Log ===`,
+    `Satori: v${app?.getVersion?.() || "unknown"}`,
     `Time: ${timestamp}`,
     `Error: ${errorMessage}`,
     `Platform: ${process.platform} ${process.arch}`,
@@ -1527,7 +1527,7 @@ function createSplashWindow() {
     height: 280,
     resizable: false,
     frame: false,
-    title: "HanaAgent",
+    title: "Satori",
     ...titleBarOpts({ x: 12, y: 12 }),
     transparent: true,
     show: false,
@@ -1745,7 +1745,7 @@ function createQuickChatWindow() {
     skipTaskbar: process.platform !== "darwin",
     frame: false,
     alwaysOnTop: true,
-    title: "Hana Quick Chat",
+    title: "Satori Quick Chat",
     transparent: true,
     backgroundColor: "#00000000",
     hasShadow: false,
@@ -1882,7 +1882,7 @@ function createMainWindow() {
     height: saved?.height || 820,
     minWidth: 420,
     minHeight: 500,
-    title: "HanaAgent",
+    title: "Satori",
     ...titleBarOpts({ x: 16, y: 16 }),
     backgroundColor: getThemeBackgroundColor(initialTheme),
     show: false,
@@ -3356,7 +3356,7 @@ function createOnboardingWindow(query = {}) {
     height: 780,
     resizable: false,
     frame: false,
-    title: "HanaAgent",
+    title: "Satori",
     ...titleBarOpts({ x: 16, y: 16 }),
     backgroundColor: getThemeBackgroundColor(initialTheme),
     show: false,
@@ -3860,7 +3860,7 @@ function buildScreenshotHTML(payload) {
   ${bodyHTML}
   <footer class="watermark">
     <img class="watermark-logo" src="${logoUrl}" />
-    <span class="watermark-text">HanaAgent</span>
+    <span class="watermark-text">Satori</span>
   </footer>
 </body>
 </html>`;
@@ -4141,7 +4141,7 @@ wrapIpcOn("settings-changed", (_event, type, data) => {
     // 重建托盘菜单，使标签跟随�?locale
     if (tray && !tray.isDestroyed()) {
       const buildMenu = () => Menu.buildFromTemplate([
-        { label: mt("tray.show", null, "Show HanaAgent"), click: () => showPrimaryWindow() },
+        { label: mt("tray.show", null, "Show Satori"), click: () => showPrimaryWindow() },
         { label: mt("tray.settings", null, "Settings"), click: () => createSettingsWindow() },
         { type: "separator" },
         { label: mt("tray.quit", null, "Quit"), click: () => { isExitingServer = true; isQuitting = true; app.quit(); } },
@@ -4634,7 +4634,7 @@ wrapIpcBestEffortHandler("show-notification", (_event, title, body, agentId, raw
   if (!Notification.isSupported()) return { shown: false, reason: "unsupported" };
   /** @type {Electron.NotificationConstructorOptions} */
   const options = {
-    title: title || "Hana",
+    title: title || "Satori",
     body: body || "",
     silent: false,
   };
@@ -4725,7 +4725,7 @@ wrapIpcBestEffortHandler("app-ready", (event) => {
     const settings = systemPreferences.getNotificationSettings?.();
     const status = settings?.authorizationStatus;
     if (settings && status === "not-determined") {
-      const notif = new Notification({ title: "Hana", body: mt("notification.ready", null, "Notifications enabled"), silent: true });
+      const notif = new Notification({ title: "Satori", body: mt("notification.ready", null, "Notifications enabled"), silent: true });
       notif.show();
     }
   }
@@ -4764,7 +4764,7 @@ app.whenReady().then(async () => {
         startupId: desktopStartupId,
       });
     }
-    console.log("[desktop] 启动 HanaAgent Server...");
+    console.log("[desktop] 启动 Satori Server...");
     await startServer();
     if (process.platform === "win32") {
       markGpuStartupPhase({
@@ -4882,7 +4882,7 @@ app.whenReady().then(async () => {
     const crashInfo = writeCrashLog(err.message);
     const detail = buildLaunchFailureDialogDetail(err, crashInfo);
     dialog.showErrorBox(
-      mt("dialog.launchFailedTitle", null, "HanaAgent Launch Failed"),
+      mt("dialog.launchFailedTitle", null, "Satori Launch Failed"),
       mt("dialog.launchFailedBody", {
         version: app?.getVersion?.() || "unknown",
         detail,

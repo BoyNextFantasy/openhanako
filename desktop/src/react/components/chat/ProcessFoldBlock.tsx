@@ -31,7 +31,7 @@ export const ProcessFoldBlock = memo(function ProcessFoldBlock({
   registerMessageElement,
 }: Props) {
   const agents = useStore(s => s.agents);
-  const globalAgentName = useStore(s => s.agentName) || 'Hanako';
+  const globalAgentName = useStore(s => s.agentName) || 'Muse';
   const globalYuan = useStore(s => s.agentYuan) || 'hanako';
   const [open, setOpen] = useState(false);
   const panelId = useId();

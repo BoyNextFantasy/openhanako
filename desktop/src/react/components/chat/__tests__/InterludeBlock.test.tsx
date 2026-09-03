@@ -66,7 +66,7 @@ describe('InterludeBlock', () => {
     fireEvent.click(screen.getByRole('button', { name: /小花 收到了/ }));
 
     const dialog = screen.getByRole('dialog');
-    expect(dialog).toHaveTextContent('✿ MOOD');
+    expect(dialog).toHaveTextContent('✦ MUSE');
     expect(dialog).toHaveTextContent('正文');
     expect(dialog).toHaveTextContent('引用');
     expect(dialog).not.toHaveTextContent('<mood>');

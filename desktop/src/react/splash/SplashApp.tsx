@@ -8,11 +8,11 @@
 import { useState, useEffect, useRef } from 'react';
 import { getYuanVisual } from '../../../../shared/yuan-visuals.ts';
 
-const DEFAULT_NAME = 'Hanako';
+const DEFAULT_NAME = 'Muse';
 const DEFAULT_VISUAL = getYuanVisual('hanako');
 
 export function SplashApp() {
-  const [avatarSrc, setAvatarSrc] = useState('assets/Hanako.png');
+  const [avatarSrc, setAvatarSrc] = useState('assets/muse.svg');
   const [text, setText] = useState('');
   const [switching, setSwitching] = useState(false);
   const [symbol, setSymbol] = useState(DEFAULT_VISUAL.symbol);
@@ -59,6 +59,8 @@ export function SplashApp() {
         const visual = getYuanVisual(yuan);
         setSymbol(visual.symbol);
         setAccentColor(visual.accent);
+        // 人格 accent 同步到 splash 根变量（进度光条等扩展共用）
+        document.documentElement.style.setProperty('--splash-accent', visual.accent);
       } catch {}
 
       // 安装模式：固定文案，不进轮播
@@ -87,9 +89,9 @@ export function SplashApp() {
 
       if (!lines.length) {
         lines = [
-          `${name} remembers the evening light`,
-          'Some words sprouted in her memory',
-          'She found your silhouette in memories',
+          'Restoring session context',
+          'Loading memory index',
+          `${name} is standing by`,
         ];
       }
 

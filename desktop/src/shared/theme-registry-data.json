@@ -8,7 +8,8 @@
   },
   "paperTextureBlockedThemeIds": [
     "midnight",
-    "midnight-contrast"
+    "midnight-contrast",
+    "aurora"
   ],
   "autoOption": {
     "id": "auto",
@@ -27,6 +28,12 @@
       "backgroundColor": "#3B4A54",
       "i18nName": "settings.appearance.midnight",
       "i18nMode": "settings.appearance.midnightMode"
+    },
+    "aurora": {
+      "cssPath": "themes/aurora.css",
+      "backgroundColor": "#0D1220",
+      "i18nName": "settings.appearance.aurora",
+      "i18nMode": "settings.appearance.auroraMode"
     },
     "high-contrast": {
       "cssPath": "themes/high-contrast.css",

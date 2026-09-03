@@ -18,14 +18,12 @@
 }
 
 .messageGroupUser {
-    align-items: flex-end;
+    align-items: stretch;
     position: relative;
 }
 
 .messageGroupAssistant {
-    align-items: flex-start;
-    padding-left: var(--space-8);
-    margin-left: 2px;
+    align-items: stretch;
     position: relative;
 }
 
@@ -35,24 +33,31 @@
     margin-left: 0;
 }
 
-/* 头像行 */
+/* 角色标签头（全宽块形态：徽标 + 名字 + hairline） */
 .avatarRow {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
-    margin-top: var(--space-24);
-    margin-bottom: 0.2rem;
+    gap: 0.45rem;
+    margin-top: var(--space-16);
+    margin-bottom: 0.45rem;
+    padding-bottom: 0.35rem;
+    border-bottom: 1px solid var(--border);
 }
 
 .avatarRowUser {
-    flex-direction: row-reverse;
+    flex-direction: row;
+}
+
+.avatarRowUser .avatarName {
+    color: var(--accent);
+    font-weight: 600;
 }
 
 .avatar {
     flex-shrink: 0;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    border-radius: 5px;
 }
 
 .hanaAvatar {
@@ -76,29 +81,27 @@
     letter-spacing: 0.02em;
 }
 
-/* 单条消息 */
+/* 单条消息（全宽块形态） */
 .message {
-    max-width: 92%;
+    max-width: 100%;
     min-width: 0;
 }
 
-/* InteractiveCard 等宽内容块需要 message 撑满可用宽度。
- * 正常情况下 .messageGroupAssistant { align-items: flex-start }
- * 导致 .message shrink-wrap 到内容宽度；但当消息包含 interactive card 时，
- * 强制撑到 92% 以便卡片拿到合理的渲染宽度。 */
+/* InteractiveCard 等宽内容块需要 message 撑满可用宽度。 */
 .messageHasWideBlock {
-    width: 92%;
+    width: 100%;
 }
 
 .message + .message {
     margin-top: var(--space-4);
 }
 
-/* 用户消息 */
+/* 用户消息（全宽引用块：左侧 accent 竖线 + 极浅底色） */
 .messageUser {
-    background: rgba(0, 0, 0, 0.045);
+    background: var(--accent-light);
+    border-left: 3px solid rgba(var(--accent-rgb), 0.55);
     padding: var(--space-8) var(--space-16);
-    border-radius: var(--radius-chat-card) var(--radius-chat-card) var(--radius-chat-card-inner) var(--radius-chat-card);
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
     color: var(--text);
     font-size: var(--chat-message-font-size);
     word-break: break-word;
@@ -238,9 +241,9 @@
 }
 
 .messageGroupUser .userAttachments {
-    align-self: flex-end;
-    justify-content: flex-end;
-    max-width: 92%;
+    align-self: flex-start;
+    justify-content: flex-start;
+    max-width: 100%;
 }
 
 .userAttachments:last-child {
@@ -2212,4 +2215,41 @@
         opacity: 1;
         transform: none;
     }
+}
+
+/* ===== aurora 主题变体（Satori 深空玻璃质感，仅 data-theme=aurora 作用域） ===== */
+
+/* 用户消息：accent 半透明玻璃气泡 */
+.messageUser:global([data-theme="aurora"] &) {
+    background: rgba(91, 141, 239, 0.14);
+    border: 1px solid rgba(143, 184, 255, 0.18);
+}
+
+/* 助手消息容器：微浮起 */
+.messageAssistant:global([data-theme="aurora"] &) {
+    background: rgba(255, 255, 255, 0.025);
+    border-radius: var(--radius-chat-card);
+    border: 1px solid rgba(143, 184, 255, 0.08);
+}
+
+/* 消息组 hover 微浮（仅精确指针设备） */
+@media (hover: hover) and (pointer: fine) {
+    .messageGroup:global([data-theme="aurora"] &) {
+        transition: transform var(--duration-fast, 160ms) var(--ease-out, ease-out);
+    }
+    .messageGroup:hover:global([data-theme="aurora"] &) {
+        transform: translateY(-1px);
+    }
+}
+
+/* ===== 形态统一：消息工具条按钮（22px 方形小圆角 + 中性 hover） ===== */
+.messageFooterBtn {
+    width: 22px;
+    height: 22px;
+    border-radius: 5px;
+    transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
+}
+
+.messageFooterBtn:hover {
+    background: var(--overlay-light);
 }

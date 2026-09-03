@@ -1,7 +1,7 @@
 /**
  * Electron client single-instance guard.
  *
- * Electron's requestSingleInstanceLock() is scoped by userData, so HanaAgent sets
+ * Electron's requestSingleInstanceLock() is scoped by userData, so Satori sets
  * userData from SATORI_HOME before requesting the lock. Production and dev homes
  * get different namespaces, while duplicate launches within the same home are
  * redirected to the first client.
@@ -15,10 +15,10 @@ function normalizeForCompare(filePath) {
 
 function getUserDataAppName(hanakoHome, defaultHome) {
   if (normalizeForCompare(hanakoHome) === normalizeForCompare(defaultHome)) {
-    return "Hanako";
+    return "Satori";
   }
   const suffix = path.basename(hanakoHome).replace(/^\./, "");
-  if (!suffix) return "Hanako";
+  if (!suffix) return "Satori";
   return suffix.charAt(0).toUpperCase() + suffix.slice(1);
 }
 

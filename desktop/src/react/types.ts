@@ -122,7 +122,7 @@ export interface Model {
   audio?: boolean;
   audioTransport?: string | null;
   audioTransportSupported?: boolean;
-  /** 输入模态数组（Pi SDK 标准字段）。包含 "image" / "video" 表示模型支持对应媒体输入；音频走 Hana 兼容能力字段。 */
+  /** 输入模态数组（Pi SDK 标准字段）。包含 "image" / "video" 表示模型支持对应媒体输入；音频走 Satori 兼容能力字段。 */
   input?: ("text" | "image" | "video")[];
 }
 

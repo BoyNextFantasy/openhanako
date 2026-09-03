@@ -1,14 +1,5 @@
 import { memo, type RefObject } from 'react';
-import { PlanModeButton, type PermissionMode } from './PlanModeButton';
-import { ComposeModeButton } from './ComposeModeButton';
-import { ContextRing } from './ContextRing';
-import { ThinkingLevelButton } from './ThinkingLevelButton';
-import { ModelSelector } from './ModelSelector';
 import { SendButton } from './SendButton';
-import type { ThinkingLevel } from '../../stores/model-slice';
-import type { Model } from '../../types';
-import type { SessionModel } from '../../stores/chat-types';
-import type { SessionWorkflowMode } from '../../types';
 import styles from './InputArea.module.css';
 
 interface Props {
@@ -17,18 +8,20 @@ interface Props {
   onAttach: () => void;
   slashBtnRef: RefObject<HTMLButtonElement | null>;
   onSlashToggle: () => void;
-  permissionMode: PermissionMode;
-  onPermissionModeChange: (v: PermissionMode) => void;
-  planModeLocked: boolean;
-  workflowMode: SessionWorkflowMode;
-  onWorkflowModeChange: (v: SessionWorkflowMode) => void;
+  // 模式控件（Plan/Compose/ContextRing/Thinking/Model）已上移到编辑器上方工具栏，
+  // 这些 props 保留为 optional 以兼容既有挂载方，不再渲染。
+  permissionMode?: unknown;
+  onPermissionModeChange?: unknown;
+  planModeLocked?: unknown;
+  workflowMode?: unknown;
+  onWorkflowModeChange?: unknown;
+  showThinking?: unknown;
+  thinkingLevel?: unknown;
+  onThinkingChange?: unknown;
+  availableThinkingLevels?: unknown;
+  models?: unknown;
+  sessionModel?: unknown;
   // 右侧控制
-  showThinking: boolean;
-  thinkingLevel: ThinkingLevel;
-  onThinkingChange: (level: ThinkingLevel) => void;
-  availableThinkingLevels: ThinkingLevel[];
-  models: Model[];
-  sessionModel?: SessionModel;
   isStreaming: boolean;
   hasInput: boolean;
   canSend: boolean;
@@ -41,14 +34,11 @@ interface Props {
   onStop: () => void;
 }
 
-/** 编辑器下方的工具按钮行 + 发送控制 */
+/** 编辑器下方的工具按钮行 + 发送控制（模式控件见 InputArea 的 input-toolbar-top） */
 export const InputControlBar = memo(function InputControlBar(props: Props) {
   const {
     t, onAttach, slashBtnRef, onSlashToggle,
-    permissionMode, onPermissionModeChange, planModeLocked,
-    workflowMode, onWorkflowModeChange,
-    showThinking, thinkingLevel, onThinkingChange, availableThinkingLevels,
-    models, sessionModel, isStreaming, hasInput, canSend,
+    isStreaming, hasInput, canSend,
     showAudioInput, audioRecordingActive, audioRecordingBusy, onAudioToggle,
     onSend, onSteer, onStop,
   } = props;
@@ -73,22 +63,11 @@ export const InputControlBar = memo(function InputControlBar(props: Props) {
           onClick={onSlashToggle}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 2L14 10L22 12L14 14L12 22L10 14L2 12L10 10Z" />
+            <path d="M12 3.5 13.6 10.4 20.5 12 13.6 13.6 12 20.5 10.4 13.6 3.5 12 10.4 10.4 12 3.5Z" />
           </svg>
         </button>
-        <PlanModeButton mode={permissionMode} onChange={onPermissionModeChange} locked={planModeLocked} />
-        <ComposeModeButton mode={workflowMode} permissionMode={permissionMode} onChange={onWorkflowModeChange} />
-        <ContextRing />
       </div>
       <div className={styles['input-controls']}>
-        {showThinking ? (
-          <div className={styles['model-split-control']}>
-            <ThinkingLevelButton level={thinkingLevel} onChange={onThinkingChange} availableLevels={availableThinkingLevels} />
-            <ModelSelector models={models} sessionModel={sessionModel} isStreaming={isStreaming} />
-          </div>
-        ) : (
-          <ModelSelector models={models} sessionModel={sessionModel} isStreaming={isStreaming} />
-        )}
         {showAudioInput && (
           <button
             type="button"
@@ -105,7 +84,7 @@ export const InputControlBar = memo(function InputControlBar(props: Props) {
               </svg>
             ) : (
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3Z" />
+                <rect x="9" y="3" width="6" height="11" rx="3" />
                 <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
                 <path d="M12 19v3" />
               </svg>

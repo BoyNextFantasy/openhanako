@@ -1,0 +1,79 @@
+/*
+ * Satori Theme: aurora（极光）
+ * 深蓝黑底 + 电光蓝→紫 accent，玻璃拟态暗色旗舰主题
+ * 对比度达标 WCAG AA（正文 ≥ 7:1，次要文字 ≥ 4.5:1）
+ */
+
+[data-theme="aurora"] {
+    /* 背景（深蓝黑） */
+    --bg:           #0D1220;
+    --bg-card:      #151C2E;
+    --bg-glass:     rgba(21, 28, 46, 0.72);
+
+    /* 主色调（电光蓝，hover 过渡到紫） */
+    --accent:       #5B8DEF;
+    --accent-hover: #8F7BF2;
+    --accent-light: rgba(91, 141, 239, 0.14);
+    --link:         #8FB8FF;
+    --link-hover:   #B4D2FF;
+    --link-rgb:     143, 184, 255;
+
+    /* 文字 */
+    --text:         #E8EDF7;
+    --text-light:   #B8C4DA;
+    --text-muted:   #94A3BF;
+
+    /* 边框与阴影 */
+    --border:       rgba(143, 184, 255, 0.14);
+    --shadow:       rgba(0, 0, 0, 0.50);
+
+    /* 状态色 */
+    --green:        #6FBF8F;
+    --green-rgb:    111, 191, 143;
+    --coral:        #E8A0A8;
+
+    /* 侧边栏 */
+    --sidebar-bg:   #101626;
+    --sidebar-bridge-card-text: #0A0E18;
+
+    /* 便笺 */
+    --jian-note-bg:     #1A2236;
+    --jian-note-border: rgba(143, 184, 255, 0.12);
+
+    /* 聊天专用 */
+    --hana-text:    #E2E9F5;
+    --mood-bg:      rgba(143, 123, 242, 0.10);
+    --mood-text:    #B4A8F5;
+    --mood-border:  rgba(143, 123, 242, 0.22);
+    --tool-bg:      rgba(91, 141, 239, 0.10);
+    --tool-text:    #B8C4DA;
+    --user-bg:      rgba(91, 141, 239, 0.12);
+    --drop-overlay-bg: rgba(13, 18, 32, 0.88);
+    --attach-bg:    rgba(255, 255, 255, 0.05);
+
+    /* 辅助色（用于 rgba 拆分和语义色） */
+    --accent-rgb:   91, 141, 239;
+    --coral-rgb:    232, 160, 168;
+    --danger:       #E07A7A;
+    --danger-rgb:   224, 122, 122;
+    --overlay-subtle: rgba(255, 255, 255, 0.03);
+    --overlay-light:  rgba(255, 255, 255, 0.05);
+    --overlay-medium: rgba(255, 255, 255, 0.08);
+    --overlay-strong: rgba(255, 255, 255, 0.15);
+    --tab-slider-bg:      var(--overlay-strong);
+    --tab-slider-shadow:  none;
+
+    /* Select 下拉箭头（SVG 内联必须硬编码颜色，跟随 text-muted） */
+    --select-arrow: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2394A3BF' fill='none' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+
+/* aurora 玻璃拟态：局部类（CSS Modules 会 hash）无法在全局文件命中，
+   质感变体写在各组件 module.css 的 :global([data-theme="aurora"]) 块里；
+   此处只覆盖全局类（styles.css 定义的骨架）与变量层。 */
+
+/* 降级标记：不支持 backdrop-filter 的环境给 html 挂标记，module 变体据此退实色 */
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+    [data-theme="aurora"] {
+        --glass-fallback: 1;
+    }
+}

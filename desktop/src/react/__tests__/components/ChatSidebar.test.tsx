@@ -57,7 +57,7 @@ describe('ChatSidebarContent', () => {
     cleanup();
   });
 
-  it('opens the skills panel from the activity bar below automation', () => {
+  it('opens the skills panel from the rail right after automation', () => {
     const onTogglePanel = vi.fn();
 
     render(
@@ -69,9 +69,16 @@ describe('ChatSidebarContent', () => {
       />,
     );
 
-    const skillsButton = screen.getByRole('button', { name: 'Skills' });
-    expect(skillsButton.previousElementSibling).toHaveTextContent('任务计划');
+    // 图标栏布局：按钮的可访问名（aria-label）顺序应保持 任务计划 → Skills 相邻
+    const rail = document.querySelector('.sidebar-rail');
+    expect(rail).not.toBeNull();
+    const railNames = Array.from(rail!.querySelectorAll('button')).map(
+      b => b.getAttribute('aria-label'),
+    );
+    expect(railNames).toEqual(expect.arrayContaining(['任务计划', 'Skills']));
+    expect(railNames.indexOf('任务计划')).toBe(railNames.indexOf('Skills') - 1);
 
+    const skillsButton = screen.getByRole('button', { name: 'Skills' });
     fireEvent.click(skillsButton);
 
     expect(onTogglePanel).toHaveBeenCalledWith('skills');

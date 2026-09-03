@@ -23,7 +23,7 @@ export function SendButton({ isStreaming, hasInput, disabled, onSend, onSteer, o
       {mode === 'send' && (
         <span className={styles['send-label']}>
           <svg className={styles['send-enter-icon']} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="9 10 4 15 9 20" /><path d="M20 4v7a4 4 0 01-4 4H4" />
+            <path d="M5 12h13" /><path d="M13 6l6 6-6 6" />
           </svg>
           <span>{t('chat.send')}</span>
         </span>

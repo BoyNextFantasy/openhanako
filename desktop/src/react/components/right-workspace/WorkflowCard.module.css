@@ -328,3 +328,17 @@
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
+
+/* ===== 形态统一：卡片头 → 小节标签 ===== */
+.header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 4px;
+}
+
+.title {
+    font-size: var(--fs-caption);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
