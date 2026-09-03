@@ -1,5 +1,5 @@
 /**
- * HanaAgent Server �?HTTP + WebSocket API
+ * Satori Server �?HTTP + WebSocket API
  *
  * 启动方式�?
  *   node server/index.js              （独立运行）
@@ -1109,7 +1109,7 @@ try {
   const actualPort = address.port;
   serverRuntimeState.actualPort = actualPort;
 
-  log.log(`HanaAgent Server 运行�?http://${host}:${actualPort}`);
+  log.log(`Satori Server 运行�?http://${host}:${actualPort}`);
   dlog.log("server", `listening on :${actualPort}`);
 
   // �?server-info 文件，供 Electron 检测复用或外部工具查询�?

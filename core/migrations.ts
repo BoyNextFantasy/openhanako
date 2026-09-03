@@ -1079,7 +1079,7 @@ function migrateMiniMaxTokenPlanAnthropicEndpoint(ctx) {
   provider.api = MINIMAX_CURRENT_ANTHROPIC_API;
 
   const header =
-    "# HanaAgent 供应商配置（全局，跨 agent 共享）\n" +
+    "# Satori 供应商配置（全局，跨 agent 共享）\n" +
     "# 由设置页面管理\n\n";
   const yamlStr = header + YAML.dump(raw, {
     indent: 2,
@@ -1136,7 +1136,7 @@ function migrateVisionToImage(ctx) {
     }
     if (changed) {
       const header =
-        "# HanaAgent 供应商配置（全局，跨 agent 共享）\n" +
+        "# Satori 供应商配置（全局，跨 agent 共享）\n" +
         "# 由设置页面管理\n\n";
       const yamlStr = header + YAML.dump(raw, {
         indent: 2,
@@ -2118,7 +2118,7 @@ function migrateGeminiOpenAICompatToNative(ctx) {
 
   if (patched > 0) {
     const header =
-      "# HanaAgent 供应商配置（全局，跨 agent 共享）\n" +
+      "# Satori 供应商配置（全局，跨 agent 共享）\n" +
       "# 由设置页面管理\n\n";
     const yamlStr = header + YAML.dump(raw, {
       indent: 2,
@@ -2462,7 +2462,7 @@ function promoteAgentVideoOverrides(ctx) {
 
   if (addedModelsChanged) {
     const header =
-      "# HanaAgent 供应商配置（全局，跨 agent 共享）\n" +
+      "# Satori 供应商配置（全局，跨 agent 共享）\n" +
       "# 由设置页面管理\n\n";
     const tmp = ymlPath + ".tmp";
     fs.writeFileSync(
@@ -2796,7 +2796,7 @@ function repairLegacyDeepSeekProviderModelIds(ctx) {
 
   if (patched > 0) {
     const header =
-      "# HanaAgent 供应商配置（全局，跨 agent 共享）\n" +
+      "# Satori 供应商配置（全局，跨 agent 共享）\n" +
       "# 由设置页面管理\n\n";
     const tmp = ymlPath + ".tmp";
     fs.writeFileSync(

@@ -260,7 +260,7 @@ function findGitRuntime({ env = process.env, bundledOnly = false } = {}) {
   }
 
   throw new Error(
-    "[win32-exec] No usable git.exe found. Install Git for Windows or rebuild HanaAgent with bundled PortableGit."
+    "[win32-exec] No usable git.exe found. Install Git for Windows or rebuild Satori with bundled PortableGit."
   );
 }
 

@@ -1,6 +1,6 @@
-# Contributing to HanaAgent
+# Contributing to Satori
 
-感谢你对 HanaAgent 的关注！
+感谢你对 Satori 的关注！
 
 ## 开发环境
 

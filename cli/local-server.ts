@@ -23,7 +23,7 @@ export function readLocalServerInfo({ hanaHome = resolveCliHanaHome(), checkProc
       ok: false,
       reason: "missing_server_info",
       filePath,
-      message: `No running HanaAgent Server was found at ${filePath}`,
+      message: `No running Satori Server was found at ${filePath}`,
     };
   }
 
@@ -53,7 +53,7 @@ export function readLocalServerInfo({ hanaHome = resolveCliHanaHome(), checkProc
       ok: false,
       reason: "stale_server_info",
       filePath,
-      message: `HanaAgent Server process ${info.pid} is no longer running`,
+      message: `Satori Server process ${info.pid} is no longer running`,
     };
   }
 

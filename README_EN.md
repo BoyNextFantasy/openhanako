@@ -1,27 +1,27 @@
 <p align="center">
-  <img src=".github/assets/banner.jpg" width="100%" alt="HanaAgent Banner">
+  <img src=".github/assets/banner.jpg" width="100%" alt="Satori Banner">
 </p>
 
 <p align="center">
-  <img src=".github/assets/HanaAgent-280.png" width="80" alt="HanaAgent">
+  <img src=".github/assets/Satori-280.png" width="80" alt="Satori">
 </p>
 
-<h1 align="center">HanaAgent</h1>
+<h1 align="center">Satori</h1>
 
 <p align="center">A personal AI agent with memory and soul</p>
 
 <p align="center"><a href="README.md">ä¸­æ–‡ç‰?/a></p>
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey.svg)](https://github.com/liliMozi/openhanako/releases)
+[![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey.svg)](https://github.com/BoyNextFantasy/openhanako/releases)
 
 ---
 
-## What is HanaAgent
+## What is Satori
 
-HanaAgent is a personal AI agent that is easier to use than traditional coding agents. It has memory, personality, and can act autonomously. Multiple agents can work together on your machine.
+Satori is a personal AI agent that is easier to use than traditional coding agents. It has memory, personality, and can act autonomously. Multiple agents can work together on your machine.
 
-As an assistant, it is gentle: no complex configuration files, no obscure jargon. HanaAgent is designed not just for coders, but for everyone who works at a computer.
+As an assistant, it is gentle: no complex configuration files, no obscure jargon. Satori is designed not just for coders, but for everyone who works at a computer.
 As a tool, it is powerful: it remembers everything you've said, operates your computer, browses the web, searches for information, reads and writes files, executes code, manages schedules, and can even learn new skills on its own.
 
 ## Features
@@ -30,7 +30,7 @@ As a tool, it is powerful: it remembers everything you've said, operates your co
 
 **Personality** â€?Not a generic "AI assistant". Each agent has its own voice and behavior through personality templates. Agents are self-contained folders, easy to back up and manage.
 
-**Tools** â€?Read/write files, run one-shot commands or persistent terminal sessions, browse the web, search the internet through browser-backed or API providers, take screenshots and segmented long screenshots, preview media, and inspect pages. Covers the vast majority of daily work scenarios. A server-first CLI can also attach to the same HanaAgent Server to show status, list sessions, and continue chats from a terminal.
+**Tools** â€?Read/write files, run one-shot commands or persistent terminal sessions, browse the web, search the internet through browser-backed or API providers, take screenshots and segmented long screenshots, preview media, and inspect pages. Covers the vast majority of daily work scenarios. A server-first CLI can also attach to the same Satori Server to show status, list sessions, and continue chats from a terminal.
 
 **Skills** â€?Built-in compatibility with the community Skills ecosystem. Agents can also install skills from GitHub or write their own. Strict safety review enabled by default.
 
@@ -52,33 +52,33 @@ As a tool, it is powerful: it remembers everything you've said, operates your co
 
 **Multi-Platform Bridge** â€?A single agent can connect to Telegram, Feishu, QQ, and WeChat bots simultaneously. Chat from any platform and remotely operate your computer. Bridge sessions carry platform context, and notifications can be delivered back to the current external platform.
 
-**Mobile & LAN Frontends** â€?HanaAgent Server can host the `/mobile/` PWA. Phones can sign in with a device access key or local account, view sessions, chat, and manage workbench files. Another desktop frontend can also connect to an existing LAN HanaAgent Server with a LAN URL and access key.
+**Mobile & LAN Frontends** â€?Satori Server can host the `/mobile/` PWA. Phones can sign in with a device access key or local account, view sessions, chat, and manage workbench files. Another desktop frontend can also connect to an existing LAN Satori Server with a LAN URL and access key.
 
 **i18n** â€?Interface available in 5 languages: Chinese, English, Japanese, Korean, and Traditional Chinese.
 
 ## Screenshots
 
 <p align="center">
-  <img src=".github/assets/screenshot-main.jpg" width="100%" alt="HanaAgent Main Interface">
+  <img src=".github/assets/screenshot-main.jpg" width="100%" alt="Satori Main Interface">
 </p>
 
 ## Quick Start
 
 ### Download
 
-**macOS (Apple Silicon / Intel):** download the latest `.dmg` from [Releases](https://github.com/liliMozi/openhanako/releases).
+**macOS (Apple Silicon / Intel):** download the latest `.dmg` from [Releases](https://github.com/BoyNextFantasy/openhanako/releases).
 
 The app is signed and notarized with an Apple Developer ID. macOS should allow it to launch directly.
 
-**Windows:** download the latest `.exe` installer from [Releases](https://github.com/liliMozi/openhanako/releases).
+**Windows:** download the latest `.exe` installer from [Releases](https://github.com/BoyNextFantasy/openhanako/releases).
 
 > **Windows SmartScreen notice:** The installer is not yet code-signed. Windows Defender SmartScreen may show a warning on first run. Click **More info** â†?**Run anyway**. This is expected for unsigned builds.
 
-**Linux:** download the latest `.AppImage` or `.deb` from [Releases](https://github.com/liliMozi/openhanako/releases).
+**Linux:** download the latest `.AppImage` or `.deb` from [Releases](https://github.com/BoyNextFantasy/openhanako/releases).
 
 ### First Run
 
-On first launch, an onboarding wizard will guide you through setup: choose a language, enter your name, connect a model provider (API key + base URL), and select three models â€?a **chat model** (main conversation), a **utility model** (lightweight tasks), and a **utility large model** (memory compilation and deep analysis). In settings you can also choose a **vision model** that lets text-only chat models work with image attachments through Vision Bridge. HanaAgent supports OpenAI-compatible providers, Anthropic-style providers, OAuth providers, and local models via Ollama.
+On first launch, an onboarding wizard will guide you through setup: choose a language, enter your name, connect a model provider (API key + base URL), and select three models â€?a **chat model** (main conversation), a **utility model** (lightweight tasks), and a **utility large model** (memory compilation and deep analysis). In settings you can also choose a **vision model** that lets text-only chat models work with image attachments through Vision Bridge. Satori supports OpenAI-compatible providers, Anthropic-style providers, OAuth providers, and local models via Ollama.
 
 ## Architecture
 
@@ -125,7 +125,7 @@ User data is rooted at `SATORI_HOME` (`~/.hanako` in production, `~/.hanako-dev`
 | macOS (Intel) | Supported |
 | Windows | Beta |
 | Linux | Supported (AppImage / deb) |
-| Mobile (PWA) | v0: phone sessions and workbench access through the same HanaAgent Server |
+| Mobile (PWA) | v0: phone sessions and workbench access through the same Satori Server |
 
 ## Development
 
@@ -164,9 +164,9 @@ npm run typecheck
 
 > The repository and release URLs intentionally remain under the legacy `openhanako` path during the current migration. The repository rename is a separate later step.
 
-- [Homepage](https://openhanako.com)
-- [Report an Issue](https://github.com/liliMozi/openhanako/issues)
-- [Security](https://github.com/liliMozi/openhanako/security)
+- [Homepage](https://github.com/BoyNextFantasy/openhanako)
+- [Report an Issue](https://github.com/BoyNextFantasy/openhanako/issues)
+- [Security](https://github.com/BoyNextFantasy/openhanako/security)
 - [Security Policy](SECURITY.md)
 - [Plugin Development](PLUGINS.md)
 - [Contributing](CONTRIBUTING.md)

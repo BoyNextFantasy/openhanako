@@ -103,7 +103,7 @@ function buildHTML(themeName) {
   ${bodyHTML}
   <footer class="watermark">
     <img class="watermark-logo" src="${logoUrl}" />
-    <span class="watermark-text">HanaAgent</span>
+    <span class="watermark-text">Satori</span>
   </footer>
 </body>
 </html>`;
