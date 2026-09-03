@@ -97,7 +97,7 @@ export function DeskCwdSkillsButton() {
     >
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
         stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+        <path d="M13 2.5 4 13.5h7L10.5 21.5 20 10.5h-7z" />
       </svg>
       <span>{label}</span>
     </button>

@@ -28,7 +28,7 @@ describe("desktop client single instance lock", () => {
   it("sets the dev userData namespace before requesting the lock", () => {
     const { app } = makeApp();
     const defaultHome = path.join("C:", "Users", "me", ".hanako");
-    const devHome = path.join("C:", "Users", "me", ".hanako-dev");
+    const devHome = path.join("C:", "Users", "me", ".satori-dev");
 
     const acquired = configureClientSingleInstance(app, {
       hanakoHome: devHome,
@@ -39,7 +39,7 @@ describe("desktop client single instance lock", () => {
     expect(acquired).toBe(true);
     expect(app.setPath).toHaveBeenCalledWith(
       "userData",
-      path.join("C:", "Users", "me", "AppData", "Roaming", "Hanako-dev"),
+      path.join("C:", "Users", "me", "AppData", "Roaming", "Satori-dev"),
     );
     expect(app.setPath.mock.invocationCallOrder[0]).toBeLessThan(
       app.requestSingleInstanceLock.mock.invocationCallOrder[0],
@@ -59,7 +59,7 @@ describe("desktop client single instance lock", () => {
     expect(acquired).toBe(true);
     expect(app.setPath).toHaveBeenCalledWith(
       "userData",
-      path.join("C:", "Users", "me", "AppData", "Roaming", "Hanako"),
+      path.join("C:", "Users", "me", "AppData", "Roaming", "Satori"),
     );
     expect(app.requestSingleInstanceLock).toHaveBeenCalledTimes(1);
   });

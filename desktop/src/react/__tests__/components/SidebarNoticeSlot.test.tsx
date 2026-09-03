@@ -17,9 +17,9 @@ const labels: Record<string, string> = {
   'settings.about.updateInstallManualHint': '点「重启更新」后安装，直接退出不会自动安装',
   'settings.about.updateInstall': '重启更新',
   'settings.about.updateInstallNow': '重启立即更新',
-  'settings.about.updateInstalling': '正在安装更新，HanaAgent 会自动重启…',
+  'settings.about.updateInstalling': '正在安装更新，Satori 会自动重启…',
   'settings.about.updateDiskSpace': '空间不足，暂时无法下载更新',
-  'settings.about.updateNeedInstall': '请先将 HanaAgent 移动到应用程序文件夹',
+  'settings.about.updateNeedInstall': '请先将 Satori 移动到应用程序文件夹',
   'settings.about.updateError': '检查更新失败',
   'window.close': '关闭',
 };

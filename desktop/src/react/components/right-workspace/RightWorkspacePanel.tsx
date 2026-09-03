@@ -6,9 +6,6 @@ import { DeskCwdSkillsButton, DeskCwdSkillsPanel } from '../desk/DeskCwdSkills';
 import { JianEditor } from '../desk/DeskEditor';
 import { PluginWidgetView } from '../plugin/PluginWidgetView';
 import { SessionRegistryFilesPanel } from './SessionRegistryFilesPanel';
-import { SessionTodoCard } from './SessionTodoCard';
-import { WorkflowCard } from './WorkflowCard';
-import { AgentActivityCard } from './AgentActivityCard';
 import { SessionStatusCard } from './SessionStatusCard';
 import styles from './RightWorkspacePanel.module.css';
 import { workspaceDisplayName } from '../../../../../shared/workspace-history.ts';
@@ -124,7 +121,6 @@ export function RightWorkspacePanel({ compact = false }: { compact?: boolean }) 
 
   return (
     <div className={styles.shell}>
-      {!compact && <SessionTodoCard />}
       <div
         className={`universal-card ${styles.workspaceCard}`}
         data-right-workspace-card=""
@@ -155,13 +151,7 @@ export function RightWorkspacePanel({ compact = false }: { compact?: boolean }) 
         <JianDrawer />
         <JianFloatingToggle />
       </div>
-      {!compact && (
-        <>
-          <WorkflowCard />
-          <AgentActivityCard />
-          <SessionStatusCard />
-        </>
-      )}
+      {!compact && <SessionStatusCard />}
     </div>
   );
 }

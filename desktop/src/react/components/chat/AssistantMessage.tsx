@@ -80,7 +80,7 @@ export const AssistantMessage = memo(function AssistantMessage({
   messageRef,
 }: Props) {
   const agents = useStore(s => s.agents);
-  const globalAgentName = useStore(s => s.agentName) || 'Hanako';
+  const globalAgentName = useStore(s => s.agentName) || 'Muse';
   const globalYuan = useStore(s => s.agentYuan) || 'hanako';
   const isStreaming = useStore(s => selectIsStreamingSession(s, sessionPath));
   const selectedIds = useStore(s => selectSelectedIdsBySession(s, sessionPath));
@@ -219,7 +219,8 @@ export const AssistantMessage = memo(function AssistantMessage({
 function RegenerateIcon() {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M21 3v5m0 0h-5m5 0-3-2.708A9 9 0 1 0 20.777 14" />
+      <path d="M20.5 8A9 9 0 1 0 21 12.5" />
+      <path d="M21 3v5h-5" />
     </svg>
   );
 }
@@ -881,7 +882,7 @@ const CronConfirmBlock = memo(function CronConfirmBlock({ block, sessionPath }: 
   const initialType = (jobData.type || jobData.scheduleType || 'cron') as string;
   const agents = useStore(s => s.agents);
   const currentAgentId = useStore(s => s.currentAgentId);
-  const fallbackAgentName = useStore(s => s.agentName) || 'Hanako';
+  const fallbackAgentName = useStore(s => s.agentName) || 'Muse';
   const fallbackAgentYuan = useStore(s => s.agentYuan) || 'hanako';
   const initialPrompt = (jobData.prompt as string) || (block.description as string) || '';
   const [draftLabel, setDraftLabel] = useState((jobData.label as string) || (block.title as string) || initialPrompt.slice(0, 40) || '');

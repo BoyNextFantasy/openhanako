@@ -23,7 +23,7 @@ export function useSidebarResize(): void {
     const rightHandle = document.getElementById('jianResizeHandle');
     const previewPanel = document.getElementById('previewPanel');
 
-    const LEFT_MIN = 180, LEFT_MAX = 400;
+    const LEFT_MIN = 220, LEFT_MAX = 400;
     const RIGHT_MIN = 200, RIGHT_MAX = 600;
     const PREVIEW_MIN = 320;
 

@@ -1701,3 +1701,80 @@
 .input-box p {
     margin: 0;
 }
+
+/* ===== aurora 主题变体：输入区焦点光晕 ===== */
+.inputSurface:global([data-theme="aurora"] &):focus-within {
+    box-shadow: 0 0 0 1px rgba(91, 141, 239, 0.45), 0 0 24px rgba(91, 141, 239, 0.18);
+    border-color: rgba(91, 141, 239, 0.5);
+}
+
+/* aurora：输入卡片玻璃拟态（半透明 + 模糊 + 亮边框），不支持 backdrop-filter 时退实色 */
+.input-wrapper:global([data-theme="aurora"] &) {
+    background: var(--bg-glass);
+    -webkit-backdrop-filter: blur(18px) saturate(1.2);
+    backdrop-filter: blur(18px) saturate(1.2);
+    border-color: rgba(143, 184, 255, 0.16);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+}
+
+.input-wrapper:global([data-theme="aurora"] &):hover {
+    border-color: rgba(143, 184, 255, 0.28);
+}
+
+/* ===== E 步布局微调：控制栏呼吸感（按钮总量与 DOM 不变，仅间距/圆角/层级） ===== */
+.input-actions {
+    gap: 0.35rem;
+}
+
+.input-actions > button,
+.input-controls > button {
+    border-radius: var(--radius-sm);
+    transition: background var(--duration-fast) var(--ease-out),
+                color var(--duration-fast) var(--ease-out),
+                border-color var(--duration-fast) var(--ease-out);
+}
+
+.input-actions > button:hover,
+.input-controls > button:hover {
+    background: var(--overlay-light);
+}
+
+/* ===== 结构改版：工具栏上置 + 方形小圆角卡片 ===== */
+
+/* 顶栏：左模式胶囊组 / 右上下文环+模型选择 */
+.input-toolbar-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-8);
+    padding-bottom: var(--space-8);
+    border-bottom: 1px solid var(--border);
+    min-width: 0;
+}
+
+.input-toolbar-group {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-width: 0;
+}
+
+/* 输入卡片：方形 + 一点弧度（10px），扁平化 */
+.input-wrapper {
+    border-radius: var(--radius-chat-surface, 10px);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+/* 移动端：顶栏横向滚动降级 */
+.input-surface-mobile .input-toolbar-top {
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+.input-surface-mobile .input-toolbar-top::-webkit-scrollbar {
+    display: none;
+}
+
+/* 发送键：8px 圆角（方形小圆角语言） */
+.send-btn {
+    border-radius: 8px;
+}

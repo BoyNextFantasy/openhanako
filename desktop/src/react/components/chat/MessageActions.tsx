@@ -112,8 +112,8 @@ export const MessageActions = memo(function MessageActions(props: Props) {
 function CopyIcon() {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+      <rect x="8.5" y="8.5" width="12" height="12" rx="3" ry="3" />
+      <path d="M15.5 5.5v-.5a2.5 2.5 0 0 0-2.5-2.5H6A2.5 2.5 0 0 0 3.5 5v7A2.5 2.5 0 0 0 6 14.5h.5" />
     </svg>
   );
 }
@@ -121,8 +121,11 @@ function CopyIcon() {
 function ScreenshotIcon() {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-      <circle cx="12" cy="13" r="4" />
+      <path d="M4 8V6a2 2 0 0 1 2-2h2" />
+      <path d="M16 4h2a2 2 0 0 1 2 2v2" />
+      <path d="M20 16v2a2 2 0 0 1-2 2h-2" />
+      <path d="M8 20H6a2 2 0 0 1-2-2v-2" />
+      <circle cx="12" cy="12" r="3.2" />
     </svg>
   );
 }
@@ -130,12 +133,12 @@ function ScreenshotIcon() {
 function SelectAllIcon() {
   return (
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M8 6h13" />
-      <path d="M8 12h13" />
-      <path d="M8 18h13" />
-      <path d="m3 6 1 1 2-2" />
-      <path d="m3 12 1 1 2-2" />
-      <path d="m3 18 1 1 2-2" />
+      <path d="M9 6h11.5" />
+      <path d="M9 12h11.5" />
+      <path d="M9 18h11.5" />
+      <path d="M3.5 6h.01" />
+      <path d="M3.5 12h.01" />
+      <path d="M3.5 18h.01" />
     </svg>
   );
 }

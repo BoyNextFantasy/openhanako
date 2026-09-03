@@ -28,6 +28,23 @@ function applyConcreteTheme(concrete: string): void {
   (window as unknown as { hana?: { syncWindowTheme?: (theme: string) => void } }).hana?.syncWindowTheme?.(concrete);
 }
 
+// 首次加载（从空白到有主题）不做过渡——避免启动闪一下；仅运行时切换才淡入。
+let themeTransitionArmed = false;
+
+/** 运行时切换主题时给根元素一个短暂淡入，遮住换肤瞬间的颜色跳变。 */
+function playThemeTransition(): void {
+  if (!themeTransitionArmed) {
+    themeTransitionArmed = true;
+    return;
+  }
+  const root = document.documentElement;
+  root.classList.remove('theme-switching');
+  // 强制 reflow 让动画可重复触发
+  void root.offsetWidth;
+  root.classList.add('theme-switching');
+  window.setTimeout(() => root.classList.remove('theme-switching'), 320);
+}
+
 let systemThemeListener: ((e: MediaQueryListEvent) => void) | null = null;
 
 function setTheme(name: string): void {
@@ -39,6 +56,7 @@ function setTheme(name: string): void {
 
   const { stored, concrete } = registry.resolveSavedTheme(name, systemIsDark());
   applyConcreteTheme(concrete);
+  playThemeTransition();
 
   if (stored === 'auto') {
     systemThemeListener = () => {

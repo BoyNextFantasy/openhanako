@@ -8,7 +8,7 @@
     "packages/*"
   ],
   "author": {
-    "name": "liliMozi"
+    "name": "Satori Team"
   },
   "keywords": [
     "ai-agent",
@@ -43,7 +43,7 @@
     "build:packages": "npm run build --workspaces --if-present",
     "generate:windows-icon": "node scripts/generate-windows-icon.cjs",
     "pack": "npm run build:computer-use-helper && npm run build:client && npm run build:server && electron-builder --dir",
-    "install:local": "npm run pack && rm -rf /Applications/HanaAgent.app /Applications/Hanako.app && cp -R dist/mac-arm64/HanaAgent.app /Applications/ && printf 'provider: github\\nowner: liliMozi\\nrepo: openhanako\\n' > /Applications/HanaAgent.app/Contents/Resources/app-update.yml && node scripts/sign-local.cjs",
+    "install:local": "npm run pack && rm -rf /Applications/Satori.app /Applications/Hanako.app && cp -R dist/mac-arm64/Satori.app /Applications/ && printf 'provider: github\\nowner: BoyNextFantasy\\nrepo: openhanako\\n' > /Applications/Satori.app/Contents/Resources/app-update.yml && node scripts/sign-local.cjs",
     "dist": "npm run build:computer-use-helper && npm run build:client && npm run build:server && electron-builder --mac dmg",
     "dist:win": "npm run build:computer-use-helper && npm run build:windows-sandbox-helper && npm run generate:windows-icon && npm run build:client && npm run build:server && electron-builder --win nsis",
     "dist:linux": "npm run build:client && npm run build:server && electron-builder --linux AppImage deb",
@@ -187,7 +187,7 @@
       ]
     },
     "dmg": {
-      "title": "HanaAgent",
+      "title": "Satori",
       "contents": [
         {
           "x": 180,
@@ -204,7 +204,7 @@
     "publish": [
       {
         "provider": "github",
-        "owner": "liliMozi",
+        "owner": "BoyNextFantasy",
         "repo": "openhanako"
       }
     ],
@@ -238,7 +238,7 @@
         "AppImage",
         "deb"
       ],
-      "maintainer": "liliMozi <liliMozi@users.noreply.github.com>",
+      "maintainer": "Satori Team <satori@example.com>",
       "category": "Utility",
       "icon": "desktop/src/icon.png",
       "artifactName": "Satori-${version}-Linux-${arch}.${ext}"

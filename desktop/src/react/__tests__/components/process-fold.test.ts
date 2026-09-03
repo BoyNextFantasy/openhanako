@@ -59,7 +59,7 @@ describe('process fold grouping', () => {
     const moodMessage: ChatMessage = {
       id: 'mood',
       role: 'assistant',
-      blocks: [thinking(), { type: 'mood', yuan: 'butter', text: 'PULSE' }],
+      blocks: [thinking(), { type: 'mood', yuan: 'butter', text: 'FLOW' }],
     };
 
     expect(isProcessOnlyAssistantMessage(moodMessage)).toBe(false);

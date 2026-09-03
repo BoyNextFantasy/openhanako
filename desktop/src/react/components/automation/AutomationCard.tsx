@@ -52,7 +52,7 @@ export function AutomationCard({
   const t = window.t ?? ((p: string) => p);
   const agents = useStore(s => s.agents);
   const currentAgentId = useStore(s => s.currentAgentId);
-  const fallbackAgentName = useStore(s => s.agentName) || 'Hanako';
+  const fallbackAgentName = useStore(s => s.agentName) || 'Muse';
   const fallbackAgentYuan = useStore(s => s.agentYuan) || 'hanako';
   const addToast = useStore(s => s.addToast);
   const [label, setLabel] = useState(jobTitle(job));

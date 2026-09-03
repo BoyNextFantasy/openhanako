@@ -95,7 +95,7 @@ describe('ProcessFoldBlock', () => {
       ]),
       assistant('a4', [
         thinking('正文前思考'),
-        { type: 'mood', yuan: 'butter', text: 'PULSE' },
+        { type: 'mood', yuan: 'butter', text: 'FLOW' },
         { type: 'text', html: '<p>正文来了</p>' },
       ]),
     ];
@@ -118,7 +118,7 @@ describe('ProcessFoldBlock', () => {
     expect(screen.queryByText('npm test')).not.toBeInTheDocument();
     expect(screen.getByText('正文来了')).toBeInTheDocument();
     expect(screen.getAllByText('思考完成')).toHaveLength(1);
-    expect(screen.getByText(/PULSE/)).toBeInTheDocument();
+    expect(screen.getByText(/FLOW/)).toBeInTheDocument();
 
     fireEvent.click(summary);
 

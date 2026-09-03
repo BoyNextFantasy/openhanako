@@ -831,3 +831,304 @@
     color: var(--text-muted);
     opacity: 0.5;
 }
+
+/* ===== 右栏工作台布局重设计（作用域限 .rightWorkspaceSection，不影响左栏工作台） ===== */
+
+/* 搜索框：全宽主输入 */
+.rightWorkspaceSection .searchWrap {
+    padding: 0;
+}
+
+.rightWorkspaceSection .searchInput {
+    height: 32px;
+    border-radius: 8px;
+    background: var(--overlay-subtle);
+    border: 1px solid var(--border);
+    padding: 0 10px;
+    font-size: var(--fs-caption);
+}
+
+.rightWorkspaceSection .searchInput:focus {
+    border-color: rgba(var(--accent-rgb), 0.5);
+    background: var(--bg-card);
+}
+
+/* 工具行：按钮群 */
+.rightWorkspaceSection .toolbar {
+    top: 36px;
+    padding: 2px 0;
+}
+
+.rightWorkspaceSection .toolbarActions {
+    gap: 4px;
+}
+
+.rightWorkspaceSection .iconBtn,
+.rightWorkspaceSection .sortBtn,
+.rightWorkspaceSection .filterBtn {
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+}
+
+.rightWorkspaceSection .tree {
+    top: calc(36px + 28px);
+    padding: 2px 4px calc(var(--right-workspace-jian-reserved, 56px) + var(--panel-edge-gap));
+}
+
+/* 文件树行：32px 圆角行 + 缩进导线 */
+.rightWorkspaceSection .treeItem {
+    height: 32px;
+    border-radius: 6px;
+    margin-bottom: 1px;
+}
+
+.rightWorkspaceSection .treeItem:hover {
+    background: var(--overlay-light);
+    border-radius: 6px;
+}
+
+.rightWorkspaceSection .treeItemSelected,
+.rightWorkspaceSection .treeItem[data-selected] {
+    background: var(--accent-light);
+    border-radius: 6px;
+}
+
+.rightWorkspaceSection .treeIndent {
+    position: relative;
+}
+
+.rightWorkspaceSection .treeIndent::before {
+    content: "";
+    position: absolute;
+    top: -14px;
+    bottom: 0;
+    right: 7px;
+    width: 1px;
+    background: var(--border);
+}
+
+.rightWorkspaceSection .itemName {
+    font-weight: 500;
+}
+
+.rightWorkspaceSection .treeItem .itemIcon {
+    width: 18px;
+    height: 18px;
+}
+
+/* ===== 溢出修复：工具行收进面板宽度，文字按钮收缩省略 ===== */
+.rightWorkspaceSection .toolbar {
+    left: 8px;
+    right: 8px;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+}
+
+.rightWorkspaceSection .toolbarActions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+    min-width: 0;
+    flex-shrink: 1;
+}
+
+.rightWorkspaceSection .toolbarActions button {
+    min-width: 0;
+    flex-shrink: 1;
+}
+
+.rightWorkspaceSection .filterBtn,
+.rightWorkspaceSection .sortBtn {
+    max-width: 72px;
+    padding: 0 6px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+/* ===== 工具行二次修复：文字按钮完整显示（去 max-width 裁切，紧凑化放下四个按钮） ===== */
+.rightWorkspaceSection .toolbarActions {
+    gap: 2px;
+}
+
+.rightWorkspaceSection .iconBtn {
+    width: 24px;
+    height: 24px;
+}
+
+.rightWorkspaceSection .filterBtn,
+.rightWorkspaceSection .sortBtn {
+    max-width: none;
+    width: auto;
+    min-height: 24px;
+    padding: 0 7px;
+    gap: 3px;
+    border-radius: 6px;
+    font-size: var(--fs-hint);
+    background: var(--overlay-subtle);
+    border: 1px solid var(--border);
+}
+
+/* ===== 工具按钮分组重排：位置类动作（预览/打开）上搜索行；列表操作（过滤/排序）贴树区 ===== */
+.rightWorkspaceSection .searchRow {
+    position: absolute;
+    top: 0;
+    left: 8px;
+    right: 8px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    z-index: 2;
+}
+
+.rightWorkspaceSection .searchRow .searchWrap {
+    position: static;
+    flex: 1;
+    min-width: 0;
+}
+
+.rightWorkspaceSection .searchActions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.rightWorkspaceSection .searchActions .iconBtn {
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    background: var(--overlay-subtle);
+    border: 1px solid var(--border);
+}
+
+.rightWorkspaceSection .searchActions .iconBtn:hover {
+    background: var(--overlay-light);
+    color: var(--text);
+}
+
+/* 过滤/排序窄条：贴树区顶部右对齐 */
+.rightWorkspaceSection .toolbar {
+    top: 38px;
+    left: auto;
+    right: 8px;
+    height: 28px;
+    overflow: visible;
+}
+
+.rightWorkspaceSection .tree {
+    top: 72px;
+}
+
+/* ===== 终版：四枚图标钮全收搜索行右侧（filter/sort 纯图标化），统一内边距与列间距 ===== */
+.rightWorkspaceSection .searchActions {
+    gap: 5px;
+}
+
+.rightWorkspaceSection .filterBtn,
+.rightWorkspaceSection .sortBtn {
+    width: 26px;
+    height: 26px;
+    min-width: 26px;
+    padding: 0;
+    gap: 0;
+    font-size: 0;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.rightWorkspaceSection .filterBtn svg,
+.rightWorkspaceSection .sortBtn svg {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+}
+
+.rightWorkspaceSection .searchRow {
+    left: 10px;
+    right: 10px;
+}
+
+.rightWorkspaceSection .tree {
+    left: 10px;
+    right: 10px;
+}
+
+.rightWorkspaceSection .treeItem {
+    column-gap: 5px;
+}
+
+/* ===== 对齐终修：搜索行/树零缩进（卡片 10px 即统一边距），行高统一 30px ===== */
+.rightWorkspaceSection .searchRow {
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 30px;
+}
+
+.rightWorkspaceSection .searchInput {
+    height: 30px;
+}
+
+.rightWorkspaceSection .searchActions {
+    height: 30px;
+}
+
+.rightWorkspaceSection .searchActions .iconBtn {
+    width: 30px;
+    height: 30px;
+}
+
+.rightWorkspaceSection .filterBtn,
+.rightWorkspaceSection .sortBtn {
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+}
+
+.rightWorkspaceSection .tree {
+    left: 0;
+    right: 0;
+    top: 38px;
+}
+
+/* ===== 工作台根元素零内边距（对齐参照 = 卡片 10px） ===== */
+.rightWorkspaceSection {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* ===== 比例调整：四钮缩至 24px，搜索框加长（同高 26px，宽度让给输入区） ===== */
+.rightWorkspaceSection .searchRow {
+    height: 26px;
+}
+
+.rightWorkspaceSection .searchInput {
+    height: 26px;
+}
+
+.rightWorkspaceSection .searchActions {
+    gap: 4px;
+    height: 26px;
+}
+
+.rightWorkspaceSection .searchActions .iconBtn {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+}
+
+.rightWorkspaceSection .filterBtn,
+.rightWorkspaceSection .sortBtn {
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+}
+
+.rightWorkspaceSection .tree {
+    top: 34px;
+}

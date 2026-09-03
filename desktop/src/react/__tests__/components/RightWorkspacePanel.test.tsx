@@ -48,6 +48,10 @@ vi.mock('../../components/right-workspace/SessionStatusCard', () => ({
 const tMap: Record<string, string> = {
   'rightWorkspace.tabs.sessionFiles': '对话文件',
   'rightWorkspace.tabs.workspace': '工作台',
+  'rightWorkspace.todo.title': '进程',
+  'rightWorkspace.workflow.title': 'Workflow',
+  'rightWorkspace.subagent.title': '子助手',
+  'rightWorkspace.session.title': '本次对话',
   'rightWorkspace.sessionFiles.empty': '本对话还没有产生或上传文件',
   'rightWorkspace.sessionFiles.title': '对话文件',
   'rightWorkspace.sessionFiles.status.expired': '已过期',

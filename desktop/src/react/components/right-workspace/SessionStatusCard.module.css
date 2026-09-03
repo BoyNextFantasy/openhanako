@@ -110,3 +110,106 @@
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
+/* ===== 形态统一：卡片头 → 小节标签 ===== */
+.header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 4px;
+}
+
+.title {
+    font-size: var(--fs-caption);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+/* ===== 布局重设计：dt/dd 列表 → 2×2 信息瓦片（同 DOM 纯 CSS 重排） ===== */
+.body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-top: var(--space-8);
+}
+
+.row {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding: 8px 10px;
+    background: var(--overlay-subtle);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    min-width: 0;
+}
+
+.label {
+    font-size: var(--fs-hint);
+    color: var(--text-muted);
+    letter-spacing: 0.04em;
+}
+
+.value {
+    font-size: var(--fs-caption);
+    font-weight: 600;
+    color: var(--text);
+    text-align: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* 模型与文件数：数值强调（第 3、4 个 dd） */
+.body > div:nth-child(3) .value,
+.body > div:nth-child(4) .value {
+    font-family: var(--font-mono, monospace);
+    font-size: var(--fs-ui);
+    color: var(--accent);
+}
+
+/* ===== 溢出修复：瓦片内长值（模型名/目录名）省略号裁剪 ===== */
+.row {
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.value {
+    min-width: 0;
+    max-width: 100%;
+    display: block;
+}
+
+.body > div:nth-child(3) .value,
+.body > div:nth-child(4) .value {
+    font-size: var(--fs-caption);
+}
+
+/* ===== 改 4×1 横排行：label 左灰 / value 右加粗，模型与文件数蓝色 mono ===== */
+.body {
+    grid-template-columns: 1fr;
+    gap: 4px;
+}
+
+.row {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 10px;
+    gap: 10px;
+}
+
+.label {
+    flex-shrink: 0;
+}
+
+.value {
+    text-align: right;
+    font-weight: 600;
+    flex-shrink: 1;
+}
+
+.body > div:nth-child(3) .value,
+.body > div:nth-child(4) .value {
+    color: var(--accent);
+}

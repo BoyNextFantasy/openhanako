@@ -24,7 +24,7 @@
     "openFullSession": "完全な会話を開く",
     "waitingReply": "返信を待っています...",
     "attachImage": "画像を追加",
-    "serviceUnavailable": "Hana サービスに接続できません",
+    "serviceUnavailable": "Satori サービスに接続できません",
     "createSessionFailed": "会話の作成に失敗しました",
     "sendFailed": "送信に失敗しました"
   },
@@ -113,11 +113,11 @@
     }
   },
   "sidebar": {
-    "title": "チャット",
+    "title": "セッション",
     "newChat": "新しいチャット",
     "collapse": "サイドバーを折りたたむ",
     "expand": "チャット一覧を展開",
-    "empty": "チャットはまだありません ✿",
+    "empty": "セッションはまだありません",
     "activity": "アクティビティ",
     "jian": "デスク",
     "bridge": "ソーシャル連携",
@@ -466,66 +466,66 @@
   "yuan": {
     "types": {
       "hanako": {
-        "label": "バランス型アシスタント",
-        "avatar": "Hanako.png"
+        "label": "ミューズ · 温かく創造的、バランス型",
+        "avatar": "muse.svg"
       },
       "butter": {
-        "label": "より感情豊か",
-        "avatar": "Butter.png"
+        "label": "ブリーズ · 軽やかでテンポが良い",
+        "avatar": "breeze.svg"
       },
       "ming": {
-        "label": "より堅実",
-        "avatar": "Ming.png"
+        "label": "セージ · 冷静で論理的、慎重思考",
+        "avatar": "sage.svg"
       },
       "kong": {
-        "label": "素のまま",
-        "avatar": "Kong.png"
+        "label": "禅 · 無駄を削ぎ落とした、モデル本来の姿",
+        "avatar": "zen.svg"
       }
     },
     "title": "元",
     "splash": {
       "butter": [
-        "{name} は昨日読みかけのページを開きました",
-        "まだ言えていない言葉があります。{name} は覚えています",
-        "{name} はうたた寝しています",
-        "忘れたくない大切な記憶を繋ぎ合わせています",
-        "{name} はあなたの最後の気分をそっとしまいました",
-        "ずっと喉元まで出かかっている言葉があります",
-        "目が覚めて、まずあなたが何をしているか気になりました",
-        "あの省略記号の中に、続きがまだ隠れています",
-        "{name} は伝えたいことを小さな小さなメモに折りたたんでいます",
-        "今日の雲、あの日あなたが撮った写真にそっくりです"
+        "{name} がワークスペーススナップショットを高速ロード中",
+        "依存関係はキャッシュ済み、即起動",
+        "タスクリスト同期済み",
+        "{name} が最後の設定を検証しました",
+        "ウォームアップ完了、ビルド通過",
+        "キャッシュヒット、待ち時間ゼロ",
+        "{name} がタスクキューを整理しました",
+        "lint 通過、警告なし",
+        "{name} がローカルサーバーに接続しました",
+        "準備万端、ブロッカーなし"
       ],
       "ming": [
-        "{name} は下書き用紙の余白に参照線を引きました",
-        "古い問いが沈殿し、新しいアイデアが浮かんできています",
-        "昨日の手がかりをもう一度見直しました",
-        "{name} はあの数式の導出が美しかったと思っています",
-        "答えには時間がかかるものもあります",
-        "{name} は仕事の最適化を考えています",
-        "{name} はすべてを整理しようとしています",
-        "前回の結論をもう一度検証しました",
-        "{name} はあの日のあなたの推論が鋭かったと思っています",
-        "{name} はコーヒーが冷めるのを待ちながら考えを整理しました"
+        "セッション整合性を検証中",
+        "推論パラメータはデフォルトポリシーに整合",
+        "{name} がコンテキストインデックスを再構築中",
+        "diff ベースラインを記録済み",
+        "型チェックのキャッシュヒット",
+        "{name} が前回の結論を再検証しました",
+        "依存グラフのロード完了",
+        "監査ログ準備完了",
+        "{name} は厳格モードに入りました",
+        "全サブシステムのセルフチェック通過"
       ]
     },
     "welcome": {
       "butter": [
-        "やっほー",
-        "会いに来てくれたの？",
-        "今日はどんな一日？",
-        "{name} はずっとここで待っていました",
-        "{name} はちょうどあなたに何か言おうとしていました"
+        "きた〜 今日はどれから始める？",
+        "いつでもどうぞ、{name} はここにいる",
+        "{name} 配置につき、身軽にいこう",
+        "アイデアは言うだけ、{name} が受け取る",
+        "すっきりと、始めよう"
       ],
       "ming": [
-        "こんにちは。準備ができたらどうぞ。",
-        "{name} は準備できています",
-        "何を処理しますか？",
+        "こんにちは。準備ができたらいつでも。",
+        "{name} は準備完了",
+        "処理すべきことはある？",
         "どうぞ、{name} は聞いています"
       ]
     },
     "placeholder": {
-      "butter": "思ったことをそのまま...",
+      "butter": "自由に入力を...",
       "ming": "どうぞ..."
     }
   },
@@ -816,16 +816,16 @@
   },
   "splash": {
     "lines": [
-      "{name} は夕暮れの光を覚えています",
-      "記憶の中で言葉が芽吹きました",
-      "思い出の中にあなたのシルエットを見つけました",
-      "風が古い会話の間を吹き抜けました",
-      "時間に浸かった言葉が、やわらかくなっています",
-      "{name} はあの日あなたが笑っていたのを覚えています",
-      "一つの記憶に、あなたが折り目をつけました",
-      "散らばった気持ちを集めました",
-      "{name} はある午後のオレンジの香りがしました",
-      "あの会話はまだ温もりを残しています"
+      "セッションコンテキストを復元中",
+      "ワークスペース状態を検証中",
+      "メモリインデックスを読み込み中",
+      "システムプロンプトをコンパイル中",
+      "ツールチェーン準備完了",
+      "サンドボックスポリシー有効",
+      "{name} がワークスペースを引き継ぎました",
+      "長期メモリを同期中",
+      "定期タスクキューを確認中",
+      "{name} はスタンバイ完了"
     ],
     "installing": "{name} を v{version} に更新しています。少々お待ちください……"
   },
@@ -900,7 +900,7 @@
         "title": "通知",
         "turnCompletion": "ターン完了通知",
         "turnCompletionNever": "通知しない",
-        "turnCompletionWhenUnfocused": "HanaAgent にフォーカスがないとき",
+        "turnCompletionWhenUnfocused": "Satori にフォーカスがないとき",
         "turnCompletionWhenSessionUnfocused": "完了した Session にフォーカスしていないとき"
       }
     },
@@ -934,12 +934,14 @@
       "warmPaperMode": "ライト",
       "midnight": "蒼夜",
       "midnightMode": "ダーク",
+      "auroraMode": "オーロラ — 深宇宙ガラス",
+      "aurora": "オーロラ",
       "highContrast": "清白",
       "highContrastMode": "ハイコントラスト",
       "grassAroma": "草の香り",
-      "grassAromaMode": "Butter",
+      "grassAromaMode": "ブリーズ",
       "contemplation": "沈思",
-      "contemplationMode": "Ming",
+      "contemplationMode": "セージ",
       "absolutely": "Absolutely",
       "absolutelyMode": "どこか見覚えが",
       "delve": "Delve",
@@ -1119,7 +1121,7 @@
       "updateChecking": "アップデートを確認中…",
       "updateDownloading": "{agentName}が新しいお家を準備中 {percent}%",
       "updateReadyInstall": "v{version} インストール準備完了",
-      "updateInstalling": "アップデートをインストール中です。HanaAgent は自動で再起動します…",
+      "updateInstalling": "アップデートをインストール中です。Satori は自動で再起動します…",
       "updateInstallManualHint": "「再起動して更新」を押すとインストールします。終了だけでは自動インストールしません",
       "updateInstall": "再起動して更新",
       "updateInstallNow": "今すぐ再起動して更新",
@@ -1127,7 +1129,7 @@
       "updateError": "アップデートの確認に失敗しました",
       "updateLatest": "最新バージョンです",
       "updateCheckBtn": "アップデートを確認",
-      "updateNeedInstall": "先に HanaAgent をアプリケーションフォルダに移動してください",
+      "updateNeedInstall": "先に Satori をアプリケーションフォルダに移動してください",
       "updateDiskSpace": "ディスク容量不足のため、アップデートをダウンロードできません",
       "launchAtLogin": "ログイン時に起動",
       "keepAwake": "ロック中も実行を継続",
@@ -1139,9 +1141,9 @@
       "mobileAccess": "モバイルアクセス",
       "desktopAccess": "コンピューターアクセス",
       "lanToggle": "LAN デバイスを許可",
-      "lanHint": "同じ LAN 上のスマートフォンやコンピューターからこの HanaAgent Server にアクセスできます",
+      "lanHint": "同じ LAN 上のスマートフォンやコンピューターからこの Satori Server にアクセスできます",
       "port": "固定ポート",
-      "portHint": "ブックマークと QR コードに使います。変更後は Hana の再起動が必要です",
+      "portHint": "ブックマークと QR コードに使います。変更後は Satori の再起動が必要です",
       "mobileUrl": "モバイル URL",
       "mobileUrlLanHint": "スマートフォンのブラウザーでこのアドレスを開きます",
       "mobileUrlLocalHint": "現在はこのコンピューターだけが接続できます",
@@ -1154,7 +1156,7 @@
       "noLanAddresses": "LAN アドレスが見つかりません",
       "qrCode": "QR コード",
       "qrCodeHint": "スキャンして PWA を開きます",
-      "restartRequired": "ポートの変更を保存しました。Hana を再起動すると反映されます",
+      "restartRequired": "ポートの変更を保存しました。Satori を再起動すると反映されます",
       "saveNetwork": "アクセス設定を保存",
       "mobileKeys": "モバイルキー",
       "generateMobileKey": "モバイルアクセスキーを生成",
@@ -1174,21 +1176,21 @@
       "desktopKeyFailed": "生成に失敗しました",
       "connectLanServer": "LAN サーバーに接続",
       "remoteServerUrl": "サーバー URL",
-      "remoteServerUrlHint": "別のコンピューターまたは NAS の HanaAgent Server URL を入力します",
+      "remoteServerUrlHint": "別のコンピューターまたは NAS の Satori Server URL を入力します",
       "remoteServerKey": "アクセスキー",
       "remoteServerKeyHint": "そのサーバーの設定ページで生成したコンピューターアクセスキーを入力します",
       "remoteServerConnected": "LAN サーバーに接続しました",
       "remoteServerFailed": "接続に失敗しました",
-      "remoteConnection": "リモート Hana に接続中",
-      "remoteConnectionDesc": "アクセスとデバイス内のローカルアカウント、パスワード、LAN スイッチ、アクセスキーはローカル Hana だけに属します。",
+      "remoteConnection": "リモート Satori に接続中",
+      "remoteConnectionDesc": "アクセスとデバイス内のローカルアカウント、パスワード、LAN スイッチ、アクセスキーはローカル Satori だけに属します。",
       "remoteConnectionName": "接続名",
       "remoteConnectionKind": "接続タイプ",
       "remoteConnectionUrl": "サーバー URL",
       "remoteConnectionUnknown": "不明",
-      "remoteLocalOnlyNote": "このコンピューターの LAN アクセス、デバイスキー、ローカルアカウントを管理するには、先にローカル Hana に戻ってください。",
-      "returnToLocal": "ローカル Hana に戻る",
-      "returnedToLocal": "ローカル Hana に戻りました",
-      "localConnectionUnavailable": "ローカル Hana 接続はまだ準備できていません",
+      "remoteLocalOnlyNote": "このコンピューターの LAN アクセス、デバイスキー、ローカルアカウントを管理するには、先にローカル Satori に戻ってください。",
+      "returnToLocal": "ローカル Satori に戻る",
+      "returnedToLocal": "ローカル Satori に戻りました",
+      "localConnectionUnavailable": "ローカル Satori 接続はまだ準備できていません",
       "pairedDevices": "ペアリング済みデバイス",
       "noDevices": "ペアリング済みデバイスはありません",
       "revoke": "取り消す",
@@ -1913,7 +1915,7 @@
       "userLabel": "なんとお呼びすればいいですか？",
       "placeholder": "あなたの名前",
       "agentLabel": "この Agent の名前は？",
-      "agentPlaceholder": "Hanako",
+      "agentPlaceholder": "Muse",
       "memoryTitle": "メモリシステム",
       "memoryHint": "オンにすると、システムは会話終了時に内容を整理してメモリにします。メモリはよく更新されるため、モデルのキャッシュヒット率が下がることがあります。オフにすると通常はより安くなります。",
       "back": "戻る",
@@ -2146,10 +2148,10 @@
     },
     "session": {
       "title": "この対話",
-      "cwd": "作業フォルダ",
-      "model": "モデル",
-      "files": "ファイル",
-      "authorizedFolders": "許可フォルダ",
+      "cwd": "所属フォルダ",
+      "model": "エンジン",
+      "files": "ファイル数",
+      "authorizedFolders": "アクセス許可",
       "addAuthorizedFolder": "許可フォルダを追加"
     },
     "tabs": {
@@ -2382,7 +2384,7 @@
     "skillMissingName": "SKILL.md に name フィールドがありません",
     "skillNameInvalid": "スキル名が無効です（\"{name}\"）。英字、数字、アンダースコア、ハイフンのみ使用できます。",
     "skillPathMustBeAbsolute": "パスは絶対パスである必要があります: {path}",
-    "skillCannotAddSelfDir": "HanaAgent 自身のスキルディレクトリは追加できません",
+    "skillCannotAddSelfDir": "Satori 自身のスキルディレクトリは追加できません",
     "skillInvalidName": "無効なスキル名です",
     "skillExternalCannotDelete": "外部互換スキルはここからは削除できません",
     "skillNotExists": "スキルが存在しません",
@@ -2556,7 +2558,7 @@
   },
   "main": {
     "tray": {
-      "show": "HanaAgent を表示",
+      "show": "Satori を表示",
       "settings": "設定",
       "quit": "終了"
     },
@@ -2564,17 +2566,17 @@
       "selectFolder": "作業フォルダを選択",
       "selectSkill": "スキルを選択",
       "selectPlugin": "プラグインを選択",
-      "launchFailedTitle": "HanaAgent の起動に失敗しました",
-      "launchFailedBody": "HanaAgent v{version}\n\n{detail}\n\n詳細ログの保存先：\n{logPath}\n\nこのスクリーンショットまたはログファイルを開発者にお送りください。",
-      "serverRestartFailed": "HanaAgent v{version}\n\nServer がクラッシュし、再起動に失敗しました。\n{error}\n\nアプリケーションを再起動してください。",
-      "serverMultipleCrash": "HanaAgent v{version}\n\nServer が複数回クラッシュしました ({reason})。\n\nアプリケーションを再起動してください。",
+      "launchFailedTitle": "Satori の起動に失敗しました",
+      "launchFailedBody": "Satori v{version}\n\n{detail}\n\n詳細ログの保存先：\n{logPath}\n\nこのスクリーンショットまたはログファイルを開発者にお送りください。",
+      "serverRestartFailed": "Satori v{version}\n\nServer がクラッシュし、再起動に失敗しました。\n{error}\n\nアプリケーションを再起動してください。",
+      "serverMultipleCrash": "Satori v{version}\n\nServer が複数回クラッシュしました ({reason})。\n\nアプリケーションを再起動してください。",
       "serverStartTimeout": "Server の起動がタイムアウトしました",
       "serverKilledBySignal": "Server がシグナルで終了しました ({signal})",
       "serverExitedWithCode": "Server が終了しました。コード: {code}",
-      "serverFilesNotReady": "自動アップデートが完了したばかりで、新バージョンのファイルがまだディスクに書き込まれていません（{missing} が見つかりません）。{waited} 秒待機しましたが完了しませんでした。しばらくしてから HanaAgent を再起動してください。",
-      "serverModuleMissing": "Server 起動失敗：モジュール {module} が見つかりません。\n通常、自動アップデート完了直後にファイルがまだディスクに書き込み中の場合に発生します。\n推奨：1〜2 分待ってから HanaAgent を再起動してください。問題が続く場合は GitHub で報告してください。",
-      "installFailedTitle": "HanaAgent アップデート",
-      "installFailedBody": "アップデートのインストールに失敗しました：\n{error}\n\nHanaAgent を再起動してからもう一度お試しください。または設定ページで手動でアップデートを確認してください。"
+      "serverFilesNotReady": "自動アップデートが完了したばかりで、新バージョンのファイルがまだディスクに書き込まれていません（{missing} が見つかりません）。{waited} 秒待機しましたが完了しませんでした。しばらくしてから Satori を再起動してください。",
+      "serverModuleMissing": "Server 起動失敗：モジュール {module} が見つかりません。\n通常、自動アップデート完了直後にファイルがまだディスクに書き込み中の場合に発生します。\n推奨：1〜2 分待ってから Satori を再起動してください。問題が続く場合は GitHub で報告してください。",
+      "installFailedTitle": "Satori アップデート",
+      "installFailedBody": "アップデートのインストールに失敗しました：\n{error}\n\nSatori を再起動してからもう一度お試しください。または設定ページで手動でアップデートを確認してください。"
     },
     "notification": {
       "ready": "通知が有効になりました"
@@ -2673,7 +2675,7 @@
     "inputHelp": "/help でコマンド一覧を表示"
   },
   "sandbox": {
-    "blocked": "[セキュリティ] {reason}\n\nこの操作は HanaAgent のサンドボックスセキュリティポリシーによりブロックされました。これはコマンドがパスまたは権限の境界を越えたことを示します。まず現在のワークスペース、具体的なパス表記、対象ファイルが許可されたワークスペースまたは session パスに属するべきかを確認してください。ブロックされたパスと理由をユーザーに説明し、サンドボックス設定の変更はユーザーが明示的に決めた場合にだけ相談してください。",
+    "blocked": "[セキュリティ] {reason}\n\nこの操作は Satori のサンドボックスセキュリティポリシーによりブロックされました。これはコマンドがパスまたは権限の境界を越えたことを示します。まず現在のワークスペース、具体的なパス表記、対象ファイルが許可されたワークスペースまたは session パスに属するべきかを確認してください。ブロックされたパスと理由をユーザーに説明し、サンドボックス設定の変更はユーザーが明示的に決めた場合にだけ相談してください。",
     "noSudo": "sudo の使用は禁止されています",
     "noSu": "su によるユーザー切り替えは禁止されています",
     "noChmod": "ファイル権限の変更は禁止されています",
@@ -2723,7 +2725,7 @@
   "status.disconnected": "Connection lost",
   "status.reconnect": "Reconnect",
   "action.retry": "Retry",
-  "mobile.update.available": "Hana の新しいバージョンがあります",
+  "mobile.update.available": "Satori の新しいバージョンがあります",
   "mobile.update.reload": "更新",
   "subagentAbort": "停止",
   "subagentAborted": "停止済み",

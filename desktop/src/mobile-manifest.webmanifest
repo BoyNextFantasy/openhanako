@@ -1,6 +1,6 @@
 {
-  "name": "HanaAgent",
-  "short_name": "HanaAgent",
+  "name": "Satori",
+  "short_name": "Satori",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

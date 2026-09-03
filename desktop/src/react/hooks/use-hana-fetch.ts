@@ -8,7 +8,7 @@ import {
 const DEFAULT_TIMEOUT = 30_000;
 
 /**
- * 构建带认证的 HanaAgent Server URL
+ * 构建带认证的 Satori Server URL
  */
 export function hanaUrl(path: string): string {
   const connection = requireServerConnection(

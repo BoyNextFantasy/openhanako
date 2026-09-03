@@ -124,7 +124,7 @@ function buildWindowsInstallSurfaceChecks({ execPath, resourcesPath } = {}) {
   const serverRoot = path.join(resourcesRoot, "server");
   const gitRoot = path.join(resourcesRoot, "git");
   const gitExe = path.join(gitRoot, "cmd", "git.exe");
-  const appExecutableLabel = executablePath ? path.basename(executablePath) : "HanaAgent.exe";
+  const appExecutableLabel = executablePath ? path.basename(executablePath) : "Satori.exe";
   const bashCandidates = [
     path.join(gitRoot, "bin", "bash.exe"),
     path.join(gitRoot, "usr", "bin", "bash.exe"),
@@ -245,7 +245,7 @@ function formatInstallSurfaceError(result, diagnosticPath) {
   const lines = missing.map(item => `- ${item.relativePath}`);
   const diagnosticLine = diagnosticPath ? `\n\nDiagnostic file:\n${diagnosticPath}` : "";
   return [
-    "HanaAgent installation is incomplete.",
+    "Satori installation is incomplete.",
     "",
     "Missing or unreadable files:",
     ...lines,

@@ -2,7 +2,7 @@
  * InteractiveCard — show_card tool 的渲染组件
  *
  * 加载方式（关键架构）：
- *   卡片 HTML 由本地 Hana server 经 http 提供（server/routes/cards.ts），
+ *   卡片 HTML 由本地 Satori server 经 http 提供（server/routes/cards.ts），
  *   iframe 用 src 加载，**不用 srcdoc/blob**。原因：srcdoc/blob 会继承渲染进程
  *   的 `script-src 'self'` CSP，导致 iframe 内所有内联脚本（高度上报 + agent 的
  *   onclick/addEventListener）被静默阻断，卡片既点不动也撑不开高度。真实 http

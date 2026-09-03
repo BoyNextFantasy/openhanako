@@ -2,7 +2,7 @@
   "cover": {
     "make": "新增封面",
     "agentGenerate": {
-      "beautifyDisabled": "需要先在主 Agent 的工具設定裡開啟小花美术。",
+      "beautifyDisabled": "需要先在主 Agent 的工具設定裡開啟缪斯美术。",
       "defaultModelMissing": "需要先在設定裡設定預設圖片模型。",
       "defaultModelInvalid": "預設圖片模型不可用，需要在設定裡重新設定。",
       "imageGenUnavailable": "圖片生成工具未啟用，需要先在設定裡開啟。",
@@ -24,7 +24,7 @@
     "openFullSession": "打開完整會話",
     "waitingReply": "正在等待回覆...",
     "attachImage": "新增圖片",
-    "serviceUnavailable": "無法連線 Hana 服務",
+    "serviceUnavailable": "無法連線 Satori 服務",
     "createSessionFailed": "建立會話失敗",
     "sendFailed": "傳送失敗"
   },
@@ -113,11 +113,11 @@
     }
   },
   "sidebar": {
-    "title": "對話",
+    "title": "會話",
     "newChat": "新對話",
     "collapse": "收起側邊欄",
     "expand": "展開對話列表",
-    "empty": "還沒有對話哦 ✿",
+    "empty": "暫無會話",
     "activity": "助手活動",
     "jian": "書桌",
     "bridge": "接入社群平台",
@@ -421,56 +421,56 @@
   "yuan": {
     "types": {
       "hanako": {
-        "label": "均衡的助手",
-        "avatar": "Hanako.png"
+        "label": "繆思 · 溫暖創意，均衡發揮",
+        "avatar": "muse.svg"
       },
       "butter": {
-        "label": "更富有感情",
-        "avatar": "Butter.png"
+        "label": "清風 · 輕快簡潔，節奏明快",
+        "avatar": "breeze.svg"
       },
       "ming": {
-        "label": "更理性冷靜",
-        "avatar": "Ming.png"
+        "label": "智者 · 理性冷靜，嚴謹深思",
+        "avatar": "sage.svg"
       },
       "kong": {
-        "label": "模型原本的樣子",
-        "avatar": "Kong.png"
+        "label": "禪 · 樸素極簡，模型本色",
+        "avatar": "zen.svg"
       }
     },
     "title": "元",
     "splash": {
       "butter": [
-        "{name} 翻開了昨天沒看完的那一頁",
-        "有些話還沒說完，{name} 記得",
-        "{name} 正在睡覺",
-        "Ta 在整理那些捨不得忘的碎片",
-        "{name} 把你上次的心情小心收好了",
-        "有一句話在嘴邊放了很久",
-        "Ta 醒來的時候先想了想你在做什麼",
-        "那些省略號裡藏著沒講完的故事",
-        "{name} 正在把想說的話疊成很小很小的紙條",
-        "今天的雲和那天你拍的那張很像"
+        "{name} 正在快速載入工作區快照",
+        "依賴已快取，秒開",
+        "待辦清單已同步",
+        "{name} 校驗完最後一項配置",
+        "熱身完畢，編譯通過",
+        "快取命中，零等待",
+        "{name} 把任務佇列排好了",
+        "lint 通過，無警告",
+        "{name} 已連線本機服務",
+        "一切就緒，零阻塞"
       ],
       "ming": [
-        "{name} 在草稿紙的空白處畫了一條輔助線",
-        "舊的問題在沉澱，新的思路在浮現",
-        "Ta 把昨天的線索重新梳理了一遍",
-        "那個公式的推導過程，{name} 覺得很漂亮",
-        "有些答案需要時間",
-        "{name} 正在思考工作怎麼優化",
-        "{name} 嘗試讓一切井井有條",
-        "Ta 把上次的結論又驗證了一遍",
-        "{name} 覺得你那天的思路很俐落",
-        "{name} 在等咖啡涼的時候順手理了一下思路"
+        "正在驗證會話完整性",
+        "推理參數已按預設策略對齊",
+        "{name} 正在重建上下文索引",
+        "diff 基線已記錄",
+        "型別檢查快取命中",
+        "{name} 複核了上次的結論",
+        "依賴圖載入完成",
+        "稽核日誌就緒",
+        "{name} 已進入嚴謹模式",
+        "所有子系統自檢通過"
       ]
     },
     "welcome": {
       "butter": [
-        "來啦～",
-        "你來找我啦？",
-        "今天過得怎麼樣呀？",
-        "{name} 一直在這裡等你",
-        "{name} 剛好想找你說點什麼"
+        "來啦～今天從哪件事開始？",
+        "隨時開工，{name} 在",
+        "{name} 已就位，輕裝上陣",
+        "有想法就說，{name} 來接",
+        "清清爽爽，開始吧"
       ],
       "ming": [
         "你好。有需要的話，隨時開始。",
@@ -816,16 +816,16 @@
   },
   "splash": {
     "lines": [
-      "{name} 想起了那天傍晚的光",
-      "有些句子在記憶裡發了芽",
-      "Ta 在回憶裡找到了你的輪廓",
-      "風穿過那些舊對話",
-      "那些文字泡在時間裡，變得很軟",
-      "{name} 記得你那天笑了很久",
-      "有一段記憶被你折了角",
-      "Ta 把散落的情緒重新收好",
-      "{name} 聞到了某個下午的橘子味",
-      "那些對話還帶著體溫"
+      "正在恢復會話上下文",
+      "校驗工作區狀態",
+      "載入記憶索引",
+      "編譯系統指令",
+      "工具鏈就緒",
+      "沙箱策略已生效",
+      "{name} 已接管工作區",
+      "同步長期記憶中",
+      "檢查定時任務佇列",
+      "{name} 隨時待命"
     ],
     "installing": "{name} 正在更新到 v{version}，請稍候……"
   },
@@ -900,7 +900,7 @@
         "title": "通知",
         "turnCompletion": "輪次完成通知",
         "turnCompletionNever": "從不",
-        "turnCompletionWhenUnfocused": "焦點不在 HanaAgent 時",
+        "turnCompletionWhenUnfocused": "焦點不在 Satori 時",
         "turnCompletionWhenSessionUnfocused": "焦點不在完成任務的 Session 時"
       }
     },
@@ -934,12 +934,14 @@
       "warmPaperMode": "白天",
       "midnight": "青夜",
       "midnightMode": "夜間",
+      "auroraMode": "極光 — 深空玻璃質感",
+      "aurora": "極光",
       "highContrast": "素白",
       "highContrastMode": "高對比",
       "grassAroma": "草香",
-      "grassAromaMode": "Butter",
+      "grassAromaMode": "清風",
       "contemplation": "沉思",
-      "contemplationMode": "Ming",
+      "contemplationMode": "智者",
       "absolutely": "Absolutely",
       "absolutelyMode": "有一點點熟悉",
       "delve": "隨時準備接住你",
@@ -1078,7 +1080,7 @@
             "summary": "讓 Agent 建立通知和外掛定時動作"
           },
           "beautify": {
-            "label": "小花美术",
+            "label": "缪斯美术",
             "summary": "讓 Agent 為文件生成封面和審美增強內容"
           },
           "browser": {
@@ -1119,7 +1121,7 @@
       "updateChecking": "正在檢查更新…",
       "updateDownloading": "{agentName}正在準備新家 {percent}%",
       "updateReadyInstall": "v{version} 已就緒",
-      "updateInstalling": "正在安裝更新，HanaAgent 會自動重新啟動…",
+      "updateInstalling": "正在安裝更新，Satori 會自動重新啟動…",
       "updateInstallManualHint": "點「重啟更新」後安裝，直接退出不會自動安裝",
       "updateInstall": "重新啟動更新",
       "updateInstallNow": "重新啟動立即更新",
@@ -1127,7 +1129,7 @@
       "updateError": "檢查更新失敗",
       "updateLatest": "已是最新版本",
       "updateCheckBtn": "檢查更新",
-      "updateNeedInstall": "請先將 HanaAgent 移動到應用程式資料夾",
+      "updateNeedInstall": "請先將 Satori 移動到應用程式資料夾",
       "updateDiskSpace": "磁碟空間不足，無法下載更新",
       "launchAtLogin": "開機自啟",
       "keepAwake": "鎖定時保持執行",
@@ -1139,9 +1141,9 @@
       "mobileAccess": "手機存取",
       "desktopAccess": "電腦存取",
       "lanToggle": "允許區域網路裝置存取",
-      "lanHint": "開啟後，同一區域網路內的手機和電腦可以存取這台 HanaAgent Server",
+      "lanHint": "開啟後，同一區域網路內的手機和電腦可以存取這台 Satori Server",
       "port": "固定連接埠",
-      "portHint": "用於書籤和 QR Code；修改後需要重新啟動 Hana 生效",
+      "portHint": "用於書籤和 QR Code；修改後需要重新啟動 Satori 生效",
       "mobileUrl": "手機存取地址",
       "mobileUrlLanHint": "在手機瀏覽器中開啟這個地址",
       "mobileUrlLocalHint": "目前僅允許本機存取，開啟區域網路後會顯示手機可用地址",
@@ -1154,7 +1156,7 @@
       "noLanAddresses": "未發現區域網路地址",
       "qrCode": "QR Code",
       "qrCodeHint": "用手機掃碼開啟 PWA",
-      "restartRequired": "連接埠變更已儲存，重新啟動 Hana 後生效",
+      "restartRequired": "連接埠變更已儲存，重新啟動 Satori 後生效",
       "saveNetwork": "儲存存取設定",
       "mobileKeys": "手機密鑰",
       "generateMobileKey": "產生手機存取密鑰",
@@ -1174,21 +1176,21 @@
       "desktopKeyFailed": "產生失敗",
       "connectLanServer": "連線區域網路伺服器",
       "remoteServerUrl": "伺服器位址",
-      "remoteServerUrlHint": "填入另一台電腦或 NAS 上 HanaAgent Server 的地址",
+      "remoteServerUrlHint": "填入另一台電腦或 NAS 上 Satori Server 的地址",
       "remoteServerKey": "存取密鑰",
       "remoteServerKeyHint": "填入那台伺服器設定頁產生的電腦存取密鑰",
       "remoteServerConnected": "已連線區域網路伺服器",
       "remoteServerFailed": "連線失敗",
-      "remoteConnection": "目前連線的是遠端 Hana",
-      "remoteConnectionDesc": "存取與裝置中的本機帳號、密碼、區域網路開關和密鑰產生只屬於本機 Hana。",
+      "remoteConnection": "目前連線的是遠端 Satori",
+      "remoteConnectionDesc": "存取與裝置中的本機帳號、密碼、區域網路開關和密鑰產生只屬於本機 Satori。",
       "remoteConnectionName": "連線名稱",
       "remoteConnectionKind": "連線類型",
       "remoteConnectionUrl": "伺服器位址",
       "remoteConnectionUnknown": "未知",
-      "remoteLocalOnlyNote": "需要管理這台電腦的區域網路存取、裝置密鑰或本機帳號時，請先切回本機 Hana。",
-      "returnToLocal": "切回本機 Hana",
-      "returnedToLocal": "已切回本機 Hana",
-      "localConnectionUnavailable": "本機 Hana 連線尚未就緒",
+      "remoteLocalOnlyNote": "需要管理這台電腦的區域網路存取、裝置密鑰或本機帳號時，請先切回本機 Satori。",
+      "returnToLocal": "切回本機 Satori",
+      "returnedToLocal": "已切回本機 Satori",
+      "localConnectionUnavailable": "本機 Satori 連線尚未就緒",
       "pairedDevices": "已配對裝置",
       "noDevices": "暫無已配對裝置",
       "revoke": "撤銷",
@@ -1905,7 +1907,7 @@
       "userLabel": "我該怎麼稱呼你？",
       "placeholder": "你的名字",
       "agentLabel": "這個 Agent 叫什麼？",
-      "agentPlaceholder": "小花",
+      "agentPlaceholder": "缪斯",
       "memoryTitle": "記憶系統",
       "memoryHint": "開啟後，系統會在對話結束時整理聊天內容，形成記憶。因為記憶會經常更新，會導致模型快取命中率降低，關掉記憶時通常會更省錢。",
       "back": "上一步",
@@ -2138,10 +2140,10 @@
     },
     "session": {
       "title": "本次對話",
-      "cwd": "工作目錄",
-      "model": "模型",
-      "files": "檔案",
-      "authorizedFolders": "授權目錄",
+      "cwd": "所屬目錄",
+      "model": "當前模型",
+      "files": "檔案數",
+      "authorizedFolders": "可存取目錄",
       "addAuthorizedFolder": "新增授權目錄"
     },
     "tabs": {
@@ -2374,7 +2376,7 @@
     "skillMissingName": "SKILL.md 中缺少 name 欄位",
     "skillNameInvalid": "技能名稱無效（\"{name}\"）。僅允許字母、數字、底線和短橫線。",
     "skillPathMustBeAbsolute": "路徑必須是絕對路徑: {path}",
-    "skillCannotAddSelfDir": "不能新增 HanaAgent 自身的技能目錄",
+    "skillCannotAddSelfDir": "不能新增 Satori 自身的技能目錄",
     "skillInvalidName": "無效的技能名稱",
     "skillExternalCannotDelete": "外部相容技能無法從此處刪除",
     "skillNotExists": "技能不存在",
@@ -2548,7 +2550,7 @@
   },
   "main": {
     "tray": {
-      "show": "顯示 HanaAgent",
+      "show": "顯示 Satori",
       "settings": "設定",
       "quit": "結束"
     },
@@ -2556,17 +2558,17 @@
       "selectFolder": "選擇工作資料夾",
       "selectSkill": "選擇技能",
       "selectPlugin": "選擇插件",
-      "launchFailedTitle": "HanaAgent 啟動失敗",
-      "launchFailedBody": "HanaAgent v{version}\n\n{detail}\n\n詳細日誌已儲存至：\n{logPath}\n\n請將此截圖或日誌檔案傳送給開發者。",
-      "serverRestartFailed": "HanaAgent v{version}\n\nServer 崩潰後重新啟動失敗。\n{error}\n\n請重新啟動應用程式。",
-      "serverMultipleCrash": "HanaAgent v{version}\n\nServer 多次崩潰 ({reason})。\n\n請重新啟動應用程式。",
+      "launchFailedTitle": "Satori 啟動失敗",
+      "launchFailedBody": "Satori v{version}\n\n{detail}\n\n詳細日誌已儲存至：\n{logPath}\n\n請將此截圖或日誌檔案傳送給開發者。",
+      "serverRestartFailed": "Satori v{version}\n\nServer 崩潰後重新啟動失敗。\n{error}\n\n請重新啟動應用程式。",
+      "serverMultipleCrash": "Satori v{version}\n\nServer 多次崩潰 ({reason})。\n\n請重新啟動應用程式。",
       "serverStartTimeout": "Server 啟動逾時",
       "serverKilledBySignal": "Server 被訊號終止 ({signal})",
       "serverExitedWithCode": "Server 已結束，code: {code}",
-      "serverFilesNotReady": "自動更新剛完成，新版本檔案仍在寫入磁碟（缺少 {missing}），已等待 {waited} 秒仍未就緒。請稍後重新啟動 HanaAgent。",
-      "serverModuleMissing": "Server 啟動失敗：找不到模組 {module}。\n通常是自動更新剛完成、新版本檔案仍在寫入磁碟所致。\n建議：等待 1-2 分鐘後重新啟動 HanaAgent；若反覆出現，請至 GitHub 回報。",
-      "installFailedTitle": "HanaAgent 更新",
-      "installFailedBody": "更新安裝失敗：\n{error}\n\n請重新啟動 HanaAgent 後重試，或前往設定頁面手動檢查更新。"
+      "serverFilesNotReady": "自動更新剛完成，新版本檔案仍在寫入磁碟（缺少 {missing}），已等待 {waited} 秒仍未就緒。請稍後重新啟動 Satori。",
+      "serverModuleMissing": "Server 啟動失敗：找不到模組 {module}。\n通常是自動更新剛完成、新版本檔案仍在寫入磁碟所致。\n建議：等待 1-2 分鐘後重新啟動 Satori；若反覆出現，請至 GitHub 回報。",
+      "installFailedTitle": "Satori 更新",
+      "installFailedBody": "更新安裝失敗：\n{error}\n\n請重新啟動 Satori 後重試，或前往設定頁面手動檢查更新。"
     },
     "notification": {
       "ready": "通知已就緒"
@@ -2665,7 +2667,7 @@
     "inputHelp": "輸入 /help 查看命令列表"
   },
   "sandbox": {
-    "blocked": "[安全策略] {reason}\n\n此操作被 HanaAgent 的沙盒安全策略阻止，表示命令越過了路徑或權限邊界。先檢查目前工作台、具體路徑寫法，以及目標檔案是否本來就應該放在允許的工作台或 session 路徑內。請向使用者說明被攔截的路徑和原因；只有使用者明確決定時，再討論是否修改沙盒設定。",
+    "blocked": "[安全策略] {reason}\n\n此操作被 Satori 的沙盒安全策略阻止，表示命令越過了路徑或權限邊界。先檢查目前工作台、具體路徑寫法，以及目標檔案是否本來就應該放在允許的工作台或 session 路徑內。請向使用者說明被攔截的路徑和原因；只有使用者明確決定時，再討論是否修改沙盒設定。",
     "noSudo": "禁止使用 sudo",
     "noSu": "禁止使用 su 切換使用者",
     "noChmod": "禁止修改檔案權限",
@@ -2715,7 +2717,7 @@
   "status.disconnected": "连接已断开",
   "status.reconnect": "重新连接",
   "action.retry": "重试",
-  "mobile.update.available": "Hana 有新版本可用",
+  "mobile.update.available": "Satori 有新版本可用",
   "mobile.update.reload": "重新整理",
   "subagentAbort": "終止",
   "subagentAborted": "已終止",
