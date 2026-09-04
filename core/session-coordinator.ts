@@ -2624,6 +2624,8 @@ export class SessionCoordinator {
       const entry = this._getSessionEntryByPath(sp);
       if (entry) entry.lastTouchedAt = Date.now();
     }
+    // 用户直接输入 = 当前等待裁决的计划卡作废（模型会收到 superseded 工具结果）
+    this._d.getEngine?.()?.resolvePlanReview?.(sp, "superseded");
     const engine = this._d.getEngine?.();
     ({ text, opts } = await prepareVisionInputForTextOnlyModel({
       targetModel: this._session.model,
@@ -2697,6 +2699,8 @@ export class SessionCoordinator {
   async promptSession(sessionPath: any, text: any, opts: any) {
     const turnContext = normalizeSessionTurnContext(opts?.context);
     this._assertActiveDesktopSessionPath(sessionPath, "promptSession");
+    // 用户直接输入 = 当前等待裁决的计划卡作废（模型会收到 superseded 工具结果）
+    this._d.getEngine?.()?.resolvePlanReview?.(sessionPath, "superseded");
     let entry = this._getSessionEntryByPath(sessionPath);
     if (!entry) {
       await this.ensureSessionLoaded(sessionPath);
@@ -2757,6 +2761,8 @@ export class SessionCoordinator {
   steerSession(sessionPath: any, text: any) {
     const entry = this._getSessionEntryByPath(sessionPath);
     if (!entry?.session.isStreaming) return false;
+    // 插队输入同样视为对等待中的计划卡说"不"（模型收到 superseded 结果 + 用户消息）
+    this._d.getEngine?.()?.resolvePlanReview?.(sessionPath, "superseded");
     entry.lastTouchedAt = Date.now();
     entry.session.steer(text);
     return true;

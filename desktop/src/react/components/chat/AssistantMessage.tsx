@@ -8,6 +8,7 @@ import { StreamingMarkdownContent } from './StreamingMarkdownContent';
 import { MoodBlock } from './MoodBlock';
 import { ThinkingBlock } from './ThinkingBlock';
 import { ToolGroupBlock } from './ToolGroupBlock';
+import { PlanReviewCard } from './PlanReviewCard';
 import { PluginCardBlock } from './PluginCardBlock';
 import { SubagentCard } from './SubagentCard';
 import { WorkflowInlineCard } from './WorkflowInlineCard';
@@ -281,8 +282,20 @@ const ContentBlockView = memo(function ContentBlockView({ block, agentName, agen
       return <ThinkingBlock content={block.content} sealed={block.sealed} />;
     case 'mood':
       return <MoodBlock yuan={block.yuan} text={block.text} />;
-    case 'tool_group':
-      return <ToolGroupBlock tools={block.tools} collapsed={block.collapsed} agentName={agentName} />;
+    case 'tool_group': {
+      const planTools = (block.tools || []).filter((t) => t.name === 'plan_submit');
+      const otherTools = (block.tools || []).filter((t) => t.name !== 'plan_submit');
+      return (
+        <>
+          {planTools.map((t) => (
+            <PlanReviewCard key={t.id || t.name} tool={t} sessionPath={sessionPath} />
+          ))}
+          {otherTools.length > 0 && (
+            <ToolGroupBlock tools={otherTools} collapsed={block.collapsed} agentName={agentName} />
+          )}
+        </>
+      );
+    }
     case 'text':
       return <StreamingMarkdownContent html={block.html} source={block.source} active={isStreaming} linkContext={{ origin: 'session', sessionPath, messageId, blockIdx }} />;
     case 'file':

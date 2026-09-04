@@ -4,6 +4,7 @@ import { WelcomeScreen } from '../WelcomeScreen';
 import { ChatArea } from '../chat/ChatArea';
 import { RegionalErrorBoundary } from '../RegionalErrorBoundary';
 import { QuestionBar } from '../QuestionModal';
+import { PlanReviewBar } from '../chat/PlanReviewCard';
 
 function WelcomeContainer() {
   const visible = useStore(s => s.welcomeVisible);
@@ -34,6 +35,7 @@ export function ChatPage({
         </RegionalErrorBoundary>
       </div>
       <QuestionBar />
+      <PlanReviewBar />
       <div className="input-area">
         <RegionalErrorBoundary
           region={`${regionPrefix}input`}

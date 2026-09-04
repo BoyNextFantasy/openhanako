@@ -117,6 +117,7 @@ import { wrapWithCheckpoint } from "../lib/checkpoint-wrapper.ts";
 import { wrapWithSessionPermission } from "../lib/tools/session-permission-wrapper.ts";
 import { filterToolObjectsByAvailability } from "./tool-availability.ts";
 import { TaskRegistry } from "../lib/task-registry.ts";
+import { bindPlanToTaskTree } from "./plan-workflow.ts";
 import { TerminalSessionManager } from "../lib/terminal/terminal-session-manager.ts";
 import { PluginInstallRecords } from "../lib/plugin-install-records.ts";
 import { ComputerHost } from "./computer-use/computer-host.ts";
@@ -215,6 +216,7 @@ export class HanaEngine {
   declare _subagentRunStore: any;
   declare _subagentThreadStore: any;
   declare _taskRegistry: any;
+  declare _planArtifacts: any;
   declare _terminalSessions: any;
   declare _uiContextBySession: any;
   declare _usageLedger: any;
@@ -440,6 +442,9 @@ export class HanaEngine {
     // subagent AbortController 存储（engine 级别，跨 agent 共享）
     this._subagentControllers = new Map();
     this._subagentRunStore = null;
+    // 会话级计划卡状态：sessionPath → { artifact, boundTaskIds }。仅内存（MVP），
+    // 重复 plan_submit 覆盖；confirmPlanArtifact 建树后置 boundTaskIds 实现幂等。
+    this._planArtifacts = new Map();
     this._taskRegistry.registerHandler("subagent", {
       abort: (taskId) => {
         const ctrl = this._subagentControllers.get(taskId);
@@ -595,6 +600,102 @@ export class HanaEngine {
     return this._taskRegistry;
   }
 
+  /**
+   * 记录会话的结构化计划（plan_submit 非阻塞工具写入）。
+   * 状态机：pending → confirmed | cancelled | superseded。覆盖提交使旧 pending 自动变 superseded。
+   */
+  setPlanArtifact(sessionPath: string, artifact: any, meta?: { toolCallId?: string }) {
+    const previous = this._planArtifacts.get(sessionPath);
+    if (previous?.status === "pending" && previous.toolCallId && previous.toolCallId !== meta?.toolCallId) {
+      // 旧卡作废：通知前端把历史里的旧卡标成 superseded
+      this._emitEvent({ type: "plan_review_update", toolCallId: previous.toolCallId, status: "superseded" }, sessionPath);
+    }
+    this._planArtifacts.set(sessionPath, {
+      artifact,
+      status: "pending",
+      boundTaskIds: null,
+      toolCallId: meta?.toolCallId || null,
+    });
+  }
+
+  getPlanArtifact(sessionPath: string) {
+    return this._planArtifacts.get(sessionPath)?.artifact || null;
+  }
+
+  /** 等待用户裁决的计划；前端刷新后据此恢复可交互卡片。 */
+  getPlanReviewEntry(sessionPath: string) {
+    const entry = this._planArtifacts.get(sessionPath);
+    if (!entry || entry.status !== "pending") return null;
+    return { artifact: entry.artifact, toolCallId: entry.toolCallId };
+  }
+
+  /**
+   * 确认后的开工注入：以用户消息形式发起一个新轮次（promptSession 按路径寻址，
+   * fire-and-forget，不阻塞 HTTP 响应）。这是「确认即开始执行」的实现通道。
+   */
+  kickOffPlanExecution(sessionPath: string) {
+    setTimeout(() => {
+      try {
+        const result = (this as any).promptSession?.(sessionPath, "（用户已在计划卡上点确认）请现在开始执行计划：从步骤 1 开始。");
+        if (result && typeof result.catch === "function") {
+          result.catch((err: any) => (this as any).emitDevLog?.("warn", `plan kickoff failed: ${err?.message || err}`));
+        }
+      } catch (err: any) {
+        (this as any).emitDevLog?.("warn", `plan kickoff failed: ${err?.message || err}`);
+      }
+    }, 30);
+  }
+
+  /** 用户直接输入 = 等待中的计划卡作废（模型在新轮次里以最新输入为准）。 */
+  resolvePlanReview(sessionPath: string, action: string) {
+    if (action !== "superseded") return false;
+    const entry = this._planArtifacts.get(sessionPath);
+    if (!entry || entry.status !== "pending") return false;
+    entry.status = "superseded";
+    if (entry.toolCallId) {
+      this._emitEvent({ type: "plan_review_update", toolCallId: entry.toolCallId, status: "superseded" }, sessionPath);
+    }
+    return true;
+  }
+
+  /** 用户关闭（✕）等待中的计划卡：模型下一轮以最新用户输入为准。 */
+  dismissPlanArtifact(sessionPath: string) {
+    const entry = this._planArtifacts.get(sessionPath);
+    if (!entry || entry.status !== "pending") {
+      return { ok: false, error: "No pending plan to dismiss." };
+    }
+    entry.status = "cancelled";
+    if (entry.toolCallId) {
+      this._emitEvent({ type: "plan_review_update", toolCallId: entry.toolCallId, status: "cancelled" }, sessionPath);
+    }
+    return { ok: true };
+  }
+
+  /**
+   * 确认计划：绑定任务树（幂等——重复确认返回同一棵树）并广播状态更新。
+   * 仅 pending 可确认；cancelled/superseded 拒绝（防幽灵建树）。
+   * 权限模式切换与开工指令注入由调用方（HTTP 路由）执行。
+   */
+  confirmPlanArtifact(sessionPath: string) {
+    const entry = this._planArtifacts.get(sessionPath);
+    if (!entry) {
+      return { ok: false, error: "No plan artifact submitted for this session." };
+    }
+    if (entry.boundTaskIds) {
+      return { ok: true, alreadyBound: true, ...entry.boundTaskIds };
+    }
+    if (entry.status !== "pending") {
+      return { ok: false, error: `Plan is ${entry.status}, not awaiting confirmation.` };
+    }
+    const bound = bindPlanToTaskTree(entry.artifact, this._taskRegistry);
+    entry.boundTaskIds = { parentTaskId: bound.parentTaskId, stepTaskIds: bound.stepTaskIds };
+    entry.status = "confirmed";
+    if (entry.toolCallId) {
+      this._emitEvent({ type: "plan_review_update", toolCallId: entry.toolCallId, status: "confirmed" }, sessionPath);
+    }
+    return { ok: true, alreadyBound: false, parentTaskId: bound.parentTaskId, stepTaskIds: bound.stepTaskIds };
+  }
+
   get runtimeContext() {
     return this._runtimeContext;
   }
@@ -746,6 +847,7 @@ export class HanaEngine {
     this._deleteSessionRuntimeMapEntry(this._uiContextBySession, sessionPath);
     this._deleteSessionRuntimeSetEntry(this._imageStripNotified, sessionPath);
     this._deleteSessionRuntimeSetEntry(this._videoStripNotified, sessionPath);
+    this._planArtifacts?.delete(sessionPath);
     if (typeof this._currentTurnNativeMedia?.clearSession === "function") {
       this._currentTurnNativeMedia.clearSession(sessionRef);
     }

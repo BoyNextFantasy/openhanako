@@ -66,6 +66,8 @@ const TOOL_ARG_SUMMARY_KEYS = ["file_path", "path", "command", "pattern", "url",
 
 export function summarizeToolStartArgs(toolName: any, rawArgs: any, startedAt = Date.now()) {
   if (!rawArgs || typeof rawArgs !== "object") return undefined;
+  // plan_submit：计划卡需要完整结构化载荷渲染（goal/steps/risks 等），白名单机制不适用
+  if (toolName === "plan_submit") return rawArgs;
   const args = {};
   for (const k of TOOL_ARG_SUMMARY_KEYS) {
     if (rawArgs[k] !== undefined) args[k] = rawArgs[k];
@@ -1292,6 +1294,10 @@ export function createChatRoute(engine: any, hub: any, { upgradeWebSocket }: any
       });
     } else if (event.type === "plan_mode") {
       broadcast({ type: "plan_mode", enabled: event.enabled, mode: event.mode, sessionPath });
+    } else if (event.type === "plan_artifact") {
+      broadcast({ type: "plan_artifact", artifact: event.artifact, toolCallId: event.toolCallId ?? null, sessionPath });
+    } else if (event.type === "plan_review_update") {
+      broadcast({ type: "plan_review_update", toolCallId: event.toolCallId, status: event.status, sessionPath });
     } else if (event.type === "notification") {
       broadcast(toNotificationWsMessage(event, sessionPath));
     } else if (event.type === "question") {

@@ -967,6 +967,69 @@ app.post("/api/session-permission-mode", async (c) => {
   });
 });
 
+// 计划卡确认：幂等建树（engine 内部去重）+ 仅规划模式代切完整权限。
+// sessionPath 缺失直接 409——绝不 fallback 到焦点会话，防止跨会话误确认。
+app.post("/api/plan/confirm", async (c) => {
+  const { sessionPath } = await safeJson(c);
+  const target = typeof sessionPath === "string" && sessionPath ? sessionPath : null;
+  if (!target) {
+    return c.json({ ok: false, error: "plan confirm requires an active session" }, 409);
+  }
+  const currentMode = engine.getSessionPermissionMode(target);
+  const result = engine.confirmPlanArtifact(target);
+  if (result?.ok === false) {
+    return c.json(result, 409);
+  }
+  // 仅 plan 模式代切 operate；read_only/ask 等用户手动选择的档位保持不动。
+  let mode = currentMode;
+  let modeSwitched = false;
+  if (currentMode === "plan") {
+    const modeResult = engine.setSessionPermissionModeForSession(target, "operate");
+    mode = modeResult?.mode || currentMode;
+    modeSwitched = modeResult?.ok !== false;
+  }
+  const value = { parentTaskId: result.parentTaskId, stepTaskIds: result.stepTaskIds, mode };
+  // 确认即开工：注入一条用户消息发起新轮次（fire-and-forget，不阻塞本响应）
+  if (!result.alreadyBound) {
+    engine.kickOffPlanExecution?.(target);
+  }
+  return c.json({
+    ok: true,
+    alreadyBound: result.alreadyBound === true,
+    ...value,
+  });
+});
+
+// 用户关闭计划卡：dismissPlanArtifact 内部会 resolve 阻塞中的 plan_submit（模型收到取消结果）。
+app.post("/api/plan/dismiss", async (c) => {
+  const { sessionPath } = await safeJson(c);
+  const target = typeof sessionPath === "string" && sessionPath ? sessionPath : null;
+  if (!target) {
+    return c.json({ ok: false, error: "plan dismiss requires an active session" }, 409);
+  }
+  const result = engine.dismissPlanArtifact(target);
+  if (result?.ok === false) {
+    return c.json(result, 409);
+  }
+  return c.json({ ok: true });
+});
+
+// 计划卡 pending 恢复：刷新后前端查询本会话是否有等待裁决的计划。
+app.get("/api/plan/artifact", (c) => {
+  const sessionPath = c.req.query("sessionPath");
+  if (!sessionPath) {
+    return c.json({ ok: true, pending: null });
+  }
+  const entry = engine.getPlanReviewEntry?.(sessionPath);
+  if (!entry) {
+    return c.json({ ok: true, pending: null });
+  }
+  return c.json({
+    ok: true,
+    pending: { artifact: entry.artifact, confirmId: entry.confirmId, toolCallId: entry.toolCallId },
+  });
+});
+
 // 远程关闭（供 desktop 端复�?server 退出时调用，跨平台可靠�?graceful shutdown�?
 app.post("/api/session-workflow-mode", async (c) => {
   const { mode, pendingNewSession, currentSessionOnly, sessionPath } = await safeJson(c);
