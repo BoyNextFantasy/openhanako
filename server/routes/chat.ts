@@ -159,6 +159,7 @@ export function toCompactionLifecycleWsMessage(event: any, sessionPath: any, get
     tokens: usage?.tokens ?? null,
     contextWindow: usage?.contextWindow ?? null,
     percent: usage?.percent ?? null,
+    tokensBefore: event.result?.tokensBefore ?? null,
   };
 }
 

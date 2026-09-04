@@ -12,7 +12,7 @@ import { createAgentSession, SessionManager, estimateTokens, refreshSessionModel
 import { isSessionJsonlFilename } from "../lib/session-jsonl.ts";
 import { createDefaultSettings } from "./session-defaults.ts";
 import { isDefaultWorkspacePath, restoreDefaultWorkspaceIfMissing } from "../shared/default-workspace.ts";
-import { computeHardTruncation } from "./compaction-utils.ts";
+import { computeHardTruncation, estimateContextBreakdown } from "./compaction-utils.ts";
 import {
   appendCompactionResultToSession,
   createCachePreservingCompactionResult,
@@ -3831,6 +3831,27 @@ export class SessionCoordinator {
     const live = this._getSessionEntryByPath(sessionPath)?.session?.getContextUsage?.();
     if (live) return live;
     return this._getRuntimeValueForPath(this._hibernatedSessionMeta, sessionPath)?.contextUsage || null;
+  }
+
+  /**
+   * 上下文组成估算（P0-4 浮窗）：按 chars/4 口径把上下文拆成
+   * 系统提示词（含技能）/ 工具定义 / 消息 / 其他。总量来自 SDK getContextUsage，
+   * 分解为估算值（技能已折叠进系统提示词，无独立口径）。
+   */
+  getSessionContextBreakdown(sessionPath: any) {
+    const entry = this._getSessionEntryByPath(sessionPath);
+    const session = entry?.session || null;
+    const contextUsage = this.getSessionContextUsage(sessionPath);
+    const totalTokens = contextUsage?.tokens ?? 0;
+    if (!totalTokens) return { contextUsage, breakdown: null };
+
+    const breakdown = estimateContextBreakdown({
+      systemPrompt: session?.agent?.state?.systemPrompt || "",
+      toolDefs: entry?.activeToolDefinitions || [],
+      messages: session?.agent?.state?.messages || [],
+      totalTokens,
+    });
+    return { contextUsage, breakdown };
   }
 
   _assertActiveDesktopSessionPath(sessionPath: any, operation: any) {

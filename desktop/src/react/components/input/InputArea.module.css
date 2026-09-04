@@ -1778,3 +1778,183 @@
 .send-btn {
     border-radius: 8px;
 }
+
+/* ── P0-4：上下文悬停浮窗（容量 / 组成 / 收益 / 操作 四层）── */
+
+.context-hover-wrap {
+    display: flex;
+}
+
+.context-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 272px;
+    box-sizing: border-box;
+    padding: 14px 16px;
+    background: var(--panel-card-bg);
+    border: var(--panel-card-border);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--panel-card-shadow);
+}
+
+.context-panel-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.context-panel-title {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.context-panel-num {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.context-stats-bar {
+    height: 5px;
+    border-radius: 999px;
+    background: var(--ring-bg);
+    overflow: hidden;
+}
+
+.context-stats-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: var(--ring-fg);
+    transition: width var(--duration-slow, 0.25s) ease;
+}
+
+.context-panel-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+}
+
+.context-panel-section-title {
+    font-size: 0.66rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+
+.context-stats-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.context-stats-row {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.74rem;
+    line-height: 1.4;
+}
+
+.context-stats-dot {
+    flex: none;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--ring-fg);
+}
+
+.context-stats-label {
+    flex: 1 1 auto;
+    min-width: 0;
+    color: var(--text-light);
+}
+
+.context-stats-value {
+    flex: none;
+    min-width: 3.2em;
+    text-align: right;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+}
+
+.context-stats-kv {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    font-size: 0.74rem;
+    line-height: 1.5;
+}
+
+.context-stats-kv span:first-child {
+    color: var(--text-light);
+}
+
+.context-stats-kv span:last-child {
+    color: var(--text);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.context-stats-note {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+}
+
+.context-panel-actions {
+    display: flex;
+    gap: 8px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+}
+
+.context-panel-action {
+    flex: 1 1 0;
+    padding: 0.34rem 0.4rem;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-light);
+    font-size: 0.7rem;
+    cursor: pointer;
+    transition: color var(--duration-fast, 0.15s) ease, border-color var(--duration-fast, 0.15s) ease;
+}
+
+.context-panel-action:hover:not(:disabled) {
+    color: var(--text);
+    border-color: rgba(var(--accent-rgb), 0.4);
+}
+
+.context-panel-action:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+
+/* 悬停反馈：以圆环圆心为中心的圆角矩形（不覆盖右侧 token 标签） */
+.context-ring {
+    position: relative;
+}
+
+.context-ring::before {
+    content: '';
+    position: absolute;
+    left: calc(0.2rem - 3px);
+    top: 50%;
+    width: 23px;
+    height: 23px;
+    transform: translateY(-50%);
+    border-radius: 9px;
+    background: transparent;
+    pointer-events: none;
+}
+
+.context-ring-wrap:hover .context-ring::before {
+    background: rgba(var(--accent-rgb), 0.14);
+}

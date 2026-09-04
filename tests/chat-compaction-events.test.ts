@@ -30,6 +30,7 @@ describe("chat route compaction lifecycle messages", () => {
       reason: "manual",
       aborted: false,
       willRetry: false,
+      tokensBefore: null,
       tokens: null,
       contextWindow: 200_000,
       percent: null,

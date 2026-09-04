@@ -23,7 +23,7 @@ describe("pruneToolOutputs", () => {
       makeUser("hello"),
       makeToolResult("short response"),
     ];
-    const result = pruneToolOutputs(msgs);
+    const { messages: result } = pruneToolOutputs(msgs);
     expect(result).toEqual(msgs);
   });
 
@@ -37,7 +37,7 @@ describe("pruneToolOutputs", () => {
       makeUser("recent question 2"),
       makeToolResult(largeText),
     ];
-    const result = pruneToolOutputs(msgs);
+    const { messages: result } = pruneToolOutputs(msgs);
     // Recent 2 turns untouched
     expect(result[3].content[0].text).toBe(largeText);
     expect(result[5].content[0].text).toBe(largeText);
@@ -52,7 +52,7 @@ describe("pruneToolOutputs", () => {
       makeToolResult(largeText),
     ];
 
-    const result = pruneToolOutputs(msgs);
+    const { messages: result } = pruneToolOutputs(msgs);
 
     expect(result[1].content[0].text.length).toBe(largeText.length);
     expect(result[1].content[0].text).not.toBe("[工具输出已省略]");
@@ -65,7 +65,7 @@ describe("pruneToolOutputs", () => {
       msgs.push(makeUser(`question ${i}`));
       msgs.push(makeToolResult(smallText));
     }
-    const result = pruneToolOutputs(msgs);
+    const { messages: result } = pruneToolOutputs(msgs);
     for (const msg of result) {
       if (msg.role === "toolResult") {
         expect(msg.content[0].text).toBe(smallText);
@@ -83,7 +83,7 @@ describe("pruneToolOutputs", () => {
       makeUser("turn 3"),
       makeToolResult(mediumText),
     ];
-    const result = pruneToolOutputs(msgs);
+    const { messages: result } = pruneToolOutputs(msgs);
     expect(result).toEqual(msgs);
   });
 
@@ -97,7 +97,7 @@ describe("pruneToolOutputs", () => {
       makeUser("turn 3"),
       makeToolResult(largeText, { isError: true }),
     ];
-    const result = pruneToolOutputs(msgs);
+    const { messages: result } = pruneToolOutputs(msgs);
     for (const msg of result) {
       if (msg.role === "toolResult") {
         expect(msg.content[0].text).not.toBe("[工具输出已省略]");
@@ -116,7 +116,7 @@ describe("pruneToolOutputs", () => {
       makeUser("recent"),
       makeToolResult(largeText),
     ];
-    const result = pruneToolOutputs(msgs);
+    const { messages: result } = pruneToolOutputs(msgs);
     // Before compaction boundary: not reached (stop at compaction marker)
     // So first tool result is NOT in the scan range
     // The messages after compaction: tool results in last 2 turns are protected
@@ -139,7 +139,7 @@ describe("pruneToolOutputs", () => {
       makeUser("turn 3"),
       makeToolResult("recent"),
     ];
-    const result = pruneToolOutputs(msgs, { protectedTurns: 2 });
+    const { messages: result } = pruneToolOutputs(msgs, { protectedTurns: 2 });
     // Image block preserved
     expect(result[1].content[0].type).toBe("image");
     expect(result[1].content[0].data).toBe("base64...");
@@ -157,7 +157,7 @@ describe("pruneToolOutputs", () => {
       makeUser("turn 3"),
       makeToolResult(largeText),
     ];
-    const result = pruneToolOutputs(msgs, {
+    const { messages: result } = pruneToolOutputs(msgs, {
       protectedTurns: 1,
       protectedTokens: 5_000,
       minimumPruneTokens: 5_000,
