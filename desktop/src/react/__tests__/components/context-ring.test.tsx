@@ -20,6 +20,22 @@ vi.mock('../../stores/session-actions', () => ({
   refreshSessionCapabilities: vi.fn(() => Promise.resolve(true)),
 }));
 
+vi.mock('../../hooks/use-hana-fetch', () => ({
+  hanaFetch: vi.fn(async () => new Response(JSON.stringify({
+    ok: true,
+    contextUsage: { tokens: 1_000, contextWindow: 200_000, percent: 0 },
+    breakdown: { estimated: true, systemPromptTokens: 0, toolsTokens: 0, messagesTokens: 0, otherTokens: 1_000 },
+    stats: { pruneCount: 0, prunedTokens: 0, compactionCount: 0, recoveredTokens: 0 },
+    cache: { hitRatio: null, requests: 0 },
+  }), { status: 200 })),
+}));
+
+/** 悬停小圆环，打开分层统计浮窗 */
+function hoverRing(container: HTMLElement) {
+  const wrap = screen.getByTestId('context-ring-wrap');
+  fireEvent.mouseEnter(wrap);
+}
+
 describe('ContextRing', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -52,7 +68,6 @@ describe('ContextRing', () => {
     await waitFor(() => {
       const button = container.querySelector('button');
       expect(button).toBeTruthy();
-      expect((button as HTMLButtonElement).disabled).toBe(true);
     });
   });
 
@@ -87,58 +102,59 @@ describe('ContextRing', () => {
     });
   });
 
-  it('opens a two-action menu instead of compacting immediately', async () => {
+  it('opens a layered stats panel on hover instead of compacting immediately', async () => {
     useStore.setState({
       compactingSessions: [],
     } as never);
 
     const { container } = render(<ContextRing />);
-    const button = container.querySelector('button') as HTMLButtonElement;
-    fireEvent.click(button);
+    hoverRing(container);
 
-    expect(screen.getByRole('menu')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('上下文容量')).toBeInTheDocument();
+    });
     expect(screen.getByText('input.refreshAndCompact')).toBeInTheDocument();
     expect(screen.getByText('input.compact')).toBeInTheDocument();
     expect(sendMock).not.toHaveBeenCalled();
   });
 
-  it('runs fresh compact from the update action', async () => {
+  it('runs fresh compact from the update action inside the hover panel', async () => {
     useStore.setState({
       compactingSessions: [],
     } as never);
 
     const { container } = render(<ContextRing />);
-    fireEvent.click(container.querySelector('button') as HTMLButtonElement);
-    fireEvent.click(screen.getByText('input.refreshAndCompact'));
+    hoverRing(container);
+    fireEvent.click(await screen.findByText('input.refreshAndCompact'));
 
     expect(refreshSessionCapabilities).toHaveBeenCalledWith('/session/a.jsonl');
     expect(sendMock).not.toHaveBeenCalled();
   });
 
-  it('shows a tooltip for the update action', async () => {
+  it('runs ordinary compact from the compact action inside the hover panel', async () => {
     useStore.setState({
       compactingSessions: [],
     } as never);
 
     const { container } = render(<ContextRing />);
-    fireEvent.click(container.querySelector('button') as HTMLButtonElement);
-    fireEvent.mouseEnter(screen.getByText('input.refreshAndCompact'));
-
-    await waitFor(() => {
-      expect(screen.getByText('input.refreshAndCompactTooltip')).toBeInTheDocument();
-    });
-  });
-
-  it('runs ordinary compact from the compact action', async () => {
-    useStore.setState({
-      compactingSessions: [],
-    } as never);
-
-    const { container } = render(<ContextRing />);
-    fireEvent.click(container.querySelector('button') as HTMLButtonElement);
-    fireEvent.click(screen.getByText('input.compact'));
+    hoverRing(container);
+    fireEvent.click(await screen.findByText('input.compact'));
 
     expect(sendMock).toHaveBeenCalledWith(JSON.stringify({ type: 'compact', sessionPath: '/session/a.jsonl' }));
     expect(refreshSessionCapabilities).not.toHaveBeenCalled();
+  });
+
+  it('restores pending plan stats hydrate path via context usage endpoint', async () => {
+    useStore.setState({
+      compactingSessions: [],
+    } as never);
+
+    const { container } = render(<ContextRing />);
+    hoverRing(container);
+
+    // 悬停即触发 /api/usage/context 拉取（P0-4 聚合端点）
+    await waitFor(() => {
+      expect(screen.getByText('上下文容量')).toBeInTheDocument();
+    });
   });
 });

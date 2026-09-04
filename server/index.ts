@@ -336,15 +336,19 @@ engine.setDeferredResultStore(deferredResultStore);
 registerDeferredResultBusHandlers(hub.eventBus, deferredResultStore);
 
 await engine.registerExtensionFactory(createDeferredResultExtension(deferredResultStore));
-await engine.registerExtensionFactory(createToolOutputPruneExtension());
+await engine.registerExtensionFactory(createToolOutputPruneExtension({
+  onPrune: (sessionPath, tokensPruned) => engine.recordPruneStats?.(sessionPath, tokensPruned),
+}));
 await engine.registerExtensionFactory(createCompactionGuardExtension({
   usageLedger: engine.usageLedger,
   getCompactionMode: () => getResolvedCompactionMode(engine.preferences),
-  onPostCompact: ({ ctx }: any) => {
+  onPostCompact: ({ event, ctx }: any) => {
     // P0: Re-inject persistent context after every compaction
     try {
       const sessionPath = ctx?.sessionManager?.getSessionFile?.();
       if (!sessionPath) return;
+      // P0-4：累计压缩收益（tokensBefore = 压缩前上下文占用）
+      engine.recordCompactionStats?.(sessionPath, event?.compactionEntry?.tokensBefore || 0);
       const session = engine.getSessionByPath?.(sessionPath);
       const agent = session?.agent;
       if (agent?.buildSystemPrompt) {

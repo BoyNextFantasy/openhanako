@@ -23,7 +23,7 @@ export interface PruneOptions {
 export function pruneToolOutputs(
   messages: any[],
   options: PruneOptions = {},
-): any[] {
+): { messages: any[]; tokensPruned: number } {
   const protectedTurns = options.protectedTurns ?? DEFAULT_PROTECTED_TURNS;
   const protectedTokens = options.protectedTokens ?? DEFAULT_PROTECTED_TOKENS;
   const minimumPruneTokens = options.minimumPruneTokens ?? DEFAULT_MINIMUM_PRUNE_TOKENS;
@@ -49,7 +49,7 @@ export function pruneToolOutputs(
     }
   }
 
-  if (userTurnsLeft > 0) return messages;
+  if (userTurnsLeft > 0) return { messages, tokensPruned: 0 };
 
   // Phase 2: prune tool outputs before the cutoff
   let tokensAccumulated = 0;
@@ -79,10 +79,10 @@ export function pruneToolOutputs(
     }
   }
 
-  if (tokensPruned < minimumPruneTokens) return messages;
+  if (tokensPruned < minimumPruneTokens) return { messages, tokensPruned: 0 };
 
   const pruned = new Set(prunedIndices);
-  return messages.map((msg, idx) => {
+  const result = messages.map((msg, idx) => {
     if (!pruned.has(idx)) return msg;
     const content = Array.isArray(msg.content)
       ? msg.content.map((block: any) => {
@@ -94,4 +94,5 @@ export function pruneToolOutputs(
       : msg.content;
     return { ...msg, content };
   });
+  return { messages: result, tokensPruned };
 }

@@ -217,6 +217,7 @@ export class HanaEngine {
   declare _subagentThreadStore: any;
   declare _taskRegistry: any;
   declare _planArtifacts: any;
+  declare _sessionContextStats: any;
   declare _terminalSessions: any;
   declare _uiContextBySession: any;
   declare _usageLedger: any;
@@ -445,6 +446,8 @@ export class HanaEngine {
     // 会话级计划卡状态：sessionPath → { artifact, boundTaskIds }。仅内存（MVP），
     // 重复 plan_submit 覆盖；confirmPlanArtifact 建树后置 boundTaskIds 实现幂等。
     this._planArtifacts = new Map();
+    // 会话级上下文收益统计（P0-4）：修剪/压缩的次数与 token 量。仅内存。
+    this._sessionContextStats = new Map();
     this._taskRegistry.registerHandler("subagent", {
       abort: (taskId) => {
         const ctrl = this._subagentControllers.get(taskId);
@@ -671,6 +674,28 @@ export class HanaEngine {
     return { ok: true };
   }
 
+  /** 累计会话的修剪收益（P0-4：由工具输出修剪扩展回调）。 */
+  recordPruneStats(sessionPath: string, tokensPruned: number) {
+    if (!sessionPath || !(tokensPruned > 0)) return;
+    const entry = this._sessionContextStats.get(sessionPath) || { pruneCount: 0, prunedTokens: 0, compactionCount: 0, recoveredTokens: 0 };
+    entry.pruneCount += 1;
+    entry.prunedTokens += tokensPruned;
+    this._sessionContextStats.set(sessionPath, entry);
+  }
+
+  /** 累计会话的压缩收益（tokensBefore = 压缩前上下文占用）。 */
+  recordCompactionStats(sessionPath: string, tokensBefore: number) {
+    if (!sessionPath || !(tokensBefore > 0)) return;
+    const entry = this._sessionContextStats.get(sessionPath) || { pruneCount: 0, prunedTokens: 0, compactionCount: 0, recoveredTokens: 0 };
+    entry.compactionCount += 1;
+    entry.recoveredTokens += tokensBefore;
+    this._sessionContextStats.set(sessionPath, entry);
+  }
+
+  getSessionContextStats(sessionPath: string) {
+    return this._sessionContextStats.get(sessionPath) || { pruneCount: 0, prunedTokens: 0, compactionCount: 0, recoveredTokens: 0 };
+  }
+
   /**
    * 确认计划：绑定任务树（幂等——重复确认返回同一棵树）并广播状态更新。
    * 仅 pending 可确认；cancelled/superseded 拒绝（防幽灵建树）。
@@ -848,6 +873,7 @@ export class HanaEngine {
     this._deleteSessionRuntimeSetEntry(this._imageStripNotified, sessionPath);
     this._deleteSessionRuntimeSetEntry(this._videoStripNotified, sessionPath);
     this._planArtifacts?.delete(sessionPath);
+    this._sessionContextStats?.delete(sessionPath);
     if (typeof this._currentTurnNativeMedia?.clearSession === "function") {
       this._currentTurnNativeMedia.clearSession(sessionRef);
     }
@@ -1173,6 +1199,7 @@ export class HanaEngine {
   async moveSessionLifecycle(input) { return this._sessionCoord.moveSessionLifecycle(input); }
   getSessionByPath(p) { return this._sessionCoord.getSessionByPath(p); }
   getSessionContextUsage(p) { return this._sessionCoord.getSessionContextUsage(p); }
+  getSessionContextBreakdown(p) { return this._sessionCoord.getSessionContextBreakdown(p); }
   /** 确保桌面 session 已加载进 cache 但不改 UI 焦点（Phase 2-C：/rc 接管态用） */
   async ensureSessionLoaded(p) { return this._sessionCoord.ensureSessionLoaded(p); }
   async reloadSessionRuntime(p, opts = {}) { return this._sessionCoord.reloadSessionRuntime(p, opts); }

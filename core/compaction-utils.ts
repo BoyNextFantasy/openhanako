@@ -135,3 +135,35 @@ function formatBytes(bytes) {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
 }
+
+/**
+ * P0-4 上下文组成估算：按 chars/4 口径（与 estimateTokens 同一启发式）把
+ * 上下文总量拆成 系统提示词 / 工具定义 / 消息 / 其他 四份。技能已折叠进
+ * 系统提示词，无独立口径；估算值仅用于浮窗展示，标注 estimated=true。
+ */
+export function estimateContextBreakdown(input: {
+  systemPrompt?: string | null;
+  toolDefs?: any[] | null;
+  messages?: any[] | null;
+  totalTokens: number;
+}) {
+  const totalTokens = input.totalTokens || 0;
+  const systemPromptTokens = Math.ceil((input.systemPrompt || "").length / 4);
+  const defs = input.toolDefs || [];
+  const toolsTokens = defs.length > 0 ? Math.ceil(JSON.stringify(defs).length / 4) : 0;
+  const messagesTokens = Math.ceil(
+    (input.messages || []).reduce((sum: number, m: any) => {
+      const text = typeof m === "string" ? m : JSON.stringify(m);
+      return sum + Math.ceil((text || "").length / 4);
+    }, 0) / 4,
+  ) * 4;
+  const known = systemPromptTokens + toolsTokens + messagesTokens;
+  const otherTokens = Math.max(0, totalTokens - known);
+  return {
+    estimated: true,
+    systemPromptTokens,
+    toolsTokens,
+    messagesTokens,
+    otherTokens,
+  };
+}

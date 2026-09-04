@@ -6,6 +6,7 @@
  *   2. `session_before_compact` 事件：压缩前修剪 preparation 中的 tool_result
  *
  * 纯内存操作，不改磁盘 JSONL。
+ * 每次实际修剪的 token 数通过 onPrune 上报（P0-4 压缩收益计量化）。
  */
 
 import { pruneToolOutputs } from "../../core/tool-output-pruner.ts";
@@ -17,6 +18,8 @@ export interface ToolOutputPruneExtensionOptions {
   protectedTurns?: number;
   protectedTokens?: number;
   minimumPruneTokens?: number;
+  /** 实际修剪发生时回调（sessionPath, tokensPruned），用于收益统计 */
+  onPrune?: (sessionPath: string, tokensPruned: number) => void;
 }
 
 export function createToolOutputPruneExtension(options: ToolOutputPruneExtensionOptions = {}) {
@@ -28,14 +31,18 @@ export function createToolOutputPruneExtension(options: ToolOutputPruneExtension
 
   return function (pi: any) {
     // Hook 1: prune tool outputs from context before regular LLM calls
-    pi.on("context", (event: any) => {
+    pi.on("context", (event: any, ctx: any) => {
       if (!Array.isArray(event?.messages) || event.messages.length === 0) {
         return undefined;
       }
       try {
-        const pruned = pruneToolOutputs(event.messages, pruneOpts);
+        const { messages: pruned, tokensPruned } = pruneToolOutputs(event.messages, pruneOpts);
         if (pruned !== event.messages) {
           log.log(`pruned tool outputs in context`);
+          if (tokensPruned > 0 && typeof options.onPrune === "function") {
+            const sessionPath = ctx?.sessionManager?.getSessionFile?.() || null;
+            if (sessionPath) options.onPrune(sessionPath, tokensPruned);
+          }
           return { messages: pruned };
         }
       } catch (err) {
@@ -49,16 +56,21 @@ export function createToolOutputPruneExtension(options: ToolOutputPruneExtension
       const preparation = event?.preparation;
       if (!preparation) return undefined;
 
+      const sessionPath = _ctx?.sessionManager?.getSessionFile?.() || null;
+
       try {
         if (Array.isArray(preparation.messagesToSummarize) && preparation.messagesToSummarize.length > 0) {
-          const pruned = pruneToolOutputs(preparation.messagesToSummarize, pruneOpts);
+          const { messages: pruned, tokensPruned } = pruneToolOutputs(preparation.messagesToSummarize, pruneOpts);
           if (pruned !== preparation.messagesToSummarize) {
             log.log(`pruned tool outputs in compaction preparation`);
             preparation.messagesToSummarize = pruned;
+            if (tokensPruned > 0 && typeof options.onPrune === "function" && sessionPath) {
+              options.onPrune(sessionPath, tokensPruned);
+            }
           }
         }
         if (Array.isArray(preparation.turnPrefixMessages) && preparation.turnPrefixMessages.length > 0) {
-          const pruned = pruneToolOutputs(preparation.turnPrefixMessages, pruneOpts);
+          const { messages: pruned } = pruneToolOutputs(preparation.turnPrefixMessages, pruneOpts);
           if (pruned !== preparation.turnPrefixMessages) {
             preparation.turnPrefixMessages = pruned;
           }
