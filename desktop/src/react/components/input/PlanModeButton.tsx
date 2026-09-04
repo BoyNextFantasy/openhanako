@@ -111,6 +111,10 @@ export function PlanModeButton({ mode, onChange, locked = false }: {
       onChange((data.mode || nextMode) as PermissionMode);
     } catch (err) {
       console.error('[plan-mode] select failed:', err);
+      // 服务端拒绝（如 409）此前被静默吞掉，用户点了没反应；这里显式浮出失败原因
+      window.dispatchEvent(new CustomEvent('hana-inline-notice', {
+        detail: { text: `权限模式切换失败：${err instanceof Error ? err.message : String(err)}`, type: 'error' },
+      }));
     }
   }, [mode, onChange, t]);
 

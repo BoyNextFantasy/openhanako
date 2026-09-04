@@ -3471,11 +3471,36 @@ export class SessionCoordinator {
     entry.lastTouchedAt = Date.now();
 
     this._clearRuntimePressureTimer(sessionPath);
-    this._deleteRuntimeValueForPath(this._hibernatedSessionMeta, sessionPath);
+    // 仿 hibernateSessionRuntime：teardown 前把会话状态快照进 _hibernatedSessionMeta，
+    // 终止后权限/工作流等按路径写入（setSessionPermissionModeForSession 等）才有落点，
+    // 否则用户点停止后无法再切换权限模式（写入全部 409 "session not found"）。
+    const isFocus = this._session === session || this.currentSessionPath === sessionPath;
+    if (isFocus) this._currentSessionPath = sessionPath;
+    this._setRuntimeValueForPath(this._hibernatedSessionMeta, sessionPath, {
+      sessionId: entry.sessionId || this._sessionRuntimeKeyForPath(sessionPath, { warn: false }),
+      sessionPath,
+      agentId: entry.agentId,
+      memoryEnabled: entry.memoryEnabled,
+      experienceEnabled: entry.experienceEnabled,
+      modelId: entry.modelId,
+      modelProvider: entry.modelProvider,
+      cwd: entry.cwd || entry.session?.sessionManager?.getCwd?.() || null,
+      workspaceFolders: Array.isArray(entry.workspaceFolders) ? [...entry.workspaceFolders] : [],
+      authorizedFolders: Array.isArray(entry.authorizedFolders) ? [...entry.authorizedFolders] : [],
+      permissionMode: entry.permissionMode,
+      workflowMode: entry.workflowMode,
+      effectiveWorkflowMode: entry.effectiveWorkflowMode,
+      accessMode: entry.accessMode,
+      planMode: entry.planMode,
+      thinkingLevel: entry.thinkingLevel,
+      toolNames: Array.isArray(entry.toolNames) ? [...entry.toolNames] : entry.toolNames,
+      contextUsage: entry.session?.getContextUsage?.() || null,
+      hibernatedAt: Date.now(),
+    });
     this._deleteRuntimeValueForPath(this._sessions, sessionPath);
-    if (this._session === session || this.currentSessionPath === sessionPath) {
+    if (isFocus) {
+      // 只卸载 live session 对象，保留焦点 path（与休眠路径一致）
       this._session = null;
-      this._currentSessionPath = null;
       this._sessionStarted = false;
     }
 
@@ -3680,7 +3705,10 @@ export class SessionCoordinator {
         );
       }
       if (entry.session.isStreaming) {
+        // forceRelease 会为"终止后仍可切模式"写入 hibernated meta 快照；
+        // 但 discard 是真删除语义，落点必须在快照写入后再清一次。
         this._forceReleaseStreamingSession(entry, sessionPath, reason);
+        this._deleteRuntimeValueForPath(this._hibernatedSessionMeta, sessionPath);
       } else {
         await this._teardownSessionEntry(entry, sessionPath, reason);
         this._deleteRuntimeValueForPath(this._sessions, sessionPath);
