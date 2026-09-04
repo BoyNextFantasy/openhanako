@@ -1436,7 +1436,7 @@ describe("model sync related routes", () => {
     const headers = fetchMock.mock.calls[0][1].headers;
     expect(headers["x-api-key"]).toBe("sk-test");
     expect(headers["anthropic-version"]).toBe("2023-06-01");
-    expect(headers["User-Agent"]).toBe("HanaAgent/1.0");
+    expect(headers["User-Agent"]).toBe("Satori/1.0");
 
     const data = await res.json();
     expect(data.models).toEqual([

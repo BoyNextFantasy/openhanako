@@ -8,7 +8,7 @@ develop         — 主开发分支，所有迭代的合集，永远处于可运
 iter/<迭代名>    — 每轮迭代的独立工作分支，从 develop 分出
 ```
 
-- **`main`**：只从 `upstream` 拉官方 HanaAgent 更新，从不在此分支写代码
+- **`main`**：只从 `upstream` 拉官方上游（OpenHanako）更新，从不在此分支写代码
 - **`develop`**：你所有改动的全集，GitHub 上选此分支即为最新代码
 - **`iter/<迭代名>`**：每次迭代的工作分支，完成后合并回 develop，出问题则直接丢弃
 

@@ -45,6 +45,7 @@ export const STANDARD_TOOL_NAMES = [
   "session_folders",
   "stop_task",
   "task",
+  "plan_submit",
   "hana_card_guide",
   "show_card",
 ];

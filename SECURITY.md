@@ -1,6 +1,6 @@
 # Security Policy
 
-This project is now marketed as HanaAgent. During the rename transition, the repository and security-reporting URLs intentionally remain on the legacy `openhanako` GitHub path.
+This project is marketed as Satori, built by the Satori Team on top of the open-source OpenHanako project. During the rename transition, the repository and security-reporting URLs intentionally remain on the legacy `openhanako` GitHub path.
 
 ## Reporting a Vulnerability
 

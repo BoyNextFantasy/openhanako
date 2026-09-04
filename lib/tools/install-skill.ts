@@ -268,7 +268,7 @@ export function createInstallSkillTool({ getUserSkillsDir, getConfig, resolveUti
         let stars = 0;
         try {
           const apiRes = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
-            headers: { "User-Agent": "HanaAgentBot/1.0", Accept: "application/vnd.github.v3+json" },
+            headers: { "User-Agent": "SatoriBot/1.0", Accept: "application/vnd.github.v3+json" },
             signal: AbortSignal.timeout(GITHUB_API_TIMEOUT),
           });
           if (!apiRes.ok) {

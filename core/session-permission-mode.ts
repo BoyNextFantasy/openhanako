@@ -107,6 +107,9 @@ const SUBAGENT_BLOCKED_TOOLS = new Set([
   "install_skill",
   "update_settings",
   "session_folders",
+  // 计划提交是与用户的确认卡签约，只有主会话能做；且工具内部按「焦点会话」
+  // 解析 sessionPath，subagent 调用会把计划写进错误会话。
+  "plan_submit",
 ]);
 
 const BROWSER_READ_ACTIONS = new Set([
@@ -379,6 +382,8 @@ export function classifySessionPermission({ mode, toolName, params, context }: {
   const declared = classifyDeclaredToolPermission(normalized, name, context);
   if (declared) return declared;
   if (INFORMATION_TOOLS.has(name)) return { action: "allow" };
+  // 计划提交 = 纯声明式动作（内存记录 + UI 事件，无文件/进程副作用），任意权限模式放行。
+  if (name === "plan_submit") return { action: "allow" };
   if (name === "browser") return classifyBrowserAction(normalized, params?.action, context);
   if (name === "exec_command") return classifyExecCommandAction(normalized, params, context);
   if (name === "write_stdin") return classifyWriteStdinAction(normalized, context);

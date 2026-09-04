@@ -61,7 +61,7 @@ vi.mock('../../hooks/use-config', () => ({
 }));
 
 vi.mock('../../hooks/use-hana-fetch', () => ({
-  hanaFetch: (path: string, opts?: RequestInit) => mocks.hanaFetch(path, opts),
+  hanaFetch: (path: string, opts?: any) => mocks.hanaFetch(path, opts),
   hanaUrl: (path: string) => `http://127.0.0.1:3210${path}`,
 }));
 

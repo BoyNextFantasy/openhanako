@@ -777,6 +777,43 @@ export function handleServerMessage(msg: any): void {
       break;
     }
 
+    case 'plan_artifact': {
+      // plan_submit 提交成功：按 toolCallId 标记 pending，并缓存卡片供弹窗渲染。
+      // 不按焦点过滤——卡属于其所在会话。
+      const toolCallId = typeof msg.toolCallId === 'string' ? msg.toolCallId : '';
+      if (toolCallId) {
+        useStore.getState().setPlanReviewStatus(toolCallId, 'pending');
+      }
+      if (msg.sessionPath && typeof msg.sessionPath === 'string') {
+        useStore.getState().setPendingPlan(msg.sessionPath, {
+          toolCallId,
+          artifact: msg.artifact ?? null,
+        });
+      }
+      break;
+    }
+
+    case 'plan_review_update': {
+      const updateCallId = typeof msg.toolCallId === 'string' ? msg.toolCallId : '';
+      const updateStatus = typeof msg.status === 'string' ? msg.status : '';
+      if (updateCallId && updateStatus) {
+        useStore.getState().setPlanReviewStatus(updateCallId, updateStatus);
+      }
+      if (updateStatus && updateStatus !== 'pending' && typeof msg.sessionPath === 'string') {
+        useStore.getState().setPendingPlan(msg.sessionPath, null);
+      }
+      break;
+    }
+
+    case 'plan_review_update': {
+      const updateCallId = typeof msg.toolCallId === 'string' ? msg.toolCallId : '';
+      const updateStatus = typeof msg.status === 'string' ? msg.status : '';
+      if (updateCallId && updateStatus) {
+        useStore.getState().setPlanReviewStatus(updateCallId, updateStatus);
+      }
+      break;
+    }
+
     case 'permission_mode': {
       if (isFocusedSessionMessage(msg)) {
         syncSessionPermissionMode(msg.mode);

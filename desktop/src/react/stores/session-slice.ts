@@ -171,6 +171,10 @@ export interface SessionSlice {
   pendingSessionConfirmationsByPath: Record<string, SessionConfirmationBlock>;
   /** LLM question 工具触发的待处理问题，keyed by session identity。 */
   pendingQuestionsByPath: Record<string, PendingQuestionBlock>;
+  /** plan_submit 计划卡的裁决状态，keyed by toolCallId（pending/confirmed/cancelled/superseded）。 */
+  planReviewByToolCall: Record<string, string>;
+  /** 等待裁决的计划卡（弹窗用），keyed by session identity。 */
+  pendingPlanByPath: Record<string, { toolCallId: string; artifact: any }>;
   setSessions: (sessions: Session[]) => void;
   setCurrentSessionPath: (path: string | null) => void;
   setCurrentSessionRef: (ref: { sessionId?: string | null; path?: string | null }) => void;
@@ -195,6 +199,8 @@ export interface SessionSlice {
   resolvePendingSessionConfirmation: (confirmId: string) => void;
   setPendingQuestion: (sessionPath: string, block: PendingQuestionBlock | null) => void;
   resolvePendingQuestion: (id: string) => void;
+  setPlanReviewStatus: (toolCallId: string, status: string | null) => void;
+  setPendingPlan: (sessionPath: string, entry: { toolCallId: string; artifact: any } | null) => void;
 }
 
 export const createSessionSlice = (
@@ -222,6 +228,8 @@ export const createSessionSlice = (
   capabilityRefreshingSessions: [],
   pendingSessionConfirmationsByPath: {},
   pendingQuestionsByPath: {},
+  planReviewByToolCall: {},
+  pendingPlanByPath: {},
   setSessions: (sessions) => set((s) => ({
     sessions,
     sessionLocatorsById: mergeSessionLocators(s.sessionLocatorsById, sessions),
@@ -397,5 +405,23 @@ export const createSessionSlice = (
         changed = true;
       }
       return changed ? { pendingQuestionsByPath: next } : {};
+    }),
+  setPlanReviewStatus: (toolCallId, status) =>
+    set((s) => {
+      const id = typeof toolCallId === 'string' ? toolCallId.trim() : '';
+      if (!id) return {};
+      const next = { ...s.planReviewByToolCall };
+      if (status) next[id] = status;
+      else delete next[id];
+      return { planReviewByToolCall: next };
+    }),
+  setPendingPlan: (sessionPath, entry) =>
+    set((s) => {
+      const path = typeof sessionPath === 'string' ? sessionPath.trim() : '';
+      if (!path) return {};
+      const next = { ...s.pendingPlanByPath };
+      if (entry) next[path] = entry;
+      else delete next[path];
+      return { pendingPlanByPath: next };
     }),
 });

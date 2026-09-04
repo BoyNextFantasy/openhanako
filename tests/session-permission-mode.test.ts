@@ -29,6 +29,12 @@ describe("session permission modes", () => {
     expect(classifySessionPermission({ mode: "operate", toolName: "write" })).toEqual({ action: "allow" });
   });
 
+  it("plan_submit is a declaration-only tool: allowed in every permission mode", () => {
+    for (const mode of ["auto", "operate", "ask", "read_only", "plan"]) {
+      expect(classifySessionPermission({ mode, toolName: "plan_submit", params: { goal: "x" } })).toEqual({ action: "allow" });
+    }
+  });
+
   it("treats exec_command one-shot like bash but protects interactive stdin", () => {
     expect(classifySessionPermission({ mode: "read_only", toolName: "exec_command", params: { cmd: "npm test" } })).toMatchObject({
       action: "deny",
@@ -203,6 +209,7 @@ describe("session permission modes", () => {
       "pin_memory", "unpin_memory", "record_experience", // 长期记忆（subagent 不碰）
       "automation", "cron", "channel", "dm", "notify", "install_skill", "update_settings", "session_folders", // agent 生命周期/对外
       "workflow",         // 间接扇出
+      "plan_submit",      // 计划卡签约（且工具按焦点会话解析 sessionPath）
     ];
     for (const name of BLOCKED) {
       expect(

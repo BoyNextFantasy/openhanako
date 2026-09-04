@@ -63,7 +63,7 @@ export function helpText() {
     "  --server-timeout-ms <n>    Server startup timeout (default: 120000)",
     "  --permission-mode <mode>   Session permission mode (default: operate)",
     "  --memory                   Enable session memory (default: off)",
-    "  --url <url>                Existing HanaAgent Server URL",
+    "  --url <url>                Existing Satori Server URL",
     "  --token <token>            Bearer token for --url",
     "  --dry-run                  Print the prompt that would be submitted",
   ].join("\n");
@@ -106,7 +106,7 @@ export async function solveWithSatori(options) {
       timeoutMs: options.serverTimeoutMs || 120000,
     });
   }
-  if (!connection.ok) throw new Error(connection.message || "HanaAgent Server unavailable");
+  if (!connection.ok) throw new Error(connection.message || "Satori Server unavailable");
 
   const client = new HanaCliClient(connection);
   const session = await client.request("/api/sessions/new-detached", {

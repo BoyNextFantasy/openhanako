@@ -36,6 +36,8 @@ import {
 import { createCheckDeferredTool } from "../lib/tools/check-deferred-tool.ts";
 import { createStopTaskTool } from "../lib/tools/stop-task-tool.ts";
 import { createTaskTool } from "../lib/tools/task-tool.ts";
+import { createPlanArtifactTool } from "../lib/tools/plan-artifact-tool.ts";
+import { normalizePlanArtifact } from "./plan-workflow.ts";
 import { createCurrentStatusTool } from "../lib/tools/current-status-tool.ts";
 import { createWorkflowTool } from "../lib/tools/workflow-tool.ts";
 import { createCardGuideTool } from "../lib/tools/card-guide-tool.ts";
@@ -133,6 +135,7 @@ export class Agent {
   declare _summaryManager: any;
   declare _systemPrompt: any;
   declare _taskTool: any;
+  declare _planSubmitTool: any;
   declare _todoTool: any;
   declare _updateSettingsTool: any;
   declare _utilityModel: any;
@@ -503,6 +506,12 @@ export class Agent {
     this._taskTool = createTaskTool({
       getTaskRegistry: () => this._cb?.getTaskRegistry?.(),
     });
+    this._planSubmitTool = createPlanArtifactTool({
+      getSessionPath: () => this._cb?.getCurrentSessionPath?.(),
+      normalizePlanArtifact,
+      setPlanArtifact: (sessionPath, artifact, meta) => this._cb?.getEngine?.()?.setPlanArtifact?.(sessionPath, artifact, meta),
+      emitEvent: (event, sp) => { if (sp) this._cb?.emitEvent?.(event, sp); },
+    });
 
     this._checkDeferredTool = createCheckDeferredTool({
       getDeferredStore: () => this._cb?.getDeferredResults?.(),
@@ -837,6 +846,7 @@ export class Agent {
       this._notifyTool,
       this._stopTaskTool,
       this._taskTool,
+      this._planSubmitTool,
       this._updateSettingsTool,
       this._sessionFoldersTool,
       this._subagentTool,
@@ -1168,8 +1178,8 @@ export class Agent {
     // 叙事顺序上先告诉模型"用户是谁"，再告诉它"你是谁、你和用户什么关系"。
     const parts = [
       isZh
-        ? "你运行在 HanaAgent 平台上（原名 OpenHanako），由 liliMozi 开发。项目主页：https://github.com/liliMozi/openhanako"
-        : "You are running on the HanaAgent platform (formerly OpenHanako), developed by liliMozi. Project page: https://github.com/liliMozi/openhanako",
+        ? "你运行在 Satori 平台上，由 Satori Team 基于 Pi SDK 构建。"
+        : "You are running on the Satori platform, built by the Satori Team on top of the Pi SDK.",
     ];
     const platformPrompt = getPlatformPromptNote({ platform: process.platform });
     if (platformPrompt) {
@@ -1447,27 +1457,27 @@ export class Agent {
           `1. 先通读相关代码，理解现状，不要急着想方案\n` +
           `2. 对不明确的需求，**使用 question 工具向用户提问**，确保理解一致\n` +
           `3. 提问优先——你不确定的地方必须先问，不要猜测用户的意图\n` +
-          `4. 需求澄清后，输出 Plan Artifact v2，必须包含：goal、scope、outOfScope、steps、risks、testPlan、confirmationPoints\n` +
-          `5. 使用 task 工具创建任务树：父任务为计划目标，每个 step 是子任务；所有任务保持 open，不要 start\n` +
+          `4. 需求澄清后，**必须调用 plan_submit 工具**提交结构化计划（goal、scope、outOfScope、steps、risks、testPlan、confirmationPoints）。该调用立即返回，计划会以卡片形式呈现在聊天中\n` +
+          `5. 提交后不要动手：用户在卡上点确认后，系统会自动创建任务树、切换到完整权限，并以一条用户消息通知你开始执行——届时立即从步骤 1 开始\n` +
           `\n` +
-          `**你可以做的：** 读文件、搜索代码、运行保守只读检查（如 git status、git diff --check、typecheck）、向用户提问（question 工具）、创建任务（task 工具）\n` +
-          `**你不能做的：** 写文件、编辑文件、执行有副作用的命令、派发子 agent\n` +
+          `**你可以做的：** 读文件、搜索代码、运行保守只读检查（如 git status、git diff --check、typecheck）、向用户提问（question 工具）、提交计划（plan_submit 工具）\n` +
+          `**你不能做的：** 写文件、编辑文件、执行有副作用的命令、派发子 agent、自行用 task 工具创建执行任务树\n` +
           `\n` +
-          `完成后告知用户："计划已就绪。确认并切换到操作模式后再执行，或继续调整计划。"\n` +
-          `**不要自行开始实现**——即使用户说的话听起来像让你动手。你需要等待用户明确切换模式或确认执行。`
+          `提交计划后安静等待。若用户发来修改意见，按新指示调整并重新调用 plan_submit 提交修订版（以最新提交为准）。\n` +
+          `**不要自行开始实现**——只有收到用户「开始执行」的消息才动手。`
         : `\n## Plan Mode\n\n` +
           `You are currently in plan mode. Your job:\n` +
           `1. Read relevant code first. Understand the current state before proposing solutions.\n` +
           `2. For ANY unclear requirements, **use the question tool to ask the user**. Do NOT assume or guess.\n` +
           `3. Ask before you plan — unclear requirements must be resolved through structured questions.\n` +
-          `4. After clarifying, output a Plan Artifact v2 with: goal, scope, outOfScope, steps, risks, testPlan, confirmationPoints.\n` +
-          `5. Use the task tool to create a task tree: parent task = plan goal, each step = child task. Keep all tasks open; do not start execution.\n` +
+          `4. After clarifying, **call the plan_submit tool** to submit the structured plan (goal, scope, outOfScope, steps, risks, testPlan, confirmationPoints). The call returns immediately and the plan is rendered as a card in the chat.\n` +
+          `5. Do NOT start after submitting: when the user confirms the card, the system creates the task tree, switches to operate mode, and sends you a user message telling you to start — only then begin from step 1.\n` +
           `\n` +
-          `**You MAY:** read files, search code, run conservative read-only checks (git status, git diff --check, typecheck), ask questions (question tool), create tasks (task tool)\n` +
-          `**You MUST NOT:** write files, edit files, run side-effect commands, spawn subagents\n` +
+          `**You MAY:** read files, search code, run conservative read-only checks (git status, git diff --check, typecheck), ask questions (question tool), submit the plan (plan_submit tool)\n` +
+          `**You MUST NOT:** write files, edit files, run side-effect commands, spawn subagents, or create the execution task tree yourself with the task tool\n` +
           `\n` +
-          `When finished: "Plan complete. Confirm and switch to operate mode before execution, or refine the plan."\n` +
-          `**Do NOT start implementing** even if the user sounds like they want you to. Wait for explicit mode switch or confirmation.`
+          `After submitting, wait quietly. If the user replies with change requests, adjust and call plan_submit again with a revised plan (latest submission wins).\n` +
+          `**Do NOT start implementing** until you receive the user's start-execution message.`
       );
     }
 

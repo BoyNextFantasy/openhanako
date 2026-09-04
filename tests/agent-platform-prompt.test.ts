@@ -47,24 +47,28 @@ afterEach(() => {
 });
 
 describe("Agent platform prompt identity", () => {
-  it("describes the current HanaAgent platform name and the former OpenHanako name in Chinese", () => {
+  it("describes the Satori platform as built by the Satori Team on the Pi SDK in Chinese", () => {
     const prompt = makeAgent("zh-CN").buildSystemPrompt({
       forceMemoryEnabled: false,
       forceExperienceEnabled: false,
     });
 
-    expect(prompt).toContain("你运行在 HanaAgent 平台上（原名 OpenHanako）");
-    expect(prompt).toContain("https://github.com/liliMozi/openhanako");
+    expect(prompt).toContain("你运行在 Satori 平台上");
+    expect(prompt).toContain("基于 Pi SDK 构建");
+    expect(prompt).not.toContain("OpenHanako");
+    expect(prompt).not.toContain("openhanako");
   });
 
-  it("describes the current HanaAgent platform name and the former OpenHanako name in English", () => {
+  it("describes the Satori platform as built by the Satori Team on the Pi SDK in English", () => {
     const prompt = makeAgent("en").buildSystemPrompt({
       forceMemoryEnabled: false,
       forceExperienceEnabled: false,
     });
 
-    expect(prompt).toContain("You are running on the HanaAgent platform (formerly OpenHanako)");
-    expect(prompt).toContain("https://github.com/liliMozi/openhanako");
+    expect(prompt).toContain("You are running on the Satori platform");
+    expect(prompt).toContain("on top of the Pi SDK");
+    expect(prompt).not.toContain("OpenHanako");
+    expect(prompt).not.toContain("openhanako");
   });
 
   it("distinguishes SessionFile identity from writable local refs in Chinese", () => {
