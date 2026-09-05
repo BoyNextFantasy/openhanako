@@ -627,4 +627,122 @@ describe("session permission wrapper", () => {
     expect(tool.execute).toHaveBeenCalledOnce();
     expect(result.details.executed).toBe(true);
   });
+
+  // ---- P0-5 危险命令硬拦截：L1 全模式硬拦 + L2 非 operate 强制人工确认 ----
+
+  it("L1 灾难命令即便 operate 也硬拦（模式判定之前）", async () => {
+    const tool = makeTool("bash");
+    const [wrapped] = wrapWithSessionPermission([tool], {
+      getPermissionMode: () => "operate",
+    });
+    const result = await wrapped.execute("call-1", { command: "format c:" }, null, null, ctx);
+    expect(tool.execute).not.toHaveBeenCalled();
+    expect(result.details).toMatchObject({
+      errorCode: "ACTION_BLOCKED_BY_SAFETY_POLICY",
+      ruleIds: ["format-drive"],
+    });
+  });
+
+  it("auto 模式下工作区外递归删除被拒（不弹卡、不自动放行），载荷带高危标记", async () => {
+    const tool = makeTool("bash");
+    const confirmStore = { create: vi.fn() };
+    const approvalGateway = {
+      review: vi.fn(async () => ({ action: "allow", reviewer: "small_tool_model", risk: "low" })),
+    };
+    const [wrapped] = wrapWithSessionPermission([tool], {
+      getPermissionMode: () => "auto",
+      getConfirmStore: () => confirmStore,
+      getApprovalGateway: () => approvalGateway,
+    });
+    const result = await wrapped.execute("call-1", { command: "rm -rf /home/me/other-project" }, null, null, ctx);
+    expect(tool.execute).not.toHaveBeenCalled();
+    expect(approvalGateway.review).not.toHaveBeenCalled();
+    expect(confirmStore.create).not.toHaveBeenCalled();
+    expect(result.details.confirmation).toMatchObject({
+      status: "high_risk_command_needs_user_approval",
+      reviewer: "safety_policy",
+      risk: "high",
+      ruleIds: ["recursive-delete-external"],
+    });
+  });
+
+  it("ask 模式下高危命令弹确认卡（带高危标记），确认后执行", async () => {
+    const tool = makeTool("bash");
+    const confirmStore = {
+      create: vi.fn(() => ({ confirmId: "conf-1", promise: Promise.resolve({ action: "confirmed" }) })),
+    };
+    const emitEvent = vi.fn();
+    const [wrapped] = wrapWithSessionPermission([tool], {
+      getPermissionMode: () => "ask",
+      getConfirmStore: () => confirmStore,
+      emitEvent,
+    });
+    const result = await wrapped.execute("call-1", { command: "reg add HKCU\\Software\\Satori /v Test /d 1" }, null, null, ctx);
+    expect(result.details.executed).toBe(true);
+    expect(emitEvent).toHaveBeenCalledWith(
+      expect.objectContaining({ type: "session_confirmation" }),
+      "/tmp/session.jsonl",
+    );
+    const request = emitEvent.mock.calls[0][0].request;
+    expect(request).toMatchObject({ risk: "high", ruleIds: ["registry-write"] });
+  });
+
+  it("ask 模式下高危命令被用户拒绝时不执行，拒绝载荷带规则 id", async () => {
+    const tool = makeTool("bash");
+    const confirmStore = {
+      create: vi.fn(() => ({ confirmId: "conf-2", promise: Promise.resolve({ action: "rejected" }) })),
+    };
+    const [wrapped] = wrapWithSessionPermission([tool], {
+      getPermissionMode: () => "ask",
+      getConfirmStore: () => confirmStore,
+      emitEvent: vi.fn(),
+    });
+    const result = await wrapped.execute("call-1", { command: "takeown /f C:\\data" }, null, null, ctx);
+    expect(tool.execute).not.toHaveBeenCalled();
+    expect(result.details.confirmation).toMatchObject({
+      status: "rejected",
+      risk: "high",
+      ruleIds: ["takeown-invocation"],
+    });
+  });
+
+  it("read-only 模式下高危命令保持 deny（确认不降级只读拦截）", async () => {
+    const tool = makeTool("bash");
+    const [wrapped] = wrapWithSessionPermission([tool], {
+      getPermissionMode: () => "read_only",
+    });
+    const result = await wrapped.execute("call-1", { command: "reg add HKCU\\Software\\Satori /v Test /d 1" }, null, null, ctx);
+    expect(tool.execute).not.toHaveBeenCalled();
+    expect(result.details.errorCode).toBe("ACTION_BLOCKED_BY_READ_ONLY");
+  });
+
+  it("operate 模式下 L2 高危命令不提升、维持放行（信任档位锁定）", async () => {
+    const tool = makeTool("bash");
+    const [wrapped] = wrapWithSessionPermission([tool], {
+      getPermissionMode: () => "operate",
+    });
+    const result = await wrapped.execute("call-1", { command: "reg add HKCU\\Software\\Satori /v Test /d 1" }, null, null, ctx);
+    expect(tool.execute).toHaveBeenCalledOnce();
+    expect(result.details.executed).toBe(true);
+  });
+
+  it("auto 模式下工作区内递归删除不受影响（防误伤回归）", async () => {
+    const tool = makeTool("bash");
+    const [wrapped] = wrapWithSessionPermission([tool], {
+      getPermissionMode: () => "auto",
+    });
+    const result = await wrapped.execute("call-1", { command: "rm -rf node_modules" }, null, null, ctx);
+    expect(tool.execute).toHaveBeenCalledOnce();
+    expect(result.details.executed).toBe(true);
+  });
+
+  it("plan 模式只读白名单命令不被 L2 误提升", async () => {
+    const tool = makeTool("exec_command");
+    const [wrapped] = wrapWithSessionPermission([tool], {
+      getPermissionMode: () => "plan",
+    });
+    const result = await wrapped.execute("call-1", { cmd: "git status" }, null, null, ctx);
+    expect(tool.execute).toHaveBeenCalledOnce();
+    expect(result.details.executed).toBe(true);
+  });
 });
