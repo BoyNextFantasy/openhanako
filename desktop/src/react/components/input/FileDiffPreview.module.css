@@ -1,0 +1,106 @@
+/* 确认卡内 write/edit 的 diff 预览。默认折叠为摘要条（对齐 ZCode），
+   点击箭头展开红绿预览。红绿只用主题语义色变量（--danger/--green），
+   aurora 与 midnight 深浅主题都定义了这两个变量及其 -rgb 伴量。 */
+.file-diff-preview {
+    /* 确认卡是横向 flex（摘要区 + 按钮组）：diff 预览独占一整行、
+       全宽铺到卡片内边距（对齐 ZCode 形态），窄屏 column 布局下同样适用。 */
+    flex: 1 1 100%;
+    min-width: 0;
+    margin: 0;
+}
+
+.file-diff-summary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    max-width: 100%;
+    padding: 0.1rem 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+    text-align: left;
+}
+
+.file-diff-summary:hover {
+    opacity: 0.85;
+}
+
+.file-diff-chevron {
+    flex-shrink: 0;
+    color: var(--text-muted);
+    transition: transform var(--duration-fast, 0.15s) ease;
+    /* 折叠时箭头朝右，展开后旋为朝下（同 ZCode） */
+    transform: rotate(-90deg);
+}
+
+.file-diff-summary[data-expanded='true'] .file-diff-chevron {
+    transform: rotate(0deg);
+}
+
+.file-diff-summary-path {
+    color: var(--text);
+    font-weight: 600;
+    font-size: 0.75rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.file-diff-stat {
+    flex-shrink: 0;
+    display: inline-flex;
+    gap: 0.3rem;
+    font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+    font-size: 0.6875rem;
+}
+
+.file-diff-stat-add {
+    color: var(--green);
+}
+
+.file-diff-stat-del {
+    color: var(--danger);
+}
+
+.file-diff-body {
+    margin-top: 0.4rem;
+    padding: 0.4rem 0.55rem;
+    border: 1px solid rgba(var(--accent-rgb, 120, 120, 120), 0.16);
+    border-radius: 0.45rem;
+    background: var(--bg-card);
+    max-height: 16rem;
+    overflow-y: auto;
+}
+
+.file-diff-row {
+    font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+    font-size: 0.6875rem;
+    line-height: 1.45;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: var(--text);
+}
+
+.file-diff-row-del {
+    color: var(--danger);
+    background: rgba(var(--danger-rgb, 181, 107, 102), 0.09);
+}
+
+.file-diff-row-add {
+    color: var(--green);
+    background: rgba(var(--green-rgb, 107, 153, 107), 0.09);
+}
+
+.file-diff-row-label {
+    color: var(--text-muted);
+    font-size: 0.625rem;
+    margin-top: 0.35rem;
+}
+
+.file-diff-omitted {
+    color: var(--text-muted);
+    font-size: 0.6875rem;
+    font-style: italic;
+    margin-top: 0.3rem;
+}
+
