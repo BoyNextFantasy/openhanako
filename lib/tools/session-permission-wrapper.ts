@@ -8,7 +8,7 @@ import {
 import { getToolSessionPath } from "./tool-session.ts";
 import { toolError, toolOk } from "./tool-result.ts";
 import { t } from "../i18n.ts";
-import { evaluateToolSafetyPolicy } from "../permission/safety-policy.ts";
+import { evaluateToolSafetyPolicy, evaluateHighRiskCommand } from "../permission/safety-policy.ts";
 import { buildApprovalReviewContext } from "../permission/approval-review-context.ts";
 
 function findRuntimeCtx(args: any[]) {
@@ -32,7 +32,7 @@ function stableSessionKey(sessionPath: any, deps: any, ctx: any = null) {
   return sessionId || sessionPath || "session";
 }
 
-function buildToolApprovalRequest(confirmId: any, toolName: any, params: any) {
+function buildToolApprovalRequest(confirmId: any, toolName: any, params: any, riskExtras: any = null) {
   return {
     type: "session_confirmation",
     confirmId,
@@ -50,6 +50,7 @@ function buildToolApprovalRequest(confirmId: any, toolName: any, params: any) {
       confirmLabel: t("approval.confirm"),
       rejectLabel: t("approval.reject"),
     },
+    ...(riskExtras ? { risk: riskExtras.risk, reviewer: riskExtras.reviewer, ruleIds: riskExtras.ruleIds } : {}),
     payload: { toolName, params },
   };
 }
@@ -128,7 +129,7 @@ function toStatus(action: any) {
   return "rejected";
 }
 
-async function askForToolApproval(toolName: any, params: any, sessionPath: any, deps: any) {
+async function askForToolApproval(toolName: any, params: any, sessionPath: any, deps: any, riskExtras: any = null) {
   const confirmStore = deps.getConfirmStore?.() || deps.confirmStore || null;
   if (!confirmStore || !sessionPath) {
     return { allowed: false, status: "rejected", confirmId: "", reason: "confirmation-unavailable" };
@@ -140,7 +141,7 @@ async function askForToolApproval(toolName: any, params: any, sessionPath: any, 
   );
   deps.emitEvent?.({
     type: "session_confirmation",
-    request: buildToolApprovalRequest(confirmId, toolName, params),
+    request: buildToolApprovalRequest(confirmId, toolName, params, riskExtras),
   }, sessionPath);
   const decision = await promise;
   const status = toStatus(decision?.action);
@@ -238,6 +239,17 @@ export function wrapWithSessionPermission(tools: any[] = [], deps: any = {}) {
           params,
           context: permissionContextForTool(tool, deps),
         });
+        // L2 高危命令强制人工确认：deny 不降级（read_only/plan 保持拦截）、
+        // operate 不提升（信任档位不变）。覆盖 auto 评审——高危不能被自动放行。
+        let highRisk: any = null;
+        if (decision.action !== "deny" && mode !== SESSION_PERMISSION_MODES.OPERATE) {
+          highRisk = evaluateHighRiskCommand(gatewayRequest);
+          if (highRisk) {
+            decision.action = "prompt";
+            decision.kind = "tool_action_approval";
+            decision.details = { toolName: tool.name, ruleIds: highRisk.ruleIds };
+          }
+        }
         if (decision.action === "allow") {
           return tool.execute(...args);
         }
@@ -278,9 +290,15 @@ export function wrapWithSessionPermission(tools: any[] = [], deps: any = {}) {
         }
 
         if (approvalPolicy === SESSION_APPROVAL_POLICIES.DENY_ON_PROMPT) {
-          return toolApprovalUnavailable(tool.name);
+          return highRisk
+            ? toolApprovalUnavailable(tool.name, "high_risk_command_needs_user_approval", highRisk.reasons?.[0] || "high-risk command requires explicit human approval; switch the session to ask or operate mode", {
+              reviewer: highRisk.reviewer,
+              risk: highRisk.risk,
+              ruleIds: highRisk.ruleIds,
+            })
+            : toolApprovalUnavailable(tool.name);
         }
-        const approval = await askForToolApproval(tool.name, params, sessionPath, deps);
+        const approval = await askForToolApproval(tool.name, params, sessionPath, deps, highRisk);
         if (!approval.allowed) {
           return toolOk("Tool action was not approved.", {
             action: tool.name,
@@ -291,6 +309,7 @@ export function wrapWithSessionPermission(tools: any[] = [], deps: any = {}) {
               confirmId: approval.confirmId,
               toolName: tool.name,
               reason: approval.reason,
+              ...(highRisk ? { reviewer: highRisk.reviewer, risk: highRisk.risk, ruleIds: highRisk.ruleIds } : {}),
             },
           });
         }
