@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { hanaFetch } from '../../hooks/use-hana-fetch';
 import type { SessionConfirmationBlock } from '../../stores/chat-types';
 import { Tooltip } from '../../ui';
+import { FileDiffPreview } from './FileDiffPreview';
 import styles from './InputArea.module.css';
 
 type ConfirmationAction = 'confirmed' | 'rejected';
@@ -273,6 +274,13 @@ export function SessionConfirmationPrompt({ block, exiting = false }: SessionCon
           </div>
         )}
       </Tooltip>
+      {block.kind === 'tool_action_approval' && (
+        <FileDiffPreview
+          key={block.confirmId}
+          toolName={block.payload?.toolName}
+          params={block.payload?.params}
+        />
+      )}
       {pending ? (
         <div className={styles['session-confirmation-actions']}>
           <button
