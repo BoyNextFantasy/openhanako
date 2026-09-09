@@ -20,7 +20,7 @@ export type PlanArtifact = {
 };
 
 type TaskRegistryLike = {
-  createLLMTask(summary: string, options?: { parentTaskId?: string | null; owner?: string | null }): { taskId: string };
+  createLLMTask(summary: string, options?: { parentTaskId?: string | null; owner?: string | null; sessionPath?: string | null }): { taskId: string };
 };
 
 function text(value: unknown, label: string): string {
@@ -106,10 +106,10 @@ export function renderPlanArtifact(plan: PlanArtifact): string {
   return lines.join("\n");
 }
 
-export function bindPlanToTaskTree(plan: PlanArtifact, registry: TaskRegistryLike) {
-  const parent = registry.createLLMTask(`Plan: ${plan.goal}`);
+export function bindPlanToTaskTree(plan: PlanArtifact, registry: TaskRegistryLike, sessionPath: string | null = null) {
+  const parent = registry.createLLMTask(`Plan: ${plan.goal}`, { sessionPath });
   const stepTaskIds = plan.steps.map((step) => {
-    const task = registry.createLLMTask(`Step ${step.index}: ${step.title}`, { parentTaskId: parent.taskId });
+    const task = registry.createLLMTask(`Step ${step.index}: ${step.title}`, { parentTaskId: parent.taskId, sessionPath });
     return task.taskId;
   });
   return {

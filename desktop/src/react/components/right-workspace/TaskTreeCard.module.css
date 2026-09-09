@@ -1,0 +1,158 @@
+/* 右侧「任务计划」卡：树形缩进 + 5 态图标。外壳复用全局 universal-card，
+   卡内规格参考 SessionTodoCard（caption 字体、header 分隔线、列表区滚动）。 */
+.card {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    padding: var(--space-8) var(--space-16);
+    gap: 5px;
+    max-height: 32%;
+    overflow: hidden;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex: 0 0 auto;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 4px;
+}
+
+.title {
+    font-family: var(--font-family, inherit);
+    font-size: var(--fs-caption);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.count {
+    font-size: var(--fs-hint);
+    color: var(--text-muted);
+}
+
+.list {
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    min-height: 0;
+}
+
+.row {
+    display: grid;
+    grid-template-columns: 14px 15px minmax(0, 1fr) auto;
+    gap: 6px;
+    align-items: center;
+    min-height: 28px;
+    padding-left: calc(var(--task-depth, 0) * 16px + 2px);
+    padding-right: 2px;
+    border-radius: 4px;
+    font-size: var(--fs-caption);
+    line-height: 1.45;
+}
+
+.row:hover {
+    background: var(--overlay-subtle);
+}
+
+.disclosure {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.disclosureButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--text-muted);
+    cursor: pointer;
+}
+
+.disclosureButton:hover {
+    color: var(--text);
+}
+
+.icon {
+    text-align: center;
+    color: var(--text-light);
+    font-size: var(--fs-hint);
+}
+
+.text {
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.actions {
+    display: none;
+    align-items: center;
+    gap: 2px;
+}
+
+.row:hover .actions,
+.row:focus-within .actions {
+    display: inline-flex;
+}
+
+.actionButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: none;
+    border-radius: 4px;
+    background: none;
+    color: var(--text-muted);
+    cursor: pointer;
+}
+
+.actionButton:hover:not(:disabled) {
+    color: var(--accent);
+    background: rgba(var(--accent-rgb, 120, 120, 120), 0.12);
+}
+
+.actionButton:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+/* ===== 5 态语义（data-status 驱动） ===== */
+
+.row[data-status='in_progress'] .icon {
+    display: inline-flex;
+    align-items: center;
+    color: var(--accent);
+}
+
+.row[data-status='in_progress'] .text {
+    font-weight: 500;
+}
+
+.row[data-status='blocked'] .icon {
+    color: var(--danger);
+}
+
+.row[data-status='done'] .icon {
+    color: var(--green);
+}
+
+.row[data-status='done'] .text {
+    color: var(--text-light);
+    text-decoration: line-through;
+}
+
+.row[data-status='abandoned'] .icon,
+.row[data-status='abandoned'] .text {
+    color: var(--text-light);
+    opacity: 0.75;
+}
