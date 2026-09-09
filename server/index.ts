@@ -79,6 +79,7 @@ import { createServerIdentityRoute } from "./routes/server-identity.ts";
 import { ensureLocalIdentityRegistries } from "../core/server-identity.ts";
 import { createResourcesRoute } from "./routes/resources.ts";
 import { createResourceIoRoute } from "./routes/resource-io.ts";
+import { createTasksRoute } from "./routes/tasks.ts";
 import { createUsageRoute } from "./routes/usage.ts";
 import { createWebAuthRoute } from "./routes/web-auth.ts";
 import { createWebSocketAuthRoute } from "./routes/ws-auth.ts";
@@ -827,6 +828,7 @@ app.route("/api", createCheckpointsRoute(engine));
 app.route("/api", createCommandsRoute(engine));
 app.route("/api", createResourceIoRoute(engine));
 app.route("/api", createResourcesRoute(engine));
+app.route("/api", createTasksRoute(engine));
 app.route("/api", createUsageRoute(engine));
 app.route("/api", createSpeechRecognitionRoute(engine));
 app.route("/api", createServerIdentityRoute({

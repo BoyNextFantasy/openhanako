@@ -6,6 +6,7 @@
  */
 
 import { Type, StringEnum } from "../pi-sdk/index.ts";
+import { getToolSessionPath } from "./tool-session.ts";
 
 const TASK_STATUSES = ["open", "in_progress", "blocked", "done", "abandoned"];
 
@@ -135,7 +136,7 @@ export function createTaskTool(deps) {
       ]),
     }),
 
-    execute: async (_toolCallId, params) => {
+    execute: async (_toolCallId, params, _signal?, _onUpdate?, ctx?) => {
       const registry = deps.getTaskRegistry?.();
       if (!registry) {
         return { content: [{ type: "text", text: "Task registry unavailable" }] };
@@ -145,7 +146,10 @@ export function createTaskTool(deps) {
 
       if (op.action === "create") {
         const parentId = op.parent_id?.trim() || null;
-        const t = registry.createLLMTask(op.summary, { parentTaskId: parentId });
+        const t = registry.createLLMTask(op.summary, {
+          parentTaskId: parentId,
+          sessionPath: getToolSessionPath(ctx),
+        });
         return { content: [{ type: "text", text: `Created ${t.taskId} (${t.status}): ${t._llmSummary}` }] };
       }
 

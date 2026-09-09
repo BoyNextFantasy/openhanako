@@ -81,6 +81,14 @@ function matchesParentSession(task, input, resolveSessionIdForPath = null) {
   return !!target.parentSessionPath && task.parentSessionPath === target.parentSessionPath;
 }
 
+// 会话路径比较键：前端/后端不同链路给出的路径分隔符与大小写可能不一致
+// （Windows 反斜杠 vs 正斜杠），字符串直等会让按会话过滤随机落空。
+// 统一为正斜杠 + 小写后再比对；打标仍存原始路径便于排查。
+function sessionPathKey(value: unknown): string | null {
+  const raw = typeof value === "string" ? value.trim() : "";
+  return raw ? raw.replace(/\\/g, "/").toLowerCase() : null;
+}
+
 export class TaskRegistry {
   declare _handlers: any;
   declare _getSessionIdForPath: any;
@@ -338,7 +346,10 @@ export class TaskRegistry {
     return false;
   }
 
-  createLLMTask(summary, { parentTaskId = null, owner = null }: any = {}) {
+// 会话路径比较键：前端/后端不同链路给出的路径分隔符与大小写可能不一致
+// （Windows 反斜杠 vs 正斜杠），字符串直等会让按会话过滤随机落空。
+// 统一为正斜杠 + 小写后再比对；打标仍存原始路径便于排查。
+  createLLMTask(summary, { parentTaskId = null, owner = null, sessionPath = null }: any = {}) {
     if (parentTaskId) {
       const parent = this._tasks.get(parentTaskId);
       if (!parent || !parent._llmTask) throw new Error(`TaskRegistry: parent LLM task "${parentTaskId}" not found`);
@@ -354,6 +365,8 @@ export class TaskRegistry {
       _llmParentTaskId: parentTaskId || null,
       _llmSummary: assertText(summary, "summary"),
       _llmOwner: owner || null,
+      _llmSessionPath: sessionPath || null,
+      _llmSessionKey: sessionPathKey(sessionPath),
       _llmLastEventKind: "created",
       _llmLastEventSummary: null,
       status: LLM_TASK_STATUSES.OPEN,
@@ -437,6 +450,12 @@ export class TaskRegistry {
         if (!task._llmTask) return false;
         if (filter.status && task.status !== filter.status) return false;
         if (!filter.includeTerminal && LLM_TERMINAL_STATUSES.has(task.status)) return false;
+        // sessionPath 过滤：按归一化比较键精确匹配。未打标的旧任务（历史遗留）一并排除——
+        // 「任务计划」卡按当前会话过滤时，无归属的任务不属于任何会话。
+        if (filter.sessionPath !== undefined) {
+          const key = sessionPathKey(filter.sessionPath);
+          if (task._llmSessionKey !== key) return false;
+        }
         if (filter.parentTaskId !== undefined) {
           if (filter.parentTaskId === null) { if (task._llmParentTaskId) return false; }
           else if (task._llmParentTaskId !== filter.parentTaskId) return false;

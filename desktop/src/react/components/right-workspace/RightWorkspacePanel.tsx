@@ -7,6 +7,7 @@ import { JianEditor } from '../desk/DeskEditor';
 import { PluginWidgetView } from '../plugin/PluginWidgetView';
 import { SessionRegistryFilesPanel } from './SessionRegistryFilesPanel';
 import { SessionStatusCard } from './SessionStatusCard';
+import { TaskTreeCard } from './TaskTreeCard';
 import styles from './RightWorkspacePanel.module.css';
 import { workspaceDisplayName } from '../../../../../shared/workspace-history.ts';
 
@@ -151,6 +152,7 @@ export function RightWorkspacePanel({ compact = false }: { compact?: boolean }) 
         <JianDrawer />
         <JianFloatingToggle />
       </div>
+      {!compact && <TaskTreeCard />}
       {!compact && <SessionStatusCard />}
     </div>
   );

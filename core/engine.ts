@@ -712,7 +712,7 @@ export class HanaEngine {
     if (entry.status !== "pending") {
       return { ok: false, error: `Plan is ${entry.status}, not awaiting confirmation.` };
     }
-    const bound = bindPlanToTaskTree(entry.artifact, this._taskRegistry);
+    const bound = bindPlanToTaskTree(entry.artifact, this._taskRegistry, sessionPath);
     entry.boundTaskIds = { parentTaskId: bound.parentTaskId, stepTaskIds: bound.stepTaskIds };
     entry.status = "confirmed";
     if (entry.toolCallId) {
