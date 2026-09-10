@@ -1,0 +1,12 @@
+{
+  "name": "mes-quality-shishan",
+  "version": "1.0.0",
+  "private": true,
+  "description": "制造质检 MES（工单/子单/工序/台账/盘点/审批）",
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "scripts": {
+    "test": "node --require ./test/_bootstrap.js --test test/"
+  }
+}
