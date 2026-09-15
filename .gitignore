@@ -89,3 +89,6 @@ reviews/
 
 # Codex environments
 .codex/
+
+# ZCode 会话工具缓存
+.zcode/
