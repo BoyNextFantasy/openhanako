@@ -125,6 +125,51 @@ Pass/fail rule:
 So the source of truth is the public task's own test command. Satori does not
 grade itself, and this repo does not reimplement the answer checker.
 
+## SWE-bench Lite (stratified sample)
+
+SWE-bench Lite (300 real GitHub issues across 11 Python repos) is wired through
+the same pipeline, with one difference: grading is done by the **official
+SWE-bench Docker harness** after all patches are collected, not by a local
+`verifyCommand`.
+
+All work defaults to `E:/swe-bench-work` (keep the C drive untouched).
+
+```bash
+# 0) One-time: official grader deps (conda env `swebench`, Python 3.11)
+TMP=E:\\temp TEMP=E:\\temp conda run -n swebench pip install swebench -i https://pypi.tuna.tsinghua.edu.cn/simple
+
+# 1) Dump the dataset (honors HF_ENDPOINT; use https://hf-mirror.com in CN)
+TMP=E:\\temp TEMP=E:\\temp HF_ENDPOINT=https://hf-mirror.com \
+  E:/Postgraduate/DataMining/environment/Anaconda/envs/swebench/python.exe \
+  scripts/swebench/dump_dataset.py --output E:/swe-bench-work/instances.jsonl
+
+# 2) Stratified sample (seed=42, 50 instances) + blobless clones + worktrees
+node scripts/swebench/prepare.mjs --instances E:/swe-bench-work/instances.jsonl --limit 50 --seed 42
+
+# 3) Headless solve (operate mode, memory off, 30min/instance, concurrency 2)
+node scripts/swebench/run.mjs --suite E:/swe-bench-work/suite-swebench-lite.json --resume
+
+# 4) Collect patches into the official predictions schema
+node scripts/swebench/collect.mjs --suite E:/swe-bench-work/suite-swebench-lite.json --predictions-out E:/swe-bench-work/predictions.jsonl
+
+# 5) Official grading (Docker; images build automatically onto E:)
+TMP=E:\\temp TEMP=E:\\temp HF_ENDPOINT=https://hf-mirror.com \
+  E:/Postgraduate/DataMining/environment/Anaconda/envs/swebench/python.exe -m swebench.harness.run_evaluation \
+  --dataset_name princeton-nlp/SWE-bench_Lite \
+  --predictions_path E:/swe-bench-work/predictions.jsonl \
+  --run_id satori-v1 --max_workers 4
+```
+
+Notes:
+
+- `run.mjs` appends to `progress.jsonl`; re-running with `--resume` skips
+  finished instances.
+- The Satori agent runs on the host without repo dependencies installed, so it
+  cannot execute the repos' test suites (v1 limitation). The official harness
+  judges everything.
+- `collect.mjs` uses `git add -A` + `git diff --cached` so new/deleted files are
+  captured while gitignored artifacts stay out.
+
 The default run calls the configured LLM API because Satori really reads the
 task and edits code. Use `--dry-run` when you only want to inspect which tasks
 would be selected:
